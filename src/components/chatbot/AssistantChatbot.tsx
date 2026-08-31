@@ -601,9 +601,9 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
 
   return (
     <>
-      {/* FLOATING TRIGGER BUTTON (Always visible at bottom right) */}
+      {/* FLOATING TRIGGER BUTTON (Always visible at bottom right) — z-[60] garantiza estar sobre AuthScreen */}
       {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+        <div className="fixed bottom-6 right-6 z-[60] flex items-center gap-3">
           <div className="hidden sm:flex items-center gap-2 bg-white/95 backdrop-blur-md border border-slate-200/90 text-slate-800 text-xs font-semibold px-3.5 py-2 rounded-2xl shadow-lg animate-bounce">
             <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
             <span>¿Dudas o simulación guiada? ¡Pregúntame!</span>
@@ -623,7 +623,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
       {/* CHATBOT DRAWER / MODAL WINDOW */}
       {isOpen && (
         <div
-          className={`fixed z-50 transition-all duration-300 ${
+          className={`fixed z-[70] transition-all duration-300 ${
             isExpanded
               ? 'inset-4 sm:inset-8 md:inset-12'
               : 'bottom-4 right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-2rem)] sm:w-[460px] h-[640px] max-h-[calc(100vh-2rem)]'
