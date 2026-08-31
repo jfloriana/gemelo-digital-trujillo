@@ -15,6 +15,7 @@ import { ValidationPolicyModule } from './components/modules/ValidationPolicyMod
 import { ReportsModule } from './components/modules/ReportsModule';
 import { LoginModal } from './components/auth/LoginModal';
 import { AuthScreen } from './components/auth/AuthScreen';
+import { AssistantChatbot } from './components/chatbot/AssistantChatbot';
 import { 
   TRUJILLO_ZONES, 
   SENSOR_NODES, 
@@ -32,12 +33,10 @@ import {
   Trees, 
   Award, 
   FileSpreadsheet, 
-  Sparkles,
   MapPin,
   Flame,
-  Wind,
   ShieldCheck,
-  CheckCircle2
+  Bot
 } from 'lucide-react';
 
 type ActiveModule = 
@@ -54,6 +53,7 @@ function MainAppContent() {
   const [activeModule, setActiveModule] = useState<ActiveModule>('digital_twin');
   const [selectedZone, setSelectedZone] = useState<UrbanZone>(TRUJILLO_ZONES[0]);
   const [isLoginOpen, setIsLoginOpen] = useState<boolean>(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState<boolean>(false);
   const [activeScenario, setActiveScenario] = useState<SimulationScenario | null>(null);
 
   // Active NbS configuration state applied to digital twin canvas
@@ -87,9 +87,25 @@ function MainAppContent() {
     setIsSimActive(true);
   };
 
-  // If user is not authenticated, show full-screen Authentication Gateway before entering the panel
+  // FIX: Chatbot debe ser visible incluso sin autenticación (ayuda al login).
+  // Antes: if (!user) return <AuthScreen /> ocultaba el chatbot en la pantalla de login.
   if (!user) {
-    return <AuthScreen />;
+    return (
+      <>
+        <AuthScreen />
+        <AssistantChatbot
+          currentModule={activeModule}
+          onNavigateModule={(mod) => setActiveModule(mod as ActiveModule)}
+          zones={TRUJILLO_ZONES}
+          selectedZone={selectedZone}
+          onSelectZone={(z) => setSelectedZone(z)}
+          onExport={handleQuickExport}
+          activeScenario={activeScenario}
+          isOpenControlled={isChatbotOpen}
+          onToggleControlled={setIsChatbotOpen}
+        />
+      </>
+    );
   }
 
   return (
@@ -186,6 +202,16 @@ function MainAppContent() {
           >
             <FileSpreadsheet className="w-4 h-4" />
             Reportes (Excel/PDF/Word/CSV)
+          </button>
+
+          <button
+            onClick={() => setIsChatbotOpen(true)}
+            className="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition-all bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white shadow-sm shadow-emerald-900/15 cursor-pointer ml-auto"
+            title="Abrir Asistente Virtual EcoTwin Bot"
+          >
+            <Bot className="w-4 h-4 text-emerald-200 animate-pulse" />
+            <span>Asistente IA EcoTwin</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-300"></span>
           </button>
         </div>
       </nav>
@@ -376,6 +402,19 @@ function MainAppContent() {
       <LoginModal
         isOpen={isLoginOpen}
         onClose={() => setIsLoginOpen(false)}
+      />
+
+      {/* Intelligent AI Assistant Chatbot (Floating & Modal) — Siempre visible, incluso autenticado */}
+      <AssistantChatbot
+        currentModule={activeModule}
+        onNavigateModule={(mod) => setActiveModule(mod as ActiveModule)}
+        zones={TRUJILLO_ZONES}
+        selectedZone={selectedZone}
+        onSelectZone={(z) => setSelectedZone(z)}
+        onExport={handleQuickExport}
+        activeScenario={activeScenario}
+        isOpenControlled={isChatbotOpen}
+        onToggleControlled={setIsChatbotOpen}
       />
     </div>
   );
