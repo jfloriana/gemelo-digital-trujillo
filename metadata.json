@@ -1,0 +1,6 @@
+{
+  "name": "Gemelo Digital Microescala - Calidad del Aire y NbS Trujillo",
+  "description": "Plataforma de Gemelo Digital a microescala y simulador de Soluciones basadas en la Naturaleza (NbS) para la mitigación de contaminantes atmosféricos e isla de calor urbano en Trujillo, La Libertad.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
