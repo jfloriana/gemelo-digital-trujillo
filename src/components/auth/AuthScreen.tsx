@@ -152,13 +152,13 @@ export const AuthScreen: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 flex flex-col justify-between selection:bg-emerald-500 selection:text-white relative overflow-hidden">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 flex flex-col justify-between selection:bg-emerald-500 selection:text-white relative">
       {/* Background Graphic Accents */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-200/40 rounded-full blur-3xl pointer-events-none -translate-y-1/2" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-teal-200/40 rounded-full blur-3xl pointer-events-none translate-y-1/2" />
 
-      {/* Top Navbar */}
-      <header className="bg-white dark:bg-slate-900/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-700 px-6 py-3.5 relative z-10">
+      {/* Top Navbar — z-40 para que el selector idioma quede por encima del card */}
+      <header className="bg-white dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-700 px-6 py-3.5 relative z-40">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center shadow-sm">
@@ -197,7 +197,7 @@ export const AuthScreen: React.FC = () => {
                 <Globe className="w-3.5 h-3.5 text-emerald-600" /><span>{LANG_LABELS[lang]}</span><ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${langOpen?'rotate-180':''}`} />
               </button>
               {langOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50">
+                <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-[60]">
                   {(Object.keys(LANG_LABELS) as Lang[]).map(l=>(
                     <button key={l} onClick={()=>{setLang(l); setLangOpen(false);}} className={`w-full text-left px-3.5 py-2 text-xs font-medium flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 ${lang===l?'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300':'text-slate-700 dark:text-slate-200'}`}>
                       <span>{l==='es'?'Español':l==='en'?'English':l==='zh'?'中文':l==='de'?'Deutsch':l==='fr'?'Français':'Português'}</span><span className="text-[11px] font-mono text-slate-400">{LANG_LABELS[l]}</span>
