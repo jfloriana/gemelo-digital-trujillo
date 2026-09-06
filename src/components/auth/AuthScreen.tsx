@@ -324,7 +324,7 @@ export const AuthScreen: React.FC = () => {
                     </label>
                     <div className="relative">
                       <input
-                        type="email"
+                        type="email" autoComplete="email"
                         required
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
@@ -418,7 +418,7 @@ export const AuthScreen: React.FC = () => {
                       type="text"
                       required
                       value={regName}
-                      onChange={(e) => setRegName(e.target.value)}
+                      onChange={(e) = autoComplete="off"> setRegName(e.target.value)}
                       placeholder="Ej. Ing. Juan Pérez"
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
                     />
@@ -427,7 +427,7 @@ export const AuthScreen: React.FC = () => {
                   <div className="space-y-1">
                     <label className="text-xs text-slate-700 font-semibold block">Correo Electrónico</label>
                     <input
-                      type="email"
+                      type="email" autoComplete="email"
                       required
                       value={regEmail}
                       onChange={(e) => setRegEmail(e.target.value)}
@@ -458,7 +458,7 @@ export const AuthScreen: React.FC = () => {
                         type="text"
                         required
                         value={regInstitution}
-                        onChange={(e) => setRegInstitution(e.target.value)}
+                        onChange={(e) = autoComplete="off"> setRegInstitution(e.target.value)}
                         placeholder="UNT / MPT / OEFA"
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs text-slate-800"
                       />

@@ -336,7 +336,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
               max="2.8"
               step="0.1"
               value={canyonHWRatio}
-              onChange={(e) => setCanyonHWRatio(Number(e.target.value))}
+              onChange={(e) = autoComplete="off"> setCanyonHWRatio(Number(e.target.value))}
               className="w-full accent-purple-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
             />
             <p className="text-[10px] text-slate-500">
@@ -368,7 +368,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
                 min="0.15"
                 max="0.75"
                 value={surfaceAlbedo}
-                onChange={(e) => setSurfaceAlbedo(Number(e.target.value))}
+                onChange={(e) = autoComplete="off"> setSurfaceAlbedo(Number(e.target.value))}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 font-mono"
               />
             </div>
@@ -421,7 +421,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
               max={600}
               step={10}
               value={treeCount}
-              onChange={(e) => setTreeCount(Number(e.target.value))}
+              onChange={(e) = autoComplete="off"> setTreeCount(Number(e.target.value))}
               className="w-full accent-emerald-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
             />
             <p className="text-[10px] text-slate-500">
@@ -444,7 +444,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
               max={10000}
               step={100}
               value={greenRoofArea}
-              onChange={(e) => setGreenRoofArea(Number(e.target.value))}
+              onChange={(e) = autoComplete="off"> setGreenRoofArea(Number(e.target.value))}
               className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
             />
             <p className="text-[10px] text-slate-500">
@@ -467,7 +467,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
               max={5000}
               step={50}
               value={greenWallArea}
-              onChange={(e) => setGreenWallArea(Number(e.target.value))}
+              onChange={(e) = autoComplete="off"> setGreenWallArea(Number(e.target.value))}
               className="w-full accent-emerald-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
             />
             <p className="text-[10px] text-slate-500">
@@ -490,7 +490,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
               max={15000}
               step={200}
               value={permeableArea}
-              onChange={(e) => setPermeableArea(Number(e.target.value))}
+              onChange={(e) = autoComplete="off"> setPermeableArea(Number(e.target.value))}
               className="w-full accent-sky-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
             />
           </div>
