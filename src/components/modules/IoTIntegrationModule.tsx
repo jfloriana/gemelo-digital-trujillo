@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SensorNode, UrbanZone, IoTTelemetryPayload, IngestionLog, QaQcValidation } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../context/I18nContext';
 import { 
   Radio, 
   Cpu, 
@@ -41,6 +42,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
   onExportReports
 }) => {
   const { user, permissions } = useAuth();
+  const { t } = useI18n();
 
   // Selected sensor for inspection/injection
   const [selectedSensorId, setSelectedSensorId] = useState<string>(sensors[0]?.id || 'sensor-trj-01');
@@ -331,18 +333,18 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="px-3 py-1 bg-sky-50 text-sky-700 border border-sky-200/60 text-xs font-semibold rounded-lg uppercase tracking-wider">
-                Módulo de Integración IoT & Telemetría en Tiempo Real
+                {t('iot.badge')}
               </span>
               <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-mono font-semibold rounded-md flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                Broker MQTT Activo
+                {t('iot.activeBadge')}
               </span>
             </div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
-              Adquisición, Procesamiento QA/QC y Calibración de Sensores de Bajo Costo
+              {t('iot.title')}
             </h2>
             <p className="text-slate-600 dark:text-slate-400 text-sm max-w-3xl mt-1">
-              Recepción continua de telemetría ambiental (PM2.5, PM10, O3, NO2, Temperatura y Humedad) vía <strong>MQTT Broker</strong> y <strong>REST API</strong> con algoritmo de calibración en 2 etapas (Zhivkov et al., 2025 / Cowell et al., 2025).
+              {t('iot.desc')}
             </p>
           </div>
 
@@ -350,18 +352,18 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
             <button
               onClick={() => onExportReports('csv')}
               className="px-3.5 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
-              title="Descargar dataset crudo y calibrado en CSV"
+              title={t('iot.btnCsvTitle')}
             >
               <FileCode className="w-3.5 h-3.5 text-amber-600" />
-              Dataset CSV
+              {t('iot.btnCsv')}
             </button>
             <button
               onClick={() => onExportReports('docx')}
               className="px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm shadow-sky-900/10 cursor-pointer"
-              title="Descargar especificación técnica en Word"
+              title={t('iot.btnDocxTitle')}
             >
               <FileText className="w-3.5 h-3.5" />
-              Protocolo Word (.docx)
+              {t('iot.btnDocx')}
             </button>
           </div>
         </div>
@@ -374,7 +376,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Radio className="w-4 h-4 text-sky-600" />
-              Protocolo de Comunicación IoT
+              {t('iot.protocolTitle')}
             </h3>
             <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg text-[10px] font-semibold">
               <button
@@ -399,7 +401,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
           {activeProtocol === 'MQTT' ? (
             <div className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="text-slate-600 dark:text-slate-400 font-medium block">Broker MQTT (TLS 1.3 Seguro):</label>
+                <label className="text-slate-600 dark:text-slate-400 font-medium block">{t('iot.brokerLabel')}</label>
                 <div className="flex items-center gap-1.5">
                   <input
                     type="text"
@@ -410,7 +412,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
                   <button
                     onClick={() => copyToClipboard(mqttBroker, 'broker')}
                     className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
-                    title="Copiar URL"
+                    title={t('iot.copyBroker')}
                   >
                     <Copy className="w-3.5 h-3.5" />
                   </button>
@@ -418,7 +420,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
               </div>
 
               <div className="space-y-1">
-                <label className="text-slate-600 dark:text-slate-400 font-medium block">Tópico de Telemetría (Topic):</label>
+                <label className="text-slate-600 dark:text-slate-400 font-medium block">{t('iot.topicLabel')}</label>
                 <div className="flex items-center gap-1.5">
                   <input
                     type="text"
@@ -429,7 +431,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
                   <button
                     onClick={() => copyToClipboard(mqttTopic, 'topic')}
                     className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
-                    title="Copiar Topic"
+                    title={t('iot.copyTopic')}
                   >
                     <Copy className="w-3.5 h-3.5" />
                   </button>
@@ -438,19 +440,19 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
 
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <div className="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Nivel QoS</span>
-                  <strong className="text-xs text-slate-800 dark:text-slate-100 font-semibold font-mono">QoS 1 (At least once)</strong>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block">{t('iot.qosLabel')}</span>
+                  <strong className="text-xs text-slate-800 dark:text-slate-100 font-semibold font-mono">{t('iot.qosVal')}</strong>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Autenticación</span>
-                  <strong className="text-xs text-emerald-700 font-semibold font-mono">X.509 + Token</strong>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block">{t('iot.authLabel')}</span>
+                  <strong className="text-xs text-emerald-700 font-semibold font-mono">{t('iot.authVal')}</strong>
                 </div>
               </div>
             </div>
           ) : (
             <div className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="text-slate-600 dark:text-slate-400 font-medium block">Endpoint Ingestión HTTP POST:</label>
+                <label className="text-slate-600 dark:text-slate-400 font-medium block">{t('iot.endpointLabel')}</label>
                 <div className="flex items-center gap-1.5">
                   <input
                     type="text"
@@ -468,7 +470,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
               </div>
 
               <div className="space-y-1">
-                <label className="text-slate-600 dark:text-slate-400 font-medium block">Bearer API Key Token:</label>
+                <label className="text-slate-600 dark:text-slate-400 font-medium block">{t('iot.bearerLabel')}</label>
                 <input
                   type="password"
                   readOnly
@@ -478,7 +480,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
               </div>
 
               <div className="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] text-slate-600 dark:text-slate-400">
-                <span>Header requerido: <code>Authorization: Bearer {apiKey.slice(0, 12)}...</code></span>
+                <span>{t('iot.headerRequired')} <code>Authorization: Bearer {apiKey.slice(0, 12)}...</code></span>
               </div>
             </div>
           )}
@@ -486,20 +488,20 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
           {copiedText && (
             <div className="text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1.5">
               <Check className="w-3.5 h-3.5" />
-              <span>Copiado al portapapeles con éxito</span>
+              <span>{t('iot.copied')}</span>
             </div>
           )}
 
           {/* Auto-Streaming Toggle */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Simulación Flujo Continuo:</span>
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('iot.streamingLabel')}</span>
             <button
               onClick={() => setIsAutoStreaming(!isAutoStreaming)}
               className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
                 isAutoStreaming ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600'
               }`}
             >
-              {isAutoStreaming ? 'Streaming Activo (12s)' : 'Pausado'}
+              {isAutoStreaming ? t('iot.streamingActive') : t('iot.streamingPaused')}
             </button>
           </div>
         </div>
@@ -509,10 +511,10 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              Pipeline QA/QC y Algoritmo de Calibración
+              {t('iot.pipelineTitle')}
             </h3>
             <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
-              Zhivkov / Cowell 2025
+              {t('iot.pipelineBadge')}
             </span>
           </div>
 
@@ -520,40 +522,40 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
             {/* Step 1 */}
             <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-1">
               <div className="flex items-center justify-between text-slate-800 dark:text-slate-100 font-semibold">
-                <span>1. Corrección Crecimiento Higroscópico</span>
-                <span className="text-[10px] text-sky-700 font-mono">Etapa 1</span>
+                <span>{t('iot.step1Title')}</span>
+                <span className="text-[10px] text-sky-700 font-mono">{t('iot.stage1')}</span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-mono bg-white dark:bg-slate-900 p-1.5 rounded-lg border border-slate-200 dark:border-slate-700/60">
-                PM_hygro = PM_raw / [ 1 + 0.25 * (RH² / (1 - RH)) ]
+                {t('iot.step1Formula')}
               </p>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
-                Elimina sobrestimación por humedad costera de Trujillo (garúa matutina).
+                {t('iot.step1Desc')}
               </span>
             </div>
 
             {/* Step 2 */}
             <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-1">
               <div className="flex items-center justify-between text-slate-800 dark:text-slate-100 font-semibold">
-                <span>2. Compensación Térmica y Deriva</span>
-                <span className="text-[10px] text-emerald-700 font-mono">Etapa 2</span>
+                <span>{t('iot.step2Title')}</span>
+                <span className="text-[10px] text-emerald-700 font-mono">{t('iot.stage2')}</span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-mono bg-white dark:bg-slate-900 p-1.5 rounded-lg border border-slate-200 dark:border-slate-700/60">
-                PM_calib = PM_hygro - 0.18 * (T_actual - 24.0°C)
+                {t('iot.step2Formula')}
               </p>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
-                Compensa calor acumulado y auto-calentamiento interno del sensor (-0.6°C).
+                {t('iot.step2Desc')}
               </span>
             </div>
 
             {/* Validation Metrics */}
             <div className="grid grid-cols-2 gap-2 pt-1 text-center">
               <div className="bg-emerald-50 p-2 rounded-xl border border-emerald-200">
-                <span className="text-[10px] text-emerald-800 block font-medium">R² Crudo vs SENAMHI</span>
-                <strong className="text-sm font-bold text-rose-700 font-mono">R² = 0.29 - 0.35</strong>
+                <span className="text-[10px] text-emerald-800 block font-medium">{t('iot.r2Raw')}</span>
+                <strong className="text-sm font-bold text-rose-700 font-mono">{t('iot.r2RawVal')}</strong>
               </div>
               <div className="bg-emerald-50 p-2 rounded-xl border border-emerald-200">
-                <span className="text-[10px] text-emerald-800 block font-medium">R² Calibrado 2-Etapas</span>
-                <strong className="text-sm font-bold text-emerald-800 font-mono">R² = 0.94 - 0.96</strong>
+                <span className="text-[10px] text-emerald-800 block font-medium">{t('iot.r2Cal')}</span>
+                <strong className="text-sm font-bold text-emerald-800 font-mono">{t('iot.r2CalVal')}</strong>
               </div>
             </div>
           </div>
@@ -564,15 +566,15 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Send className="w-4 h-4 text-emerald-600" />
-              Inyector de Paquetes en Vivo
+              {t('iot.injectorTitle')}
             </h3>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400">Prueba Manual API/MQTT</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">{t('iot.injectorSub')}</span>
           </div>
 
           <div className="space-y-3">
             {/* Target sensor dropdown */}
             <div className="space-y-1">
-              <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Nodo Sensor Destino:</label>
+              <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('iot.targetNode')}</label>
               <select
                 value={selectedSensorId}
                 onChange={(e) => setSelectedSensorId(e.target.value)}
@@ -589,7 +591,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
             {/* Slider PM2.5 */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-slate-600 dark:text-slate-400 font-medium">PM2.5 Crudo:</span>
+                <span className="text-slate-600 dark:text-slate-400 font-medium">{t('iot.pmRaw')}</span>
                 <strong className="font-mono text-slate-900 dark:text-white">{injectPM25} µg/m³</strong>
               </div>
               <input
@@ -606,7 +608,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
             {/* Slider Temperatura */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-slate-600 dark:text-slate-400 font-medium">Temperatura Cruda:</span>
+                <span className="text-slate-600 dark:text-slate-400 font-medium">{t('iot.tempRaw')}</span>
                 <strong className="font-mono text-slate-900 dark:text-white">{injectTemp} °C</strong>
               </div>
               <input
@@ -623,7 +625,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
             {/* Slider Humedad Relativa */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-slate-600 dark:text-slate-400 font-medium">Humedad Relativa (HR):</span>
+                <span className="text-slate-600 dark:text-slate-400 font-medium">{t('iot.humLabel')}</span>
                 <strong className="font-mono text-slate-900 dark:text-white">{injectHumidity} %</strong>
               </div>
               <input
@@ -640,7 +642,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
             {/* Slider Ozono O3 */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-slate-600 dark:text-slate-400 font-medium">Ozono Troposférico O3:</span>
+                <span className="text-slate-600 dark:text-slate-400 font-medium">{t('iot.o3Label')}</span>
                 <strong className="font-mono text-slate-900 dark:text-white">{injectO3} ppb</strong>
               </div>
               <input
@@ -661,7 +663,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
               className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm shadow-emerald-900/10 cursor-pointer"
             >
               <Send className="w-4 h-4" />
-              {!permissions.canInjectIoT ? 'Requiere Rol Investigador/Admin' : (lastInjectSuccess ? '¡Paquete Procesado y Calibrado!' : 'Publicar Paquete IoT')}
+              {!permissions.canInjectIoT ? t('iot.btnNoPerm') : (lastInjectSuccess ? t('iot.btnPublished') : t('iot.btnPublish'))}
             </button>
           </div>
         </div>
@@ -673,15 +675,15 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Database className="w-5 h-5 text-sky-600" />
-              Flota de Nodos Sensores IoT Desplegados en Trujillo
+              {t('iot.fleetTitle')}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Estado de telemetría en tiempo real, calibración 2-etapas e impacto en el gemelo digital.
+              {t('iot.fleetDesc')}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl">
-              6/6 Nodos En Línea
+              {t('iot.onlineBadge')}
             </span>
           </div>
         </div>
@@ -690,15 +692,15 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
           <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
             <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-mono border-b border-slate-200/80 dark:border-slate-700">
               <tr>
-                <th className="py-2.5 px-3">Nodo Sensor</th>
-                <th className="py-2.5 px-3">Zona Trujillo</th>
-                <th className="py-2.5 px-3">Hardware / Sensores</th>
-                <th className="py-2.5 px-3">Temp Calibrada</th>
-                <th className="py-2.5 px-3">PM2.5 Calibrado</th>
-                <th className="py-2.5 px-3">O3 / NO2</th>
-                <th className="py-2.5 px-3">Señal / Batería</th>
-                <th className="py-2.5 px-3">Calibración Zhivkov</th>
-                <th className="py-2.5 px-3">Acción</th>
+                <th className="py-2.5 px-3">{t('iot.col.sensor')}</th>
+                <th className="py-2.5 px-3">{t('iot.col.zone')}</th>
+                <th className="py-2.5 px-3">{t('iot.col.hardware')}</th>
+                <th className="py-2.5 px-3">{t('iot.col.temp')}</th>
+                <th className="py-2.5 px-3">{t('iot.col.pm')}</th>
+                <th className="py-2.5 px-3">{t('iot.col.o3no2')}</th>
+                <th className="py-2.5 px-3">{t('iot.col.signal')}</th>
+                <th className="py-2.5 px-3">{t('iot.col.calib')}</th>
+                <th className="py-2.5 px-3">{t('iot.col.action')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -748,7 +750,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
                             : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                         }`}
                       >
-                        {isSelected ? 'Seleccionado' : 'Inspeccionar'}
+                        {isSelected ? t('iot.btnSelected') : t('iot.btnInspect')}
                       </button>
                     </td>
                   </tr>
@@ -765,11 +767,11 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
           <div className="flex items-center gap-2">
             <Terminal className="w-5 h-5 text-emerald-600" />
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              Registro de Ingestión en Tiempo Real (Telemetry Logs)
+              {t('iot.logTitle')}
             </h3>
           </div>
           <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
-            {logs.length} paquetes auditados
+            {t('iot.logCount').replace('{count}', String(logs.length))}
           </span>
         </div>
 
@@ -806,7 +808,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
                 </span>
 
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  QA/QC OK
+                  {t('iot.qaqcOk')}
                 </span>
               </div>
             </div>

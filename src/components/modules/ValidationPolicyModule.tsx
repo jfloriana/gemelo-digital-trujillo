@@ -33,23 +33,23 @@ export const ValidationPolicyModule: React.FC<ValidationPolicyModuleProps> = ({
   const policyRecommendations = [
     {
       id: 'rec-01',
-      title: 'Ordenanza Municipal de Techos Verdes y Factor Bioclimático en Trujillo Cercado',
-      description: 'Establecer incentivos tributarios en el arbitrio municipal para inmuebles comerciales que implementen cubiertas vegetales extensivas (>50 m²).',
-      impact: 'Alto',
+      title: t('validation.rec1.title'),
+      description: t('validation.rec1.desc'),
+      impact: t('validation.rec1.impact'),
       responsible: 'Municipalidad Provincial de Trujillo (GDU)'
     },
     {
       id: 'rec-02',
-      title: 'Priorización del Corredor Arbolado en Anillo Vial Av. España y Av. América',
-      description: 'Sustitución de bermas asfaltadas por arbolado continuo de alta copa (Molle costeño, Huarango) para atrapar el 28% de PM2.5 diésel.',
-      impact: 'Muy Alto',
+      title: t('validation.rec2.title'),
+      description: t('validation.rec2.desc'),
+      impact: t('validation.rec2.impact'),
       responsible: 'SEGAT / MPT'
     },
     {
       id: 'rec-03',
-      title: 'Red de Alerta Temprana de Inversión Térmica y Picos de Calor a Microescala',
-      description: 'Integrar la telemetría del Gemelo Digital con avisos en tiempo real para centros de salud y colegios en distritos de alto riesgo (El Porvenir, Mayorista).',
-      impact: 'Crítico',
+      title: t('validation.rec3.title'),
+      description: t('validation.rec3.desc'),
+      impact: t('validation.rec3.impact'),
       responsible: 'GERESA La Libertad / OEFA'
     }
   ];

@@ -56,7 +56,7 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
     const trainLoss = Number((baseLoss * Math.exp(-epoch / 8) + 0.015 + Math.random() * 0.005).toFixed(4));
     const valLoss = Number((trainLoss * 1.12 + Math.random() * 0.008).toFixed(4));
     return {
-      epoch: `Época ${epoch}`,
+      epoch: `${t('ai.epochs').split(':')[0] || 'Epoch'} ${epoch}`,
       trainLoss,
       valLoss
     };

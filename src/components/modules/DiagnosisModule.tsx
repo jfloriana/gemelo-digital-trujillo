@@ -97,7 +97,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-xs font-semibold rounded-lg uppercase tracking-wider">
-                Objetivo Específico 1 (OE1)
+                {t('diagnosis.badge')}
               </span>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
                 {t('oe1.title')}
@@ -113,7 +113,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
                   onClick={() => { setEditingZone(null); setZoneModalOpen(true); }}
                   className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Registrar Zona
+                  <Plus className="w-3.5 h-3.5" /> {t('common.registerZone')}
                 </button>
               )}
               <button
@@ -121,14 +121,14 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
                 className="px-3.5 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 shadow-xs flex items-center gap-1.5 transition-all"
               >
                 <Download className="w-3.5 h-3.5 text-emerald-600" />
-                Reporte OE1 (PDF)
+                {t('diagnosis.btnReport')}
               </button>
               <button
                 onClick={() => onExportReports('xlsx')}
                 className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm shadow-emerald-900/10"
               >
                 <Download className="w-3.5 h-3.5" />
-                Datos Brutos (Excel)
+                {t('diagnosis.btnExcel')}
               </button>
             </div>
           </div>
@@ -137,17 +137,17 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
 
       {/* Filtrar por departamento */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Departamento:</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('diagnosis.filterDept')}</span>
         <select value={deptFilter} onChange={e=>setDeptFilter(e.target.value)} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-semibold">
           {departments.map(d=> <option key={d} value={d}>{d}</option>)}
         </select>
-        <span className="text-xs text-slate-400">{filteredZones.length} zonas {deptFilter!=='Todos' ? `en ${deptFilter}` : 'en Perú'}</span>
-        {deptFilter!=='Todos' && <button onClick={()=>setDeptFilter('Todos')} className="text-xs text-emerald-600 hover:underline">Ver todas</button>}
+        <span className="text-xs text-slate-400">{t('diagnosis.filterCount').replace('{count}', String(filteredZones.length))} {deptFilter!=='Todos' ? t('diagnosis.noZonesSuffixIn').replace('{dept}', deptFilter) : t('diagnosis.inPeru')}</span>
+        {deptFilter!=='Todos' && <button onClick={()=>setDeptFilter('Todos')} className="text-xs text-emerald-600 hover:underline">{t('diagnosis.viewAll')}</button>}
       </div>
 
       {/* Zone Selector Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {filteredZones.length === 0 && <div className="col-span-6 bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">Sin zonas {deptFilter!=='Todos' ? `en ${deptFilter}` : ''} — usa “Registrar Zona” para crear la primera{deptFilter==='Todos' ? '' : ` en ${deptFilter}`}.</div>}
+        {filteredZones.length === 0 && <div className="col-span-6 bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">{t('diagnosis.noZones')} {deptFilter!=='Todos' ? t('diagnosis.noZonesSuffixIn').replace('{dept}', deptFilter) : ''} — usa "{t('common.registerZone')}" para crear la primera{deptFilter==='Todos' ? '' : t('diagnosis.noZonesSuffixIn').replace('{dept}', deptFilter)}.</div>}
         {filteredZones.map((zone) => {
           const isSelected = zone.id === selectedZone.id;
           return (
@@ -187,7 +187,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
               {permissions.canModifyZones && (
                 <div className="absolute -top-1 -right-1 flex gap-1">
                   <button onClick={(e)=>{e.stopPropagation(); setEditingZone(zone); setZoneModalOpen(true);}} className="w-6 h-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg grid place-items-center hover:bg-slate-50 dark:bg-slate-800 shadow-xs"><Pencil className="w-3 h-3 text-slate-600 dark:text-slate-400" /></button>
-                  <button onClick={async (e)=>{e.stopPropagation(); if(confirm(`¿Eliminar ${zone.name}?`)){ await supabase.from('urban_zones').delete().eq('id', zone.id); }}} className="w-6 h-6 bg-white dark:bg-slate-900 border border-rose-200 rounded-lg grid place-items-center hover:bg-rose-50 shadow-xs"><Trash2 className="w-3 h-3 text-rose-600" /></button>
+                  <button onClick={async (e)=>{e.stopPropagation(); if(confirm(t('diagnosis.deleteConfirm').replace('{name}', zone.name))){ await supabase.from('urban_zones').delete().eq('id', zone.id); }}} className="w-6 h-6 bg-white dark:bg-slate-900 border border-rose-200 rounded-lg grid place-items-center hover:bg-rose-50 shadow-xs"><Trash2 className="w-3 h-3 text-rose-600" /></button>
                 </div>
               )}
             </div>
@@ -200,19 +200,19 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
         <div className="md:col-span-2 space-y-1">
           <div className="flex items-center gap-2 text-xs text-emerald-700 font-semibold">
             <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-            Zona Seleccionada: {selectedZone.name}
+            {t('diagnosis.selectedZone')} {selectedZone.name}
           </div>
           <p className="text-slate-600 dark:text-slate-400 text-sm">
             {selectedZone.description}
           </p>
           <div className="pt-2 flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-            <span>Población Total: <strong className="text-slate-800 dark:text-slate-100">{selectedZone.targetPopulation.toLocaleString()} hab.</strong></span>
-            <span>Población Vulnerable: <strong className="text-amber-700 font-semibold">{selectedZone.vulnerablePopulation.toLocaleString()}</strong></span>
+            <span>{t('diagnosis.totalPop')} <strong className="text-slate-800 dark:text-slate-100">{selectedZone.targetPopulation.toLocaleString()} {t('common.inhabitants')}</strong></span>
+            <span>{t('diagnosis.vulnPop')} <strong className="text-amber-700 font-semibold">{selectedZone.vulnerablePopulation.toLocaleString()} {t('common.inhabitants')}</strong></span>
           </div>
         </div>
 
         <div className="bg-slate-50 dark:bg-slate-800 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-1">
-          <span className="text-xs text-slate-500 dark:text-slate-400 block font-medium">Fuente Principal de Emisión</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 block font-medium">{t('diagnosis.sourceLabel')}</span>
           <p className="text-xs text-slate-800 dark:text-slate-100 font-semibold">
             {selectedZone.primaryPollutionSource}
           </p>
@@ -220,16 +220,16 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
 
         <div className="bg-slate-50 dark:bg-slate-800 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-1.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500 dark:text-slate-400">Suelo Sellado (Asfalto/Concreto):</span>
+            <span className="text-slate-500 dark:text-slate-400">{t('diagnosis.builtDensity')}</span>
             <span className="font-bold text-red-600">{selectedZone.builtDensity}%</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500 dark:text-slate-400">Cobertura Arbórea Actual:</span>
+            <span className="text-slate-500 dark:text-slate-400">{t('diagnosis.treeCover')}</span>
             <span className="font-bold text-emerald-600">{selectedZone.treeCover}%</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500 dark:text-slate-400">Nodos IoT Desplegados:</span>
-            <span className="font-bold text-sky-700">{zoneSensors.length} sensores</span>
+            <span className="text-slate-500 dark:text-slate-400">{t('diagnosis.iotNodes')}</span>
+            <span className="font-bold text-sky-700">{zoneSensors.length} {t('diagnosis.sensorsSuffix')}</span>
           </div>
         </div>
       </div>
@@ -245,7 +245,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
-          Material Particulado (PM2.5 / PM10)
+          {t('diagnosis.tab.pm')}
         </button>
 
         <button
@@ -257,7 +257,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
           }`}
         >
           <Thermometer className="w-3.5 h-3.5" />
-          Temperatura, UHI y Confort (PET/TCS)
+          {t('diagnosis.tab.uhi')}
         </button>
 
         <button
@@ -269,7 +269,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
           }`}
         >
           <Wind className="w-3.5 h-3.5" />
-          Gases Precursores (NO2, O3, CO)
+          {t('diagnosis.tab.gases')}
         </button>
 
         <button
@@ -281,7 +281,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
           }`}
         >
           <Cpu className="w-3.5 h-3.5" />
-          Calibración 2-Etapas (Zhivkov et al.)
+          {t('diagnosis.tab.calibration')}
         </button>
       </div>
 
@@ -293,15 +293,15 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
             <div>
               <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Activity className="w-4 h-4 text-emerald-600" />
-                Serie Temporal de Telemetría 24 Horas: {selectedSensor.name}
+                {t('diagnosis.seriesTitle')} {selectedSensor.name}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Frecuencia horaria | Sensor: {selectedSensor.sensorType} ({selectedSensor.calibrationStatus})
+                {t('diagnosis.seriesSub').replace('{type}', selectedSensor.sensorType).replace('{status}', selectedSensor.calibrationStatus)}
               </p>
             </div>
 
             <div className="text-right">
-              <span className="text-xs text-slate-500 dark:text-slate-400 block">Estado del Nodo</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 block">{t('diagnosis.nodeStatus')}</span>
               <span className="inline-flex items-center gap-1.5 text-xs text-emerald-700 font-semibold">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 {selectedSensor.status.toUpperCase()}
@@ -390,7 +390,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
           <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
             <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-1.5">
               <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
-              Evidencia Microescalar: Variabilidad de PM2.5 y Temperatura en distancias cortas (0 - 100m)
+              {t('diagnosis.evidenceTitle')}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
               {streetDistanceVariation.map((item, idx) => (
@@ -415,8 +415,8 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
         <div className="space-y-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-5 space-y-4 shadow-sm">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center justify-between">
-              <span>Nodos IoT en {selectedZone.district}</span>
-              <span className="text-xs text-emerald-700 font-mono font-bold">({zoneSensors.length} activos)</span>
+              <span>{t('diagnosis.iotIn')} {selectedZone.district}</span>
+              <span className="text-xs text-emerald-700 font-mono font-bold">({zoneSensors.length} {t('diagnosis.activeCount')})</span>
             </h3>
 
             <div className="space-y-2">
@@ -449,14 +449,14 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
           <div className="bg-emerald-50/50 border border-emerald-200/80 rounded-2xl p-5 space-y-3 shadow-xs">
             <div className="flex items-center gap-2 text-emerald-800 font-bold text-xs">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              Método de Calibración en 2 Etapas
+              {t('diagnosis.calibTitle')}
             </div>
             <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-              Basado en <strong>Zhivkov et al. (2025)</strong>, los sensores ópticos de bajo costo (PMS5003 / Sensirion SPS30) se calibran en:
+              {t('diagnosis.calibDesc')}
             </p>
             <ol className="text-xs text-slate-700 dark:text-slate-300 space-y-1.5 list-decimal pl-4">
-              <li><strong>Corrección higroscópica:</strong> Ajuste por alta humedad relativa costera de Trujillo (70-85% HR).</li>
-              <li><strong>Regresión Polinomial Multivariable:</strong> Sube el R² de <strong>{selectedSensor.r2ScoreRaw}</strong> a <strong>{selectedSensor.r2ScoreCalibrated}</strong> contra estación de referencia oficial.</li>
+              <li><strong>{t('diagnosis.calibStep1')}</strong> {t('diagnosis.calibStep1Desc')}</li>
+              <li><strong>{t('diagnosis.calibStep2')}</strong> {t('diagnosis.calibStep2Desc').replace('{raw}', String(selectedSensor.r2ScoreRaw)).replace('{cal}', String(selectedSensor.r2ScoreCalibrated))}</li>
             </ol>
             <div className="bg-white dark:bg-slate-900 p-2.5 rounded-xl text-[11px] text-emerald-900 font-mono border border-emerald-200 shadow-xs">
               f(PM) = α·PM_raw + β·(HR/(1-HR)) + γ·Temp + δ

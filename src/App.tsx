@@ -20,12 +20,15 @@ const ValidationPolicyModule = React.lazy(() => import('./components/modules/Val
 const ReportsModule = React.lazy(() => import('./components/modules/ReportsModule').then(m => ({ default: m.ReportsModule })));
 
 // Fallback para lazy
-const ModuleFallback: React.FC = () => (
-  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-10 text-center text-sm text-slate-500 dark:text-slate-400">
-    <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-    Cargando módulo…
-  </div>
-);
+const ModuleFallback: React.FC = () => {
+  const { t } = useI18n();
+  return (
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-10 text-center text-sm text-slate-500 dark:text-slate-400">
+      <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+      {t('app.loadingModule')}
+    </div>
+  );
+};
 import { AssistantChatbot } from './components/chatbot/AssistantChatbot';
 import { useSupabaseData } from './hooks/useSupabaseData';
 import { UrbanZone, SimulationScenario } from './types';
@@ -133,8 +136,8 @@ function MainAppContent() {
 
       {isDemo && (
         <div className="bg-amber-50 dark:bg-amber-950 border-b border-amber-200 dark:border-amber-800 px-4 lg:px-8 py-2.5 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between">
-          <span>Modo demo — acceso limitado (solo visualización). Verifica tu correo tras registrarte para acceso completo (simulación, inyección IoT, zonas).</span>
-          <button onClick={() => { localStorage.removeItem('trujillo_is_demo'); location.reload(); }} className="font-bold underline">Salir demo</button>
+          <span>{t('app.demoBanner')}</span>
+          <button onClick={() => { localStorage.removeItem('trujillo_is_demo'); location.reload(); }} className="font-bold underline">{t('app.exitDemo')}</button>
         </div>
       )}
 
@@ -310,7 +313,7 @@ function MainAppContent() {
                   <Cpu className="w-4 h-4 text-purple-600" />
                 </div>
                 <div className="text-lg font-bold text-purple-700 dark:text-purple-400 font-mono">1D-CNN (R² = 0.9925)</div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">Inferencia ultrarrápida 4.8 ms</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('app.modelSub')}</p>
               </div>
 
               <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4.5 rounded-2xl shadow-sm dark:shadow-none space-y-1.5">

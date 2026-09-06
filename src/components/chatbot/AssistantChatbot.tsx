@@ -719,35 +719,35 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
           <div className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200/80 dark:border-slate-700 px-4 py-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0 text-[11px]">
             <span className="text-slate-400 font-semibold flex items-center gap-1 shrink-0">
               <Sliders className="w-3 h-3 text-slate-400" />
-              Guías:
+              {t('assistant.guides')}
             </span>
             <button
               onClick={() => startGuidedFlow('tour')}
               className="px-2.5 py-1 bg-white dark:bg-slate-900 hover:bg-emerald-50 text-slate-700 dark:text-slate-300 hover:text-emerald-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 rounded-lg font-medium whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
             >
               <Compass className="w-3 h-3 text-emerald-600" />
-              Tour Tesis
+              {t('assistant.tour')}
             </button>
             <button
               onClick={() => startGuidedFlow('nbs_guide')}
               className="px-2.5 py-1 bg-white dark:bg-slate-900 hover:bg-emerald-50 text-slate-700 dark:text-slate-300 hover:text-emerald-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 rounded-lg font-medium whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
             >
               <Trees className="w-3 h-3 text-teal-600" />
-              Simulador NbS
+              {t('assistant.nbsSim')}
             </button>
             <button
               onClick={() => startGuidedFlow('iot_guide')}
               className="px-2.5 py-1 bg-white dark:bg-slate-900 hover:bg-emerald-50 text-slate-700 dark:text-slate-300 hover:text-emerald-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 rounded-lg font-medium whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
             >
               <Boxes className="w-3 h-3 text-purple-600" />
-              Calibración IoT
+              {t('assistant.iotCalib')}
             </button>
             <button
               onClick={() => startGuidedFlow('regulations')}
               className="px-2.5 py-1 bg-white dark:bg-slate-900 hover:bg-emerald-50 text-slate-700 dark:text-slate-300 hover:text-emerald-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 rounded-lg font-medium whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
             >
               <ShieldCheck className="w-3 h-3 text-sky-600" />
-              ECA-Aire MINAM
+              {t('assistant.eca')}
             </button>
           </div>
 

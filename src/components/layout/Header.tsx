@@ -120,7 +120,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={() => onQuickExport('pdf')}
             className="hidden sm:flex px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 shadow-xs items-center gap-1.5 transition-all cursor-pointer"
-            title="Exportar reporte rápido en PDF"
+            title={t('header.quickPdfTitle')}
           >
             <Download className="w-3.5 h-3.5 text-emerald-600" />
             <span>{t('header.reportPdf')}</span>
@@ -129,7 +129,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={() => onQuickExport('xlsx')}
             className="hidden sm:flex px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 shadow-xs items-center gap-1.5 transition-all cursor-pointer"
-            title="Exportar libro de datos en Excel"
+            title={t('header.quickExcelTitle')}
           >
             <Download className="w-3.5 h-3.5 text-emerald-600" />
             <span>{t('header.bookExcel')}</span>
