@@ -220,22 +220,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const sendVerificationViaBrevo = async (email: string, name: string) => {
     const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/verify` : undefined;
-    // Brevo puro: token propio en email_verifications (24h) + BCC a Joel
-    try {
-      const r = await fetch('/api/send-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name, redirect_to: redirectTo }),
-      });
-      if (r.ok) return;
+    // Brevo 100% — sin Supabase, token propio + BCC a Joel
+    const r = await fetch('/api/send-verification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, name, redirect_to: redirectTo }),
+    });
+    if (!r.ok) {
       const txt = await r.text().then(t=>t.slice(0,800));
-      console.warn('Vercel /api/send-verification fallo', txt);
+      console.warn('Brevo /api/send-verification fallo', txt);
       throw new Error(txt);
-    } catch (e) {
-      console.warn('Brevo verification fallback a Supabase resend', e);
-      try {
-        await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: redirectTo } });
-      } catch {}
     }
   };
 
@@ -265,18 +259,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error.message.includes('already registered')) return { success: false, error: 'Ya existe cuenta con este correo.' };
       return { success: false, error: error.message };
     }
-    // Envía correo profesional vía Brevo Edge Function (no bloquea registro si falla, Supabase ya envió uno por SMTP si está configurado)
-    if (signUpData.user && !signUpData.user.email_confirmed_at) {
-      await sendVerificationViaBrevo(data.email.trim(), data.name.trim());
-    }
+    // Brevo 100% — envía verificación con diseño profesional (no depende de Supabase SMTP)
+    await sendVerificationViaBrevo(data.email.trim(), data.name.trim());
     return { success: true };
   };
 
   const resendVerification = async (email: string): Promise<{ success: boolean; error?: string }> => {
     if (!hasSupabase) return { success: false, error: 'Supabase no configurado' };
     try {
-      const { error } = await supabase.auth.resend({ type: 'signup', email: email.trim(), options: { emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/verify` : undefined } });
-      if (error) throw error;
       await sendVerificationViaBrevo(email.trim(), email.split('@')[0]);
       return { success: true };
     } catch (e) {
