@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from '../../context/I18nContext';
 import { ThesisObjectiveEvaluation, UrbanZone } from '../../types';
 import { 
   CheckCircle2, 
@@ -25,6 +26,7 @@ export const ValidationPolicyModule: React.FC<ValidationPolicyModuleProps> = ({
   zones,
   onExportReports
 }) => {
+  const { t } = useI18n();
   const totalBenefitedPop = zones.reduce((acc, z) => acc + z.targetPopulation, 0);
   const totalVulnerablePop = zones.reduce((acc, z) => acc + z.vulnerablePopulation, 0);
 
@@ -59,14 +61,13 @@ export const ValidationPolicyModule: React.FC<ValidationPolicyModuleProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <span className="px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200/60 text-xs font-semibold rounded-lg uppercase tracking-wider">
-              Objetivo Específico 5 (OE5)
+              {t('validation.badge')}
             </span>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
-              Validación de Hipótesis de Tesis y Recomendaciones de Política Pública
+              {t('validation.title')}
             </h2>
             <p className="text-slate-600 dark:text-slate-400 text-sm max-w-3xl mt-1">
-              Verificación cuantitativa de objetivos, análisis de exposición de población vulnerable y lineamientos 
-              para la toma de decisiones en la <strong>Municipalidad Provincial de Trujillo</strong> y el <strong>Gobierno Regional de La Libertad</strong>.
+              {t('validation.desc')}
             </p>
           </div>
 
@@ -76,14 +77,14 @@ export const ValidationPolicyModule: React.FC<ValidationPolicyModuleProps> = ({
               className="px-3.5 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 shadow-xs flex items-center gap-1.5 transition-all"
             >
               <Download className="w-3.5 h-3.5 text-amber-600" />
-              Tesis Completa (.docx)
+              {t('validation.btnDocx')}
             </button>
             <button
               onClick={() => onExportReports('pdf')}
               className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm shadow-amber-900/10"
             >
               <Download className="w-3.5 h-3.5" />
-              Dictamen Final PDF
+              {t('validation.btnPdf')}
             </button>
           </div>
         </div>
@@ -94,34 +95,34 @@ export const ValidationPolicyModule: React.FC<ValidationPolicyModuleProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-amber-800 font-bold text-sm">
             <Award className="w-5 h-5 text-amber-600" />
-            Dictamen Estadístico de la Hipótesis General de Tesis
+            {t('validation.hypoTitle')}
           </div>
           <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg shadow-xs">
-            HIPÓTESIS CONFIRMADA (p &lt; 0.001)
+            {t('validation.hypoConfirmed')}
           </span>
         </div>
 
         <p className="text-sm text-slate-700 dark:text-slate-300 italic bg-white dark:bg-slate-900/80 dark:bg-slate-900/80 p-4 rounded-xl border border-amber-200/60 leading-relaxed shadow-2xs">
-          "El diseño de un gemelo digital de calidad del aire a microescala, integrado con la simulación de soluciones basadas en la naturaleza urbana, permite estimar de manera significativa la reducción de la exposición de la población a contaminantes atmosféricos y calor extremo en la ciudad de Trujillo, medida a través de la precisión predictiva de los modelos a nivel de calle o edificación y de la magnitud de la reducción proyectada en los escenarios de intervención verde simulados."
+          {t('validation.hypoQuote')}
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
           <div className="bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-amber-200/60 text-xs space-y-1 shadow-2xs">
-            <span className="text-slate-500 dark:text-slate-400 block">Precisión del Gemelo Digital</span>
+            <span className="text-slate-500 dark:text-slate-400 block">{t('validation.precision')}</span>
             <strong className="text-base font-bold font-mono text-emerald-700">R² = 0.9925</strong>
-            <p className="text-[10px] text-slate-400">Modelo 1D-CNN vs Observado a microescala</p>
+            <p className="text-[10px] text-slate-400">{t('validation.precisionSub')}</p>
           </div>
 
           <div className="bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-amber-200/60 text-xs space-y-1 shadow-2xs">
-            <span className="text-slate-500 dark:text-slate-400 block">Magnitud Reducción Térmica</span>
+            <span className="text-slate-500 dark:text-slate-400 block">{t('validation.tempMagnitude')}</span>
             <strong className="text-base font-bold font-mono text-emerald-700">ΔT = -3.8 °C</strong>
-            <p className="text-[10px] text-slate-400">En cañones urbanos con NbS combinadas</p>
+            <p className="text-[10px] text-slate-400">{t('validation.tempMagnitudeSub')}</p>
           </div>
 
           <div className="bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-amber-200/60 text-xs space-y-1 shadow-2xs">
-            <span className="text-slate-500 dark:text-slate-400 block">Reducción de Exposición PM2.5</span>
+            <span className="text-slate-500 dark:text-slate-400 block">{t('validation.pmReduction')}</span>
             <strong className="text-base font-bold font-mono text-emerald-700">ΔPM2.5 = -28.5%</strong>
-            <p className="text-[10px] text-slate-400">Por interceptación foliar de arbolado nativo</p>
+            <p className="text-[10px] text-slate-400">{t('validation.pmReductionSub')}</p>
           </div>
         </div>
       </div>
@@ -130,7 +131,7 @@ export const ValidationPolicyModule: React.FC<ValidationPolicyModuleProps> = ({
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 space-y-4 shadow-sm">
         <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <CheckCircle2 className="w-5 h-5 text-teal-600" />
-          Matriz de Cumplimiento de Objetivos Específicos (OE1 - OE5)
+          {t('validation.matrixTitle')}
         </h3>
 
         <div className="space-y-3">
@@ -154,8 +155,8 @@ export const ValidationPolicyModule: React.FC<ValidationPolicyModuleProps> = ({
                   <div key={idx} className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200/80 dark:border-slate-700 text-xs space-y-1 shadow-2xs">
                     <span className="text-slate-500 dark:text-slate-400 block text-[11px]">{m.name}</span>
                     <div className="flex justify-between text-[11px]">
-                      <span className="text-slate-400">Meta: {m.target}</span>
-                      <span className="font-bold text-teal-700">Logrado: {m.achieved}</span>
+                      <span className="text-slate-400">{t('validation.goal')} {m.target}</span>
+                      <span className="font-bold text-teal-700">{t('validation.achieved')} {m.achieved}</span>
                     </div>
                   </div>
                 ))}
@@ -175,23 +176,23 @@ export const ValidationPolicyModule: React.FC<ValidationPolicyModuleProps> = ({
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-5 space-y-4 shadow-sm">
           <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Users className="w-4 h-4 text-amber-600" />
-            Exposición Humana en Trujillo (Pan et al., 2024 Framework)
+            {t('validation.exposureTitle')}
           </h3>
 
           <div className="space-y-2">
             <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700 flex justify-between items-center text-xs">
-              <span className="text-slate-600 dark:text-slate-400">Población Urbana Total en Zonas de Estudio:</span>
+              <span className="text-slate-600 dark:text-slate-400">{t('validation.totalPop')}</span>
               <strong className="text-slate-900 dark:text-white font-mono">{totalBenefitedPop.toLocaleString()} hab.</strong>
             </div>
 
             <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700 flex justify-between items-center text-xs">
-              <span className="text-slate-600 dark:text-slate-400">Población Vulnerable (Niños y Tercera Edad):</span>
+              <span className="text-slate-600 dark:text-slate-400">{t('validation.vulnerablePop')}</span>
               <strong className="text-amber-700 font-mono">{totalVulnerablePop.toLocaleString()} hab.</strong>
             </div>
 
             <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700 flex justify-between items-center text-xs">
-              <span className="text-slate-600 dark:text-slate-400">Relación Costo-Beneficio Social (B/C Ratio):</span>
-              <strong className="text-emerald-700 font-mono">3.4x (S/. 3.40 retornado por cada S/. 1.00)</strong>
+              <span className="text-slate-600 dark:text-slate-400">{t('validation.bcRatio')}</span>
+              <strong className="text-emerald-700 font-mono">{t('validation.bcRatioVal')}</strong>
             </div>
           </div>
         </div>
@@ -200,7 +201,7 @@ export const ValidationPolicyModule: React.FC<ValidationPolicyModuleProps> = ({
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-5 space-y-4 shadow-sm">
           <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Landmark className="w-4 h-4 text-sky-600" />
-            Recomendaciones para la Municipalidad Provincial de Trujillo
+            {t('validation.policyTitle')}
           </h3>
 
           <div className="space-y-2.5">

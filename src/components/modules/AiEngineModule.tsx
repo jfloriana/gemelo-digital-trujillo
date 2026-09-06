@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useI18n } from '../../context/I18nContext';
 import { AiModelMetric, UrbanZone } from '../../types';
 import { 
   ResponsiveContainer, 
@@ -42,6 +43,7 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
   selectedZone,
   onExportReports
 }) => {
+  const { t } = useI18n();
   const [selectedModel, setSelectedModel] = useState<AiModelMetric>(models[0]); // 1D-CNN default
   const [forecastHorizon, setForecastHorizon] = useState<number>(24); // 24 hours
   const [isTraining, setIsTraining] = useState<boolean>(false);
@@ -105,15 +107,13 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <span className="px-3 py-1 bg-purple-50 text-purple-700 border border-purple-200/60 text-xs font-semibold rounded-lg uppercase tracking-wider">
-              Objetivo Específico 3 (OE3)
+              {t('ai.badge')}
             </span>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
-              Modelos de Machine Learning & Deep Learning a Microescala
+              {t('ai.title')}
             </h2>
             <p className="text-slate-600 dark:text-slate-400 text-sm max-w-3xl mt-1">
-              Adaptación y comparación de algoritmos avanzados de aprendizaje supervisado y profundo: 
-              <strong> 1D-CNN</strong> (Naveed et al., 2025), <strong>GNN</strong> (Zhivkov et al., 2025), 
-              <strong> Bi-LSTM</strong> y <strong>Modelado Espaciotemporal Bayesiano</strong> (Li et al., 2026).
+              {t('ai.desc')}
             </p>
           </div>
 
@@ -123,14 +123,14 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
               className="px-3.5 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 shadow-xs flex items-center gap-1.5 transition-all"
             >
               <Download className="w-3.5 h-3.5 text-purple-600" />
-              Métricas en Excel
+              {t('ai.btnExcel')}
             </button>
             <button
               onClick={() => onExportReports('pdf')}
               className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm shadow-purple-900/10"
             >
               <Download className="w-3.5 h-3.5" />
-              Informe IA (PDF)
+              {t('ai.btnPdf')}
             </button>
           </div>
         </div>
@@ -163,15 +163,15 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
               <h4 className="font-bold text-xs text-slate-900 dark:text-white line-clamp-1">{model.name}</h4>
               <div className="mt-3 space-y-1 text-[11px] font-mono">
                 <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">R² Score:</span>
+                  <span className="text-slate-500 dark:text-slate-400">{t('ai.r2')}</span>
                   <span className="font-bold text-emerald-700">{model.r2.toFixed(4)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">MAPE:</span>
+                  <span className="text-slate-500 dark:text-slate-400">{t('ai.mape')}</span>
                   <span className="font-bold text-amber-700">{model.mape}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Inferencia:</span>
+                  <span className="text-slate-500 dark:text-slate-400">{t('ai.inference')}</span>
                   <span className="text-slate-700 dark:text-slate-300">{model.inferenceTimeMs} ms</span>
                 </div>
               </div>
@@ -188,10 +188,10 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Cpu className="w-5 h-5 text-purple-600" />
-                Arquitectura: {selectedModel.name}
+                {t('ai.architecture')} {selectedModel.name}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Capas: <code className="text-purple-800 bg-purple-50 px-2 py-0.5 rounded font-mono text-[11px] border border-purple-200">{selectedModel.architecture}</code>
+                {t('ai.architecture')} <code className="text-purple-800 bg-purple-50 px-2 py-0.5 rounded font-mono text-[11px] border border-purple-200">{selectedModel.architecture}</code>
               </p>
             </div>
 
@@ -203,12 +203,12 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
               {isTraining ? (
                 <>
                   <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                  Optimizando Gradientes...
+                  {t('ai.optimizing')}
                 </>
               ) : (
                 <>
                   <Play className="w-3.5 h-3.5" />
-                  Re-entrenar con Datos Trujillo
+                  {t('ai.retrain')}
                 </>
               )}
             </button>
@@ -217,8 +217,8 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
           {/* Loss Curve Chart */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
-              <span className="font-semibold">Curva de Convergencia (Loss vs Épocas de Entrenamiento)</span>
-              <span className="text-slate-500 dark:text-slate-400 font-mono">Épocas: 50 | Optimizer: Adam (lr=0.001)</span>
+              <span className="font-semibold">{t('ai.convergenceTitle')}</span>
+              <span className="text-slate-500 dark:text-slate-400 font-mono">{t('ai.epochs')}</span>
             </div>
             <div className="h-[220px] w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700">
               <ResponsiveContainer width="100%" height="100%">
@@ -230,8 +230,8 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
                     contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', color: '#0f172a', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
                   <Legend />
-                  <Line type="monotone" dataKey="trainLoss" name="Pérdida de Entrenamiento (MSE)" stroke="#9333ea" strokeWidth={2.5} dot={false} />
-                  <Line type="monotone" dataKey="valLoss" name="Pérdida de Validación" stroke="#0284c7" strokeWidth={2} strokeDasharray="3 3" dot={false} />
+                  <Line type="monotone" dataKey="trainLoss" name={t('ai.trainLoss')} stroke="#9333ea" strokeWidth={2.5} dot={false} />
+                  <Line type="monotone" dataKey="valLoss" name={t('ai.valLoss')} stroke="#0284c7" strokeWidth={2} strokeDasharray="3 3" dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -241,10 +241,10 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                Pronóstico Predictivo a Futuro en {selectedZone.name.split(':')[1]?.trim() || selectedZone.name}
+                {t('ai.forecastTitle')} {selectedZone.name.split(':')[1]?.trim() || selectedZone.name}
               </span>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Horizonte:</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{t('ai.horizon')}</span>
                 {[6, 12, 24].map(h => (
                   <button
                     key={h}
@@ -270,8 +270,8 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
                     contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', color: '#0f172a', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
                   <Legend />
-                  <Line yAxisId="left" type="monotone" dataKey="predPM25" name="PM2.5 Predicho (µg/m³)" stroke="#d97706" strokeWidth={2.5} />
-                  <Line yAxisId="right" type="monotone" dataKey="predTemp" name="Temp. Predicha (°C)" stroke="#ea580c" strokeWidth={2} />
+                  <Line yAxisId="left" type="monotone" dataKey="predPM25" name={t('ai.pmPredicted')} stroke="#d97706" strokeWidth={2.5} />
+                  <Line yAxisId="right" type="monotone" dataKey="predTemp" name={t('ai.tempPredicted')} stroke="#ea580c" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -283,7 +283,7 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
           <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-3">
             <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
               <BarChart3 className="w-4 h-4 text-purple-600" />
-              Importancia de Variables (Feature Importance)
+              {t('ai.featureImportance')}
             </h4>
             <div className="space-y-2 pt-1">
               {featureImportanceData.map((f, idx) => (
@@ -307,13 +307,13 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
           <div className="bg-purple-50/50 p-4 rounded-xl border border-purple-200/80 space-y-2.5 shadow-xs">
             <div className="flex items-center gap-2 text-purple-800 font-bold text-xs">
               <ShieldCheck className="w-4 h-4 text-purple-600" />
-              Validación Científica del Modelo
+              {t('ai.validationTitle')}
             </div>
             <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-              El modelo <strong>1D-CNN (Naveed et al., 2025)</strong> demostró el mejor ajuste para Trujillo con un <strong>R² = {selectedModel.r2.toFixed(4)}</strong> y un error porcentual absoluto medio (MAPE) de solo <strong>{selectedModel.mape}%</strong>, permitiendo inferencias ultrarrápidas de <strong>{selectedModel.inferenceTimeMs} ms</strong> compatibles con el gemelo digital en tiempo real.
+              {t('ai.validationDesc').replace('{r2}', selectedModel.r2.toFixed(4)).replace('{mape}', String(selectedModel.mape)).replace('{ms}', String(selectedModel.inferenceTimeMs))}
             </p>
             <div className="text-[11px] text-slate-500 dark:text-slate-400 border-t border-purple-200/60 pt-2 flex items-center justify-between">
-              <span>Resolución Espacial:</span>
+              <span>{t('ai.spatialResolution')}</span>
               <strong className="text-slate-800 dark:text-slate-100">{selectedModel.spatialResolution}</strong>
             </div>
           </div>

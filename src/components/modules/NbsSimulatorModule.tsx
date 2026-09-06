@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NbsIntervention, UrbanZone, SimulationScenario, SimulationModelType, SimulationMlParams } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../context/I18nContext';
 import { 
   Trees, 
   Leaf, 
@@ -58,6 +59,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
   onScenarioSaved
 }) => {
   const { user, permissions } = useAuth();
+  const { t } = useI18n();
 
   // Machine Learning Model Selection
   const [selectedMlModel, setSelectedMlModel] = useState<SimulationModelType>('1d_cnn');
@@ -248,7 +250,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-xs font-semibold rounded-lg uppercase tracking-wider">
-                Módulo Avanzado de Predicción ML & Simulación NbS (OE3 / OE4)
+                {t('nbs.badge')}
               </span>
               <span className="px-2.5 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-mono font-semibold rounded-md flex items-center gap-1">
                 <Cpu className="w-3 h-3 text-purple-600" />
@@ -256,10 +258,10 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
               </span>
             </div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
-              Simulador de Calidad del Aire, Microclima y Soluciones Basadas en la Naturaleza
+              {t('nbs.title')}
             </h2>
             <p className="text-slate-600 dark:text-slate-400 text-sm max-w-3xl mt-1">
-              Parametrización microescalar de cañones urbanos, arbolado nativo de Trujillo, techos verdes y pavimentos permeables con evaluación del confort térmico bajo el marco <strong>GREENPASS®</strong>.
+              {t('nbs.desc')}
             </p>
           </div>
 
@@ -270,7 +272,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
               title="Descargar parámetros y resultados proyectados en Excel"
             >
               <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-              Simulación Excel
+              {t('nbs.btnExcel')}
             </button>
             <button
               onClick={() => onExportReports('pdf', currentScenario)}
@@ -278,14 +280,14 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
               title="Descargar reporte completo en PDF"
             >
               <FileText className="w-3.5 h-3.5 text-rose-600" />
-              Simulación PDF
+              {t('nbs.btnPdf')}
             </button>
             <button
               onClick={handleSaveScenario}
               className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm shadow-emerald-900/10 cursor-pointer"
             >
               {savedSuccess ? <Check className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
-              {savedSuccess ? '¡Sincronizado!' : 'Guardar en Gemelo'}
+              {savedSuccess ? t('nbs.btnSaved') : t('nbs.btnSave')}
             </button>
           </div>
         </div>
@@ -298,26 +300,26 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Cpu className="w-4 h-4 text-purple-600" />
-              1. Modelo ML & Cañón Urbano
+              {t('nbs.panel1.title')}
             </h3>
             <span className="text-[10px] font-mono text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 font-bold">
-              Inferencia 4.8ms
+              {t('nbs.panel1.inference')}
             </span>
           </div>
 
           {/* Model Selector Dropdown */}
           <div className="space-y-1">
-            <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Algoritmo de Aprendizaje Automático:</label>
+            <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('nbs.panel1.algoLabel')}</label>
             <select
               value={selectedMlModel}
               onChange={(e) => setSelectedMlModel(e.target.value as SimulationModelType)}
               className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
             >
-              <option value="1d_cnn">1D-CNN (Naveed et al. 2025) - Convolucional Microescala (R²=0.9925)</option>
-              <option value="gnn">GNN (Zhivkov et al. 2025) - Red de Grafos & Topología Vial (R²=0.9880)</option>
-              <option value="random_forest">Random Forest Regressor - Ensemble 300 Árboles (R²=0.9610)</option>
-              <option value="bi_lstm">Bi-LSTM (Li et al. 2026) - Memoria Espaciotemporal (R²=0.9740)</option>
-              <option value="xgboost">XGBoost - Gradient Boosting Tabular (R²=0.9530)</option>
+              <option value="1d_cnn">{t('nbs.opt.1d_cnn')}</option>
+              <option value="gnn">{t('nbs.opt.gnn')}</option>
+              <option value="random_forest">{t('nbs.opt.rf')}</option>
+              <option value="bi_lstm">{t('nbs.opt.bilstm')}</option>
+              <option value="xgboost">{t('nbs.opt.xgboost')}</option>
             </select>
           </div>
 
@@ -326,9 +328,9 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
             <div className="flex justify-between text-xs">
               <span className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1">
                 <Sliders className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
-                Relación H/W Cañón (Altura/Ancho):
+                {t('nbs.panel1.hwRatio')}
               </span>
-              <strong className="font-mono text-slate-900 dark:text-white">{canyonHWRatio.toFixed(1)} ({canyonHWRatio >= 2.0 ? 'Cañón Estrecho' : 'Cañón Abierto'})</strong>
+              <strong className="font-mono text-slate-900 dark:text-white">{canyonHWRatio.toFixed(1)} ({canyonHWRatio >= 2.0 ? t('nbs.panel1.narrow') : t('nbs.panel1.open')})</strong>
             </div>
             <input
               type="range"
@@ -340,28 +342,28 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
               className="w-full accent-purple-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
             />
             <p className="text-[10px] text-slate-500 dark:text-slate-400">
-              Factor de atrapamiento térmico y recirculación de vórtice: <strong>{canyonTrappingFactor.toFixed(2)}x</strong>
+              {t('nbs.panel1.trapping')} <strong>{canyonTrappingFactor.toFixed(2)}x</strong>
             </p>
           </div>
 
           {/* Canyon Orientation & Surface Albedo */}
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="space-y-1">
-              <label className="text-slate-600 dark:text-slate-400 font-medium block">Orientación Calle:</label>
+              <label className="text-slate-600 dark:text-slate-400 font-medium block">{t('nbs.panel1.orientation')}</label>
               <select
                 value={canyonOrientation}
                 onChange={(e) => setCanyonOrientation(e.target.value as any)}
                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100"
               >
-                <option value="NE-SO">NE-SO (Brisa Marina)</option>
-                <option value="N-S">Norte-Sur</option>
-                <option value="E-O">Este-Oeste (Alta Radiación)</option>
-                <option value="NO-SE">NO-SE</option>
+                <option value="NE-SO">{t('nbs.opt.ne_sw')}</option>
+                <option value="N-S">{t('nbs.opt.n_s')}</option>
+                <option value="E-O">{t('nbs.opt.e_w')}</option>
+                <option value="NO-SE">{t('nbs.opt.nw_se')}</option>
               </select>
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-600 dark:text-slate-400 font-medium block">Albedo Superficial:</label>
+              <label className="text-slate-600 dark:text-slate-400 font-medium block">{t('nbs.panel1.albedo')}</label>
               <input
                 type="number"
                 step="0.05"
@@ -376,18 +378,18 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
 
           {/* Environmental Boundary Conditions */}
           <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-2 text-xs">
-            <span className="font-semibold text-slate-800 dark:text-slate-100 block">Condiciones de Borde Atmosférico:</span>
+            <span className="font-semibold text-slate-800 dark:text-slate-100 block">{t('nbs.panel1.boundary')}</span>
             <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
               <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-700/60">
-                <span className="text-slate-500 dark:text-slate-400 block text-[10px]">Viento</span>
+                <span className="text-slate-500 dark:text-slate-400 block text-[10px]">{t('nbs.panel1.wind')}</span>
                 <strong className="font-mono text-slate-900 dark:text-white">{ambientWindSpeed} m/s</strong>
               </div>
               <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-700/60">
-                <span className="text-slate-500 dark:text-slate-400 block text-[10px]">Radiación</span>
+                <span className="text-slate-500 dark:text-slate-400 block text-[10px]">{t('nbs.panel1.radiation')}</span>
                 <strong className="font-mono text-amber-700">{ambientSolarRad} W/m²</strong>
               </div>
               <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-700/60">
-                <span className="text-slate-500 dark:text-slate-400 block text-[10px]">Humedad</span>
+                <span className="text-slate-500 dark:text-slate-400 block text-[10px]">{t('nbs.panel1.humidity')}</span>
                 <strong className="font-mono text-sky-700">{ambientRH} %</strong>
               </div>
             </div>
@@ -399,7 +401,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Trees className="w-4 h-4 text-emerald-600" />
-              2. Intervenciones NbS en Trujillo
+              {t('nbs.panel2.title')}
             </h3>
             <span className="text-xs font-bold text-emerald-700 font-mono">
               {selectedZone.name.split(':')[1]?.trim() || selectedZone.name}
@@ -411,9 +413,9 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                 <Trees className="w-3.5 h-3.5 text-emerald-600" />
-                Arbolado Urbano & Corredores
+                {t('nbs.panel2.tree')}
               </span>
-              <span className="font-mono font-bold text-emerald-700">{treeCount} árboles</span>
+              <span className="font-mono font-bold text-emerald-700">{treeCount} {t('nbs.panel2.treeUnit')}</span>
             </div>
             <input
               type="range"
@@ -425,7 +427,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
               className="w-full accent-emerald-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
             />
             <p className="text-[10px] text-slate-500 dark:text-slate-400">
-              Especies adaptadas: <em>Molle costeño, Huarango, Jacarandá, Tecoma stans</em>.
+              {t('nbs.panel2.treeDesc')}
             </p>
           </div>
 
@@ -434,7 +436,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                 <Leaf className="w-3.5 h-3.5 text-teal-600" />
-                Techos Verdes Extensivos
+                {t('nbs.panel2.greenRoof')}
               </span>
               <span className="font-mono font-bold text-teal-700">{greenRoofArea.toLocaleString()} m²</span>
             </div>
@@ -448,7 +450,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
               className="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
             />
             <p className="text-[10px] text-slate-500 dark:text-slate-400">
-              Sustrato drenante ligero con xerófilas: <em>Sedum spp., Aptenia cordifolia</em>.
+              {t('nbs.panel2.greenRoofDesc')}
             </p>
           </div>
 
@@ -457,7 +459,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-emerald-600" />
-                Muros Verdes & Fachadas
+                {t('nbs.panel2.greenWall')}
               </span>
               <span className="font-mono font-bold text-emerald-700">{greenWallArea.toLocaleString()} m²</span>
             </div>
@@ -471,7 +473,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
               className="w-full accent-emerald-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
             />
             <p className="text-[10px] text-slate-500 dark:text-slate-400">
-              Absorción directa de NO2 y enfriamiento en cañones ciegos.
+              {t('nbs.panel2.greenWallDesc')}
             </p>
           </div>
 
@@ -480,7 +482,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                 <Droplets className="w-3.5 h-3.5 text-sky-600" />
-                Pavimentos Permeables & Grass Paver
+                {t('nbs.panel2.permeable')}
               </span>
               <span className="font-mono font-bold text-sky-700">{permeableArea.toLocaleString()} m²</span>
             </div>
@@ -501,7 +503,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
           {/* Key Output Metric Cards */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 p-3.5 rounded-xl shadow-xs space-y-0.5">
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Reducción Térmica</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 block">{t('nbs.metric.tempReduction')}</span>
               <strong className="text-xl font-bold font-mono text-emerald-700">
                 -{totalTempDrop} °C
               </strong>
@@ -509,7 +511,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
             </div>
 
             <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 p-3.5 rounded-xl shadow-xs space-y-0.5">
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Mitigación PM2.5</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 block">{t('nbs.metric.pmMitigation')}</span>
               <strong className="text-xl font-bold font-mono text-amber-700">
                 -{totalPmRedPercent}%
               </strong>
@@ -517,7 +519,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
             </div>
 
             <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 p-3.5 rounded-xl shadow-xs space-y-0.5">
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Confort PET / TCS</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 block">{t('nbs.metric.comfort')}</span>
               <strong className="text-xl font-bold font-mono text-sky-700">
                 {tcsAfter}/100
               </strong>
@@ -525,19 +527,19 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
             </div>
 
             <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 p-3.5 rounded-xl shadow-xs space-y-0.5">
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Presupuesto PEN</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 block">{t('nbs.metric.budget')}</span>
               <strong className="text-sm font-bold font-mono text-slate-900 dark:text-white">
                 S/. {(totalBudgetPEN / 1000).toFixed(0)}k
               </strong>
-              <p className="text-[10px] text-slate-400">B/C Ratio: 3.4</p>
+              <p className="text-[10px] text-slate-400">{t('nbs.metric.budgetSub')}</p>
             </div>
           </div>
 
           {/* Bar Chart Visualizer */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 p-4 rounded-xl shadow-sm space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <strong className="text-slate-900 dark:text-white">Comparativa Pre vs Post Intervención</strong>
-              <span className="text-[10px] text-slate-400 font-mono">Microescala</span>
+              <strong className="text-slate-900 dark:text-white">{t('nbs.chart.title')}</strong>
+              <span className="text-[10px] text-slate-400 font-mono">{t('nbs.chart.micro')}</span>
             </div>
             <div className="h-[180px] w-full pt-1">
               <ResponsiveContainer width="100%" height="100%">
@@ -561,18 +563,18 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
             <div className="flex items-center justify-between border-b border-emerald-200/60 pb-1.5">
               <strong className="text-emerald-950 font-bold flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5 text-emerald-700" />
-                Beneficio Social en Trujillo
+                {t('nbs.social.title')}
               </strong>
-              <span className="text-[10px] text-emerald-800 font-mono font-semibold">GREENPASS®</span>
+              <span className="text-[10px] text-emerald-800 font-mono font-semibold">{t('nbs.social.greenpass')}</span>
             </div>
             <div className="grid grid-cols-2 gap-2 text-[11px]">
               <div>
-                <span className="text-slate-500 dark:text-slate-400 block">Población Protegida:</span>
+                <span className="text-slate-500 dark:text-slate-400 block">{t('nbs.social.protected')}</span>
                 <strong className="text-slate-900 dark:text-white font-mono">{populationBenefited.toLocaleString()} hab.</strong>
               </div>
               <div>
-                <span className="text-slate-500 dark:text-slate-400 block">Captura de Carbono:</span>
-                <strong className="text-emerald-800 font-mono">{co2CapturedTonYear} Ton CO2/año</strong>
+                <span className="text-slate-500 dark:text-slate-400 block">{t('nbs.social.carbon')}</span>
+                <strong className="text-emerald-800 font-mono">{co2CapturedTonYear} {t('nbs.social.carbonUnit')}</strong>
               </div>
             </div>
           </div>

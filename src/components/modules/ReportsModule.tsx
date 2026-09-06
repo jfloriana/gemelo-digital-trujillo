@@ -33,7 +33,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
   objectives,
   activeScenario
 }) => {
-  const { lang } = useI18n();
+  const { lang, t } = useI18n();
   const [isExporting, setIsExporting] = useState<string | null>(null);
 
   const handleExport = async (format: 'xlsx' | 'pdf' | 'docx' | 'csv') => {
@@ -50,7 +50,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
       }
     } catch (e) {
       console.error('Export error', e);
-      alert('Hubo un inconveniente al generar el archivo. Por favor reintenta.');
+      alert(t('reports.exportError'));
     } finally {
       setIsExporting(null);
     }
@@ -63,21 +63,20 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <span className="px-3 py-1 bg-teal-50 text-teal-700 border border-teal-200/60 text-xs font-semibold rounded-lg uppercase tracking-wider">
-              Centro de Exportación Multiformato
+              {t('reports.badge')}
             </span>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
-              Generación de Reportes Técnicos, Científicos y Datasets
+              {t('reports.title2')}
             </h2>
             <p className="text-slate-600 dark:text-slate-400 text-sm max-w-3xl mt-1">
-              Descarga directa de los resultados de la tesis en formatos estandarizados <strong>Excel (.xlsx)</strong>, 
-              <strong> PDF (.pdf)</strong>, <strong>Word (.docx)</strong> y <strong>CSV (.csv)</strong> con estructura académica formal.
+              {t('reports.desc2')}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <span className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 shadow-2xs">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              Datos Verificados Trujillo 2026
+              {t('reports.verified')}
             </span>
           </div>
         </div>
@@ -91,9 +90,9 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
             <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center group-hover:scale-110 transition-transform">
               <FileSpreadsheet className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-base text-slate-900 dark:text-white">Libro de Trabajo Excel (.xlsx)</h3>
+            <h3 className="font-bold text-base text-slate-900 dark:text-white">{t('reports.excelTitle')}</h3>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Contiene 6 hojas estructuradas: Zonas de Trujillo, Telemetría IoT cruda y calibrada, Benchmarks de Modelos IA, Catálogo NbS, Cumplimiento de Objetivos y Escenario Simulado.
+              {t('reports.excelDesc')}
             </p>
           </div>
 
@@ -103,7 +102,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
             className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm shadow-emerald-900/10"
           >
             <Download className="w-4 h-4" />
-            {isExporting === 'xlsx' ? 'Generando Excel...' : 'Descargar Excel (.xlsx)'}
+            {isExporting === 'xlsx' ? t('reports.excelGenerating') : t('reports.excelBtn')}
           </button>
         </div>
 
@@ -113,9 +112,9 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
             <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center group-hover:scale-110 transition-transform">
               <FileText className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-base text-slate-900 dark:text-white">Informe Técnico PDF (.pdf)</h3>
+            <h3 className="font-bold text-base text-slate-900 dark:text-white">{t('reports.pdfTitle')}</h3>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Documento formal con membrete institucional, tablas estilizadas con jspdf-autotable, indicadores de calidad del aire, fórmulas de calibración y firmas académicas.
+              {t('reports.pdfDesc')}
             </p>
           </div>
 
@@ -125,7 +124,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
             className="w-full py-2.5 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm shadow-rose-900/10"
           >
             <Download className="w-4 h-4" />
-            {isExporting === 'pdf' ? 'Compilando PDF...' : 'Descargar PDF (.pdf)'}
+            {isExporting === 'pdf' ? t('reports.pdfCompiling') : t('reports.pdfBtn')}
           </button>
         </div>
 
@@ -135,9 +134,9 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
             <div className="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-110 transition-transform">
               <FileCheck2 className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-base text-slate-900 dark:text-white">Capítulos de Tesis Word (.docx)</h3>
+            <h3 className="font-bold text-base text-slate-900 dark:text-white">{t('reports.wordTitle')}</h3>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Documento estructurado en capítulos según la guía de tesis universitaria: Resumen, Diagnóstico OE1, Arquitectura OE2, Modelos OE3, Simulación NbS OE4 y Discusión OE5.
+              {t('reports.wordDesc')}
             </p>
           </div>
 
@@ -147,7 +146,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
             className="w-full py-2.5 bg-sky-600 hover:bg-sky-700 disabled:bg-sky-300 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm shadow-sky-900/10"
           >
             <Download className="w-4 h-4" />
-            {isExporting === 'docx' ? 'Compilando Word...' : 'Descargar Word (.docx)'}
+            {isExporting === 'docx' ? t('reports.wordCompiling') : t('reports.wordBtn')}
           </button>
         </div>
 
@@ -157,9 +156,9 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
             <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center group-hover:scale-110 transition-transform">
               <FileCode className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-base text-slate-900 dark:text-white">Dataset Crudo CSV (.csv)</h3>
+            <h3 className="font-bold text-base text-slate-900 dark:text-white">{t('reports.csvTitle')}</h3>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Matriz completa de telemetría horaria con valores de PM2.5, PM10, NO2, O3, Temperatura, PET, TCS y Delta UHI lista para importación directa en Python, R o SPSS.
+              {t('reports.csvDesc')}
             </p>
           </div>
 
@@ -169,7 +168,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
             className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm shadow-amber-900/10"
           >
             <Download className="w-4 h-4" />
-            {isExporting === 'csv' ? 'Exportando CSV...' : 'Descargar CSV (.csv)'}
+            {isExporting === 'csv' ? t('reports.csvExporting') : t('reports.csvBtn')}
           </button>
         </div>
       </div>
@@ -180,14 +179,14 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Database className="w-5 h-5 text-teal-600" />
-              Vista Previa de Datos Compilados para el Reporte
+              {t('reports.previewTitle')}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Resumen en tiempo real sincronizado con todas las simulaciones y lecturas de Trujillo.
+              {t('reports.previewDesc')}
             </p>
           </div>
           <span className="text-xs font-mono text-slate-500 dark:text-slate-400 font-medium">
-            {sensors.length} nodos activos | 6 zonas críticas
+            {t('reports.previewMeta').replace('{count}', String(sensors.length))}
           </span>
         </div>
 
@@ -195,13 +194,13 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
           <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
             <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-mono border-b border-slate-200/80 dark:border-slate-700">
               <tr>
-                <th className="py-2.5 px-3">Zona Trujillo</th>
-                <th className="py-2.5 px-3">Temp Base</th>
-                <th className="py-2.5 px-3">PM2.5 Base</th>
-                <th className="py-2.5 px-3">Arbolado (%)</th>
-                <th className="py-2.5 px-3">Población Vulnerable</th>
-                <th className="py-2.5 px-3">Sensores IoT</th>
-                <th className="py-2.5 px-3">Nivel de Riesgo</th>
+                <th className="py-2.5 px-3">{t('reports.table.zone')}</th>
+                <th className="py-2.5 px-3">{t('reports.table.tempBase')}</th>
+                <th className="py-2.5 px-3">{t('reports.table.pm25Base')}</th>
+                <th className="py-2.5 px-3">{t('reports.table.tree')}</th>
+                <th className="py-2.5 px-3">{t('reports.table.vulnerable')}</th>
+                <th className="py-2.5 px-3">{t('reports.table.sensors')}</th>
+                <th className="py-2.5 px-3">{t('reports.table.risk')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -212,7 +211,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
                   <td className="py-2.5 px-3 font-mono font-semibold text-amber-700">{z.baselinePM25} µg/m³</td>
                   <td className="py-2.5 px-3 font-mono text-emerald-700">{z.treeCover}%</td>
                   <td className="py-2.5 px-3 font-mono text-slate-700 dark:text-slate-300">{z.vulnerablePopulation.toLocaleString()}</td>
-                  <td className="py-2.5 px-3 font-mono text-sky-700">{z.sensorsCount} nodos</td>
+                  <td className="py-2.5 px-3 font-mono text-sky-700">{z.sensorsCount} {t('reports.nodes')}</td>
                   <td className="py-2.5 px-3">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                       z.vulnerabilityLevel === 'Crítica' ? 'bg-rose-50 text-rose-700 border border-rose-200' :

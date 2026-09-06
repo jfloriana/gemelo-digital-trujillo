@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { useI18n } from '../../context/I18nContext';
 import { SensorNode, UrbanZone, NbsIntervention } from '../../types';
 import { 
   Layers, 
@@ -31,6 +32,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
   isSimulationActive,
   onApplyNbsQuick
 }) => {
+  const { t } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [viewMode, setViewMode] = useState<'3d_canyon' | 'thermal_grid' | 'pm_dispersion'>('3d_canyon');
   const [showAirflow, setShowAirflow] = useState<boolean>(true);
@@ -360,7 +362,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
         ctx.strokeRect(splitX - 45, 12, 90, 24);
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 11px sans-serif';
-        ctx.fillText('ANTES | DESPUÉS', splitX - 40, 28);
+        ctx.fillText(t('canvas.beforeAfter'), splitX - 40, 28);
       }
 
       animationFrameId = requestAnimationFrame(render);
@@ -414,10 +416,10 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
           <div>
             <h3 className="text-slate-900 dark:text-white text-sm font-semibold flex items-center gap-2">
-              Gemelo Digital 3D a Microescala: {zone.name.split(':')[1]?.trim() || zone.name}
+              {t('canvas.title')} {zone.name.split(':')[1]?.trim() || zone.name}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Malla discretizada 5x5m | Simulación CFD / LBM + Dispersión Gaussiana & NbS
+              {t('canvas.desc')}
             </p>
           </div>
         </div>
@@ -429,10 +431,10 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
             className={`px-3 py-1.5 text-xs rounded-xl font-medium flex items-center gap-1.5 transition-all ${
               showAirflow ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 hover:bg-slate-50'
             }`}
-            title="Vórtices de viento y flujo LBM en cañón urbano"
+            title={t('canvas.btnFlowTitle')}
           >
             <Wind className="w-3.5 h-3.5" />
-            Flujo LBM
+            {t('canvas.btnFlow')}
           </button>
 
           <button
@@ -440,10 +442,10 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
             className={`px-3 py-1.5 text-xs rounded-xl font-medium flex items-center gap-1.5 transition-all ${
               showThermalLayer ? 'bg-amber-50 text-amber-700 border border-amber-300 shadow-xs' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 hover:bg-slate-50'
             }`}
-            title="Gradiente térmico de Isla de Calor Urbano (UHI)"
+            title={t('canvas.btnThermalTitle')}
           >
             <Flame className="w-3.5 h-3.5" />
-            Gradiente Térmico
+            {t('canvas.btnThermal')}
           </button>
 
           <button
@@ -451,10 +453,10 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
             className={`px-3 py-1.5 text-xs rounded-xl font-medium flex items-center gap-1.5 transition-all ${
               showParticles ? 'bg-red-50 text-red-700 border border-red-300 shadow-xs' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 hover:bg-slate-50'
             }`}
-            title="Partículas suspendidas PM2.5 / PM10"
+            title={t('canvas.btnPmTitle')}
           >
             <Layers className="w-3.5 h-3.5" />
-            Pluma PM2.5
+            {t('canvas.btnPm')}
           </button>
 
           <button
@@ -464,7 +466,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
             }`}
           >
             <Eye className="w-3.5 h-3.5" />
-            Split Antes/Después
+            {t('canvas.btnSplit')}
           </button>
         </div>
       </div>
@@ -482,45 +484,45 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
         {/* Live Simulation Overlay HUD */}
         <div className="absolute top-4 left-4 bg-white dark:bg-slate-900/95 dark:bg-slate-900/95 backdrop-blur-md p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-lg max-w-xs text-xs space-y-2 text-slate-800 dark:text-slate-100">
           <div className="flex items-center justify-between text-slate-700 dark:text-slate-300 font-semibold pb-1 border-b border-slate-100 dark:border-slate-800">
-            <span>Telemetría en Vivo (Microescala)</span>
-            <span className="text-emerald-600 font-mono text-[11px]">Sincronizado</span>
+            <span>{t('canvas.hudTitle')}</span>
+            <span className="text-emerald-600 font-mono text-[11px]">{t('canvas.hudSynced')}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 pt-1">
             <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
-              <span className="text-slate-500 dark:text-slate-400 block text-[10px] font-medium">Temp. Microescala</span>
+              <span className="text-slate-500 dark:text-slate-400 block text-[10px] font-medium">{t('canvas.hudTemp')}</span>
               <span className={`text-base font-bold font-mono ${effectiveTemp > 30 ? 'text-red-600' : 'text-emerald-600'}`}>
                 {effectiveTemp} °C
               </span>
               {currentTempMitigation > 0 && (
                 <span className="text-[10px] text-emerald-700 block font-medium">
-                  ↓ -{currentTempMitigation.toFixed(1)} °C por NbS
+                  {t('canvas.hudMitigatedTemp').replace('{val}', currentTempMitigation.toFixed(1))}
                 </span>
               )}
             </div>
 
             <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
-              <span className="text-slate-500 dark:text-slate-400 block text-[10px] font-medium">PM2.5 Calibrado</span>
+              <span className="text-slate-500 dark:text-slate-400 block text-[10px] font-medium">{t('canvas.hudPm')}</span>
               <span className={`text-base font-bold font-mono ${effectivePM25 > 55 ? 'text-red-600' : effectivePM25 > 35 ? 'text-amber-600' : 'text-emerald-600'}`}>
                 {effectivePM25} µg/m³
               </span>
               {currentPmMitigationPercent > 0 && (
                 <span className="text-[10px] text-emerald-700 block font-medium">
-                  ↓ -{currentPmMitigationPercent.toFixed(1)}% mitigado
+                  {t('canvas.hudMitigatedPm').replace('{val}', currentPmMitigationPercent.toFixed(1))}
                 </span>
               )}
             </div>
           </div>
 
           <div className="flex items-center justify-between text-[11px] text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-100 dark:border-slate-800">
-            <span className="font-medium">Delta Isla de Calor (UHI):</span>
+            <span className="font-medium">{t('canvas.hudUhi')}</span>
             <span className="font-semibold text-amber-700 font-mono">
               +{(Math.max(0.8, (effectiveTemp - 24.5) * 0.6)).toFixed(1)} °C
             </span>
           </div>
 
           <div className="flex items-center justify-between text-[11px] text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-100 dark:border-slate-800">
-            <span className="font-medium">Confort Térmico (PET):</span>
+            <span className="font-medium">{t('canvas.hudPet')}</span>
             <span className="font-semibold text-teal-700 font-mono">
               {(effectiveTemp + 2.8).toFixed(1)} °C
             </span>
@@ -538,13 +540,13 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
             }`}
           >
             <Trees className="w-4 h-4" />
-            {isPlacingTree ? 'Haz clic en el mapa para plantar' : 'Plantar Árbol en Cañón'}
+            {isPlacingTree ? t('canvas.plantActive') : t('canvas.plant')}
           </button>
 
           <button
             onClick={() => setCustomTrees([])}
             className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 transition-colors"
-            title="Reiniciar árboles colocados"
+            title={t('canvas.resetTrees')}
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
@@ -556,15 +558,15 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            Flora nativa recomendada: <strong className="text-slate-700 dark:text-slate-300">Molle Costeño & Huarango</strong>
+            {t('canvas.flora')} <strong className="text-slate-700 dark:text-slate-300">{t('canvas.floraVal')}</strong>
           </span>
           <span className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-cyan-500" />
-            Viento predominante: <strong className="text-slate-700 dark:text-slate-300">Suroeste (SO 2.1 m/s)</strong>
+            {t('canvas.wind')} <strong className="text-slate-700 dark:text-slate-300">{t('canvas.windVal')}</strong>
           </span>
         </div>
         <div className="text-slate-500 dark:text-slate-400">
-          Referencia: <strong className="text-slate-700 dark:text-slate-300">Li et al. (2026) & Zhivkov et al. (2025)</strong>
+          {t('canvas.reference')} <strong className="text-slate-700 dark:text-slate-300">{t('canvas.referenceVal')}</strong>
         </div>
       </div>
     </div>
