@@ -342,10 +342,7 @@ export const AuthScreen: React.FC = () => {
                   </div>
 
                   <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <label className="text-xs text-slate-700 font-semibold block">Contraseña</label>
-                      <span className="text-[10px] text-emerald-700 font-medium">Clave demo: trujillo2026</span>
-                    </div>
+                    <label className="text-xs text-slate-700 font-semibold block">Contraseña</label>
                     <div className="relative">
                       <input
                         type={showLoginPassword ? 'text' : 'password'}

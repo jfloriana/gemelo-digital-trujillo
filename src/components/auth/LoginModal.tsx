@@ -224,10 +224,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             </div>
 
             <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <label className="text-xs text-slate-700 font-semibold block">Contraseña</label>
-                <span className="text-[10px] text-slate-400">Demo clave: trujillo2026</span>
-              </div>
+              <label className="text-xs text-slate-700 font-semibold block">Contraseña</label>
               <div className="relative">
                 <input
                   type={showLoginPassword ? 'text' : 'password'}
