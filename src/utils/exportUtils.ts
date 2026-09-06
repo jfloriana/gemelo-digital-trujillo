@@ -19,27 +19,108 @@ import {
 import saveAs from 'file-saver';
 import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, SimulationScenario } from '../types';
 
+type ExportLang = 'es' | 'en' | 'zh' | 'de' | 'fr' | 'pt';
+const exT = (lang: ExportLang) => {
+  const d: Record<ExportLang, any> = {
+    es: {
+      reportTitle: 'REPORTE TÉCNICO Y CIENTÍFICO - GEMELO DIGITAL A MICROESCALA TRUJILLO',
+      thesisTitle: 'Gemelo digital de calidad del aire a microescala y soluciones basadas en naturaleza urbana para reducir la exposición a contaminantes y calor extremo',
+      caseStudy: 'Ciudad de Trujillo, Región La Libertad, Perú',
+      lead: 'Ing. Joel Anderson Florian Arévalo & Ing. Jason Anderson Galvéz Luna',
+      dateLabel: 'Fecha de Generación:',
+      inst: 'Universidad Nacional de Trujillo / Municipalidad Provincial de Trujillo / SENAMHI',
+      zonesTitle: 'RESUMEN DE ZONAS CRÍTICAS EVALUADAS',
+      zh: ['ID Zona', 'Nombre de Zona', 'Distrito', 'Departamento', 'Vulnerabilidad', 'Población Total', 'Población Vulnerable', 'Temp Base (°C)', 'PM2.5 Base (µg/m³)', 'Cobertura Arbórea (%)', 'Densidad Edificada (%)', 'Fuente Principal'],
+      w1: 'Resumen_Zonas', w2: 'Telemetria_Sensores', w3: 'Modelos_ML', w4: 'Catalogo_NbS', w5: 'Validacion_Objetivos', w6: 'Escenario_Simulado',
+      file: 'Reporte_Gemelo_Digital_Trujillo',
+    },
+    en: {
+      reportTitle: 'TECHNICAL AND SCIENTIFIC REPORT — TRUJILLO MICRO-SCALE DIGITAL TWIN',
+      thesisTitle: 'Micro-scale air quality digital twin and urban nature-based solutions to reduce pollutant and extreme heat exposure',
+      caseStudy: 'City of Trujillo, La Libertad Region, Peru',
+      lead: 'Eng. Joel Anderson Florian Arévalo & Eng. Jason Anderson Galvéz Luna',
+      dateLabel: 'Generation Date:',
+      inst: 'National University of Trujillo / Provincial Municipality of Trujillo / SENAMHI',
+      zonesTitle: 'SUMMARY OF CRITICAL ZONES EVALUATED',
+      zh: ['Zone ID', 'Zone Name', 'District', 'Department', 'Vulnerability', 'Total Population', 'Vulnerable Pop.', 'Base Temp (°C)', 'Base PM2.5 (µg/m³)', 'Tree Cover (%)', 'Built Density (%)', 'Main Source'],
+      w1: 'Zones_Summary', w2: 'Sensors_Telemetry', w3: 'ML_Models', w4: 'NbS_Catalog', w5: 'Objectives_Validation', w6: 'Simulated_Scenario',
+      file: 'Trujillo_Digital_Twin_Report',
+    },
+    zh: {
+      reportTitle: '技术与科学报告 — 特鲁希略微尺度数字孪生',
+      thesisTitle: '微尺度空气质量数字孪生与基于自然的城市解决方案',
+      caseStudy: '秘鲁特鲁希略市，拉利伯塔德大区',
+      lead: '工程师 Joel Anderson Florian Arévalo & Jason Anderson Galvéz Luna',
+      dateLabel: '生成日期：',
+      inst: '特鲁希略国立大学 / 特鲁希略省市政府 / SENAMHI',
+      zonesTitle: '关键区域评估摘要',
+      zh: ['区域ID', '区域名称', '区', '省', '脆弱性', '总人口', '脆弱人口', '基准温度 (°C)', '基准 PM2.5', '绿化覆盖率', '建筑密度', '主要来源'],
+      w1: '区域摘要', w2: '传感器遥测', w3: 'ML模型', w4: 'NbS目录', w5: '目标验证', w6: '模拟场景',
+      file: '特鲁希略_数字孪生_报告',
+    },
+    de: {
+      reportTitle: 'TECHNISCHER UND WISSENSCHAFTLICHER BERICHT — MIKROSKALIGER DIGITALER ZWILLING TRUJILLO',
+      thesisTitle: 'Mikroskaliger digitaler Zwilling der Luftqualität und naturbasierte Lösungen',
+      caseStudy: 'Stadt Trujillo, Region La Libertad, Peru',
+      lead: 'Ing. Joel Anderson Florian Arévalo & Ing. Jason Anderson Galvéz Luna',
+      dateLabel: 'Erstellungsdatum:',
+      inst: 'Nationale Universität Trujillo / Provinzgemeinde Trujillo / SENAMHI',
+      zonesTitle: 'ZUSAMMENFASSUNG KRITISCHER ZONEN',
+      zh: ['Zonen-ID', 'Zonenname', 'Bezirk', 'Departement', 'Vulnerabilität', 'Gesamtbevölkerung', 'Vulnerable Bev.', 'Basis Temp (°C)', 'Basis PM2.5', 'Baumbedeckung', 'Bebauungsdichte', 'Hauptquelle'],
+      w1: 'Zonen_Zusammenfassung', w2: 'Sensoren_Telemetrie', w3: 'ML_Modelle', w4: 'NbS_Katalog', w5: 'Ziele_Validierung', w6: 'Simuliertes_Szenario',
+      file: 'Trujillo_Digitaler_Zwilling_Bericht',
+    },
+    fr: {
+      reportTitle: 'RAPPORT TECHNIQUE ET SCIENTIFIQUE — JUMEAU NUMÉRIQUE MICRO-ÉCHELLE TRUJILLO',
+      thesisTitle: 'Jumeau numérique de la qualité de l’air à micro-échelle et solutions fondées sur la nature',
+      caseStudy: 'Ville de Trujillo, Région La Libertad, Pérou',
+      lead: 'Ing. Joel Anderson Florian Arévalo & Ing. Jason Anderson Galvéz Luna',
+      dateLabel: 'Date de génération :',
+      inst: 'Université Nationale de Trujillo / Municipalité Provinciale de Trujillo / SENAMHI',
+      zonesTitle: 'RÉSUMÉ DES ZONES CRITIQUES ÉVALUÉES',
+      zh: ['ID Zone', 'Nom Zone', 'District', 'Département', 'Vulnérabilité', 'Population Totale', 'Pop. Vulnérable', 'Temp Base (°C)', 'PM2.5 Base', 'Couverture Arborée', 'Densité Bâtie', 'Source Principale'],
+      w1: 'Résumé_Zones', w2: 'Télémétrie_Capteurs', w3: 'Modèles_ML', w4: 'Catalogue_NbS', w5: 'Validation_Objectifs', w6: 'Scénario_Simulé',
+      file: 'Rapport_Jumeau_Numérique_Trujillo',
+    },
+    pt: {
+      reportTitle: 'RELATÓRIO TÉCNICO E CIENTÍFICO — GÊMEO DIGITAL MICROESCALA TRUJILLO',
+      thesisTitle: 'Gêmeo digital de qualidade do ar em microescala e soluções baseadas na natureza',
+      caseStudy: 'Cidade de Trujillo, Região La Libertad, Peru',
+      lead: 'Eng. Joel Anderson Florian Arévalo & Eng. Jason Anderson Galvéz Luna',
+      dateLabel: 'Data de Geração:',
+      inst: 'Universidade Nacional de Trujillo / Prefeitura Provincial de Trujillo / SENAMHI',
+      zonesTitle: 'RESUMO DAS ZONAS CRÍTICAS AVALIADAS',
+      zh: ['ID Zona', 'Nome da Zona', 'Distrito', 'Departamento', 'Vulnerabilidade', 'População Total', 'Pop. Vulnerável', 'Temp Base (°C)', 'PM2.5 Base', 'Cobertura Arbórea', 'Densidade Edificada', 'Fonte Principal'],
+      w1: 'Resumo_Zonas', w2: 'Telemetria_Sensores', w3: 'Modelos_ML', w4: 'Catálogo_NbS', w5: 'Validação_Objetivos', w6: 'Cenário_Simulado',
+      file: 'Relatório_Gêmeo_Digital_Trujillo',
+    },
+  };
+  return d[lang] || d.es;
+};
+
 export const exportToExcel = (
   zones: UrbanZone[],
   sensors: SensorNode[],
   models: AiModelMetric[],
   nbsList: NbsIntervention[],
   objectives: ThesisObjectiveEvaluation[],
-  activeScenario?: SimulationScenario | null
+  activeScenario?: SimulationScenario | null,
+  lang: ExportLang = 'es'
 ) => {
+  const tr = exT(lang);
   const wb = XLSX.utils.book_new();
 
   // Sheet 1: Resumen General de Tesis
   const thesisSummaryData = [
-    ['REPORTE TÉCNICO Y CIENTÍFICO - GEMELO DIGITAL A MICROESCALA TRUJILLO'],
-    ['Título de Tesis:', 'Gemelo digital de calidad del aire a microescala y soluciones basadas en naturaleza urbana para reducir la exposición a contaminantes y calor extremo'],
-    ['Caso de Estudio:', 'Ciudad de Trujillo, Región La Libertad, Perú'],
-    ['Investigador Principal:', 'Ing. Joel Arevalo'],
-    ['Fecha de Generación:', new Date().toLocaleString('es-PE')],
-    ['Instituciones:', 'Universidad Nacional de Trujillo / Municipalidad Provincial de Trujillo / SENAMHI'],
+    [tr.reportTitle],
+    [tr.thesisTitle],
+    [tr.caseStudy],
+    [tr.lead],
+    [tr.dateLabel, new Date().toLocaleString(lang === 'en' ? 'en-US' : lang === 'zh' ? 'zh-CN' : lang === 'de' ? 'de-DE' : lang === 'fr' ? 'fr-FR' : lang === 'pt' ? 'pt-BR' : 'es-PE')],
+    [tr.inst],
     [''],
-    ['RESUMEN DE ZONAS CRÍTICAS EVALUADAS'],
-    ['ID Zona', 'Nombre de Zona', 'Distrito', 'Vulnerabilidad', 'Población Total', 'Población Vulnerable', 'Temp Base (°C)', 'PM2.5 Base (µg/m³)', 'Cobertura Arbórea (%)', 'Densidad Edificada (%)', 'Fuente Principal']
+    [tr.zonesTitle],
+    tr.zh
   ];
 
   zones.forEach(z => {
@@ -59,7 +140,7 @@ export const exportToExcel = (
   });
 
   const wsSummary = XLSX.utils.aoa_to_sheet(thesisSummaryData);
-  XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumen_Zonas_Trujillo');
+  XLSX.utils.book_append_sheet(wb, wsSummary, tr.w1);
 
   // Sheet 2: Telemetría de Sensores IoT Calibrados (2-Etapas Zhivkov / Cowell)
   const sensorsData = [
@@ -93,7 +174,7 @@ export const exportToExcel = (
   });
 
   const wsSensors = XLSX.utils.aoa_to_sheet(sensorsData);
-  XLSX.utils.book_append_sheet(wb, wsSensors, 'Telemetria_Sensores_IoT');
+  XLSX.utils.book_append_sheet(wb, wsSensors, tr.w2);
 
   // Sheet 3: Comparativa de Modelos Machine Learning y Deep Learning
   const modelsData = [
@@ -118,7 +199,7 @@ export const exportToExcel = (
   });
 
   const wsModels = XLSX.utils.aoa_to_sheet(modelsData);
-  XLSX.utils.book_append_sheet(wb, wsModels, 'Modelos_Machine_Learning');
+  XLSX.utils.book_append_sheet(wb, wsModels, tr.w3);
 
   // Sheet 4: Catálogo y Eficacia de Soluciones Basadas en la Naturaleza (NbS)
   const nbsData = [
@@ -141,7 +222,7 @@ export const exportToExcel = (
   });
 
   const wsNbs = XLSX.utils.aoa_to_sheet(nbsData);
-  XLSX.utils.book_append_sheet(wb, wsNbs, 'Catalogo_NbS_Trujillo');
+  XLSX.utils.book_append_sheet(wb, wsNbs, tr.w4);
 
   // Sheet 5: Cumplimiento de Objetivos de Tesis
   const objData = [
@@ -164,7 +245,7 @@ export const exportToExcel = (
   });
 
   const wsObj = XLSX.utils.aoa_to_sheet(objData);
-  XLSX.utils.book_append_sheet(wb, wsObj, 'Validacion_Objetivos_Tesis');
+  XLSX.utils.book_append_sheet(wb, wsObj, tr.w5);
 
   // Sheet 6: Escenario Simulado NbS Detallado (si existe)
   if (activeScenario) {
@@ -196,13 +277,13 @@ export const exportToExcel = (
       ['Retención de Escorrentía Hídrica (m³/año):', String(activeScenario.results.stormwaterRetentionM3 || 480)]
     ];
     const wsScenario = XLSX.utils.aoa_to_sheet(scenarioData);
-    XLSX.utils.book_append_sheet(wb, wsScenario, 'Escenario_Simulado_Detallado');
+    XLSX.utils.book_append_sheet(wb, wsScenario, tr.w6);
   }
 
-  XLSX.writeFile(wb, `Reporte_Gemelo_Digital_Trujillo_${Date.now()}.xlsx`);
+  XLSX.writeFile(wb, `${tr.file}_${Date.now()}.xlsx`);
 };
 
-export const exportToCSV = (sensors: SensorNode[]) => {
+export const exportToCSV = (sensors: SensorNode[], _lang: ExportLang = 'es') => {
   const headers = [
     'timestamp',
     'codigo_sensor',
@@ -259,7 +340,8 @@ export const exportToPDF = (
   models: AiModelMetric[],
   nbsList: NbsIntervention[],
   objectives: ThesisObjectiveEvaluation[],
-  activeScenario?: SimulationScenario | null
+  activeScenario?: SimulationScenario | null,
+  _lang: ExportLang = 'es'
 ) => {
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -489,7 +571,8 @@ export const exportToWord = async (
   models: AiModelMetric[],
   nbsList: NbsIntervention[],
   objectives: ThesisObjectiveEvaluation[],
-  activeScenario?: SimulationScenario | null
+  activeScenario?: SimulationScenario | null,
+  _lang: ExportLang = 'es'
 ) => {
   const now = new Date();
   const fechaAPA = now.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });

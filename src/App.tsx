@@ -55,7 +55,7 @@ type ActiveModule =
 
 function MainAppContent() {
   const { user, isDemo } = useAuth();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { zones: TRUJILLO_ZONES, sensors: SENSOR_NODES, models: AI_MODELS_BENCHMARK, nbs: NBS_CATALOG, objectives: THESIS_OBJECTIVES_DATA } = useSupabaseData();
   const [activeModule, setActiveModule] = useState<ActiveModule>('digital_twin');
   const [selectedZone, setSelectedZone] = useState<UrbanZone>(() => TRUJILLO_ZONES[0]);
@@ -80,13 +80,13 @@ function MainAppContent() {
 
   const handleQuickExport = (format: 'xlsx' | 'pdf' | 'docx' | 'csv') => {
     if (format === 'xlsx') {
-      exportToExcel(TRUJILLO_ZONES, SENSOR_NODES, AI_MODELS_BENCHMARK, NBS_CATALOG, THESIS_OBJECTIVES_DATA, activeScenario);
+      exportToExcel(TRUJILLO_ZONES, SENSOR_NODES, AI_MODELS_BENCHMARK, NBS_CATALOG, THESIS_OBJECTIVES_DATA, activeScenario, lang as any);
     } else if (format === 'pdf') {
-      exportToPDF(TRUJILLO_ZONES, SENSOR_NODES, AI_MODELS_BENCHMARK, NBS_CATALOG, THESIS_OBJECTIVES_DATA, activeScenario);
+      exportToPDF(TRUJILLO_ZONES, SENSOR_NODES, AI_MODELS_BENCHMARK, NBS_CATALOG, THESIS_OBJECTIVES_DATA, activeScenario, lang as any);
     } else if (format === 'docx') {
-      exportToWord(TRUJILLO_ZONES, SENSOR_NODES, AI_MODELS_BENCHMARK, NBS_CATALOG, THESIS_OBJECTIVES_DATA, activeScenario);
+      exportToWord(TRUJILLO_ZONES, SENSOR_NODES, AI_MODELS_BENCHMARK, NBS_CATALOG, THESIS_OBJECTIVES_DATA, activeScenario, lang as any);
     } else if (format === 'csv') {
-      exportToCSV(SENSOR_NODES);
+      exportToCSV(SENSOR_NODES, lang as any);
     }
   };
 
