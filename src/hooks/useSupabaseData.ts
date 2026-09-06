@@ -148,7 +148,14 @@ export function useSupabaseData() {
       }
     })();
 
-    // Realtime: lecturas nuevas actualizan last_reading
+    // Realtime: zonas y lecturas
+    const chZones = supabase.channel('realtime-zones')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'urban_zones' }, async () => {
+        const { data } = await supabase.from('urban_zones').select('*').order('id');
+        if (data) setZones(data.map(mapZone));
+      })
+      .subscribe();
+
     const ch = supabase.channel('realtime-readings')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'environmental_readings' }, payload => {
         const r: any = payload.new;
@@ -172,7 +179,7 @@ export function useSupabaseData() {
       })
       .subscribe();
 
-    return () => { mounted = false; supabase.removeChannel(ch); };
+    return () => { mounted = false; supabase.removeChannel(ch); supabase.removeChannel(chZones); };
   }, []);
 
   return { zones, sensors, models, nbs, objectives, loading, hasSupabase };

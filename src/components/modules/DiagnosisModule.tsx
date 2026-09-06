@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { UrbanZone, SensorNode } from '../../types';
+import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
+import { ZoneFormModal } from './ZoneFormModal';
 import { 
   ResponsiveContainer, 
   AreaChart, 
@@ -29,7 +32,10 @@ import {
   Layers, 
   ArrowRight,
   ShieldAlert,
-  Download
+  Download,
+  Plus,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 
 interface DiagnosisModuleProps {
@@ -47,10 +53,13 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
   onSelectZone,
   onExportReports
 }) => {
+  const { permissions } = useAuth();
   const [selectedSensor, setSelectedSensor] = useState<SensorNode>(
     sensors.find(s => s.zoneId === selectedZone.id) || sensors[0]
   );
   const [metricTab, setMetricTab] = useState<'pm' | 'temp_uhi' | 'gases' | 'calibration'>('pm');
+  const [zoneModalOpen, setZoneModalOpen] = useState(false);
+  const [editingZone, setEditingZone] = useState<UrbanZone | null>(null);
 
   const zoneSensors = sensors.filter(s => s.zoneId === selectedZone.id);
 
@@ -95,6 +104,14 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
+              {permissions.canModifyZones && (
+                <button
+                  onClick={() => { setEditingZone(null); setZoneModalOpen(true); }}
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Registrar Zona
+                </button>
+              )}
               <button
                 onClick={() => onExportReports('pdf')}
                 className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-medium border border-slate-200 shadow-xs flex items-center gap-1.5 transition-all"
@@ -116,22 +133,23 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
 
       {/* Zone Selector Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {zones.length === 0 && <div className="col-span-6 bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">Sin zonas — usa “Registrar Zona” para crear la primera.</div>}
         {zones.map((zone) => {
           const isSelected = zone.id === selectedZone.id;
           return (
-            <button
-              key={zone.id}
-              onClick={() => {
-                onSelectZone(zone);
-                const firstSens = sensors.find(s => s.zoneId === zone.id);
-                if (firstSens) setSelectedSensor(firstSens);
-              }}
-              className={`p-3.5 rounded-xl text-left border transition-all ${
-                isSelected
-                  ? 'bg-emerald-50/80 border-emerald-500 ring-2 ring-emerald-500/20 text-slate-900 shadow-sm'
-                  : 'bg-white border-slate-200/80 hover:border-slate-300 text-slate-700 shadow-xs'
-              }`}
-            >
+            <div key={zone.id} className="relative">
+              <button
+                onClick={() => {
+                  onSelectZone(zone);
+                  const firstSens = sensors.find(s => s.zoneId === zone.id);
+                  if (firstSens) setSelectedSensor(firstSens);
+                }}
+                className={`w-full p-3.5 rounded-xl text-left border transition-all ${
+                  isSelected
+                    ? 'bg-emerald-50/80 border-emerald-500 ring-2 ring-emerald-500/20 text-slate-900 shadow-sm'
+                    : 'bg-white border-slate-200/80 hover:border-slate-300 text-slate-700 shadow-xs'
+                }`}
+              >
               <div className="flex items-center justify-between text-xs mb-1.5">
                 <span className="font-mono text-emerald-700 font-bold">{zone.id.replace('zona-', 'Z-')}</span>
                 <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
@@ -151,7 +169,14 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
                 <span className="text-slate-500">Base: <strong className="text-slate-800">{zone.baselineTemp}°C</strong></span>
                 <span className="text-slate-500">PM: <strong className="text-amber-600 font-bold">{zone.baselinePM25}µg</strong></span>
               </div>
-            </button>
+              </button>
+              {permissions.canModifyZones && (
+                <div className="absolute -top-1 -right-1 flex gap-1">
+                  <button onClick={(e)=>{e.stopPropagation(); setEditingZone(zone); setZoneModalOpen(true);}} className="w-6 h-6 bg-white border border-slate-200 rounded-lg grid place-items-center hover:bg-slate-50 shadow-xs"><Pencil className="w-3 h-3 text-slate-600" /></button>
+                  <button onClick={async (e)=>{e.stopPropagation(); if(confirm(`¿Eliminar ${zone.name}?`)){ await supabase.from('urban_zones').delete().eq('id', zone.id); }}} className="w-6 h-6 bg-white border border-rose-200 rounded-lg grid place-items-center hover:bg-rose-50 shadow-xs"><Trash2 className="w-3 h-3 text-rose-600" /></button>
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
@@ -425,6 +450,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
           </div>
         </div>
       </div>
+      <ZoneFormModal isOpen={zoneModalOpen} onClose={()=>setZoneModalOpen(false)} editingZone={editingZone} onSaved={()=>{ /* Realtime actualiza */ }} />
     </div>
   );
 };
