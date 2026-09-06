@@ -190,24 +190,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return { success: false, error: 'Modo sin Supabase: usa trujillo2026' };
     }
-    // Verifica Brevo primero (email_verified en profiles)
+    // Verifica Brevo primero (email_verified en profiles) — usa maybeSingle para no 406 si no existe
     const normalized = email.trim().toLowerCase();
-    const { data: prof } = await supabase.from('profiles').select('email_verified').eq('email', normalized).single();
+    const { data: prof } = await supabase.from('profiles').select('email_verified').eq('email', normalized).maybeSingle();
     if (prof && (prof as any).email_verified === false) {
       return { success: false, error: 'Debes verificar tu correo. Revisa tu bandeja y haz clic en “Verificar mi correo”. ¿No lo ves? usa Reenviar verificación.' };
     }
     const { data, error } = await supabase.auth.signInWithPassword({ email: normalized, password });
     if (error) {
-      if (error.message.toLowerCase().includes('email not confirmed')) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes('email not confirmed')) {
         return { success: false, error: 'Debes verificar tu correo. Revisa tu bandeja y haz clic en “Verificar mi correo”. ¿No lo ves? usa Reenviar verificación.' };
       }
-      if (error.message.includes('Invalid login credentials')) {
+      if (msg.includes('email rate limit exceeded') || msg.includes('429') || msg.includes('rate limit')) {
+        return { success: false, error: 'Demasiados intentos. Espera 2 minutos antes de reintentar o usa Reenviar verificación (límite 1/h).' };
+      }
+      if (msg.includes('invalid login credentials')) {
         return { success: false, error: 'Credenciales inválidas. Verifica correo y contraseña.' };
       }
       return { success: false, error: error.message };
     }
     if (data.user) {
-      const { data: prof2 } = await supabase.from('profiles').select('email_verified').eq('id', data.user.id).single();
+      const { data: prof2 } = await supabase.from('profiles').select('email_verified').eq('id', data.user.id).maybeSingle();
       if (prof2 && (prof2 as any).email_verified === false) {
         await supabase.auth.signOut();
         return { success: false, error: 'Debes verificar tu correo antes de ingresar. Revisa tu bandeja y haz clic en “Verificar mi correo”.' };

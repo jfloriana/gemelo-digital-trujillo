@@ -341,6 +341,7 @@ export const AuthScreen: React.FC = () => {
                       <input
                         type={showLoginPassword ? 'text' : 'password'}
                         required
+                        autoComplete="current-password"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         placeholder="••••••••"
@@ -470,6 +471,7 @@ export const AuthScreen: React.FC = () => {
                       <input
                         type={showRegPassword ? 'text' : 'password'}
                         required
+                        autoComplete="new-password"
                         value={regPassword}
                         onChange={(e) => setRegPassword(e.target.value)}
                         placeholder="Min. 6 caracteres"
@@ -482,6 +484,7 @@ export const AuthScreen: React.FC = () => {
                       <input
                         type={showRegPassword ? 'text' : 'password'}
                         required
+                        autoComplete="new-password"
                         value={regConfirmPassword}
                         onChange={(e) => setRegConfirmPassword(e.target.value)}
                         placeholder="Repetir contraseña"
