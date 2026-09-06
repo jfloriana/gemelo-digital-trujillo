@@ -219,15 +219,15 @@ export const AuthScreen: React.FC = () => {
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-semibold">
                 <Award className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Investigación de Tesis de Posgrado - Trujillo, Perú</span>
+                <span>{t('auth.badge')}</span>
               </div>
 
               <h1 className="text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
-                Gemelo Digital a Microescala de Calidad del Aire y Soluciones Basadas en la Naturaleza
+                {t('auth.title')}
               </h1>
 
               <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                Plataforma integral para modelar cañones urbanos, calibrar sensores IoT de bajo costo con algoritmos de 2 etapas, predecir contaminantes mediante <strong>1D-CNN ($R^2=0.9925$)</strong> y <strong>GNN</strong>, y evaluar el confort térmico bajo el estándar <strong>GREENPASS®</strong>.
+                {t('auth.subtitle')}
               </p>
             </div>
 
@@ -236,40 +236,40 @@ export const AuthScreen: React.FC = () => {
               <div className="bg-white dark:bg-slate-900/80 dark:bg-slate-900/80 backdrop-blur-xs border border-slate-200/80 dark:border-slate-700 p-3.5 rounded-2xl shadow-xs space-y-1">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-100">
                   <Activity className="w-4 h-4 text-emerald-600" />
-                  Calibración IoT (OE2)
+                  {t('auth.cardCalibTitle')}
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Corrección no lineal higroscópica ($R^2$ de 0.29 a 0.94 frente a SENAMHI).
+                  {t('auth.cardCalibDesc')}
                 </p>
               </div>
 
               <div className="bg-white dark:bg-slate-900/80 dark:bg-slate-900/80 backdrop-blur-xs border border-slate-200/80 dark:border-slate-700 p-3.5 rounded-2xl shadow-xs space-y-1">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-100">
                   <Cpu className="w-4 h-4 text-purple-600" />
-                  Machine Learning (OE3)
+                  {t('auth.cardMLTitle')}
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Modelos 1D-CNN, GNN, Random Forest y Bi-LSTM a microescala callejera.
+                  {t('auth.cardMLDesc')}
                 </p>
               </div>
 
               <div className="bg-white dark:bg-slate-900/80 dark:bg-slate-900/80 backdrop-blur-xs border border-slate-200/80 dark:border-slate-700 p-3.5 rounded-2xl shadow-xs space-y-1">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-100">
                   <Trees className="w-4 h-4 text-teal-600" />
-                  Simulador NbS (OE4)
+                  {t('auth.cardNbSTitle')}
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Arbolado nativo, techos verdes y pavimentos permeables en Trujillo.
+                  {t('auth.cardNbSDesc')}
                 </p>
               </div>
 
               <div className="bg-white dark:bg-slate-900/80 dark:bg-slate-900/80 backdrop-blur-xs border border-slate-200/80 dark:border-slate-700 p-3.5 rounded-2xl shadow-xs space-y-1">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-100">
                   <ShieldCheck className="w-4 h-4 text-sky-600" />
-                  Políticas Públicas (OE5)
+                  {t('auth.cardPolicyTitle')}
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Reportes técnicos automáticos en Excel, PDF y Word para MPT y OEFA.
+                  {t('auth.cardPolicyDesc')}
                 </p>
               </div>
             </div>
@@ -308,7 +308,7 @@ export const AuthScreen: React.FC = () => {
                   }`}
                 >
                   <LogIn className="w-3.5 h-3.5" />
-                  Iniciar Sesión
+                  {t('auth.tabs.login')}
                 </button>
                 <button
                   onClick={() => { setActiveTab('register'); setRegisterError(null); }}
@@ -319,7 +319,7 @@ export const AuthScreen: React.FC = () => {
                   }`}
                 >
                   <UserPlus className="w-3.5 h-3.5" />
-                  Registrarse
+                  {t('auth.tabs.register')}
                 </button>
                 <button
                   onClick={() => setActiveTab('demo')}
@@ -330,7 +330,7 @@ export const AuthScreen: React.FC = () => {
                   }`}
                 >
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  Roles Demo
+                  {t('auth.tabs.demo')}
                 </button>
               </div>
 
@@ -338,9 +338,9 @@ export const AuthScreen: React.FC = () => {
               {activeTab === 'login' && (
                 <form onSubmit={handleLoginSubmit} className="space-y-4">
                   <div className="space-y-1">
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">Ingreso al Panel de Control</h2>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('auth.login.title')}</h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Introduce tus credenciales autorizadas o selecciona una cuenta demo.
+                      {t('auth.login.desc')}
                     </p>
                   </div>
 
@@ -355,7 +355,7 @@ export const AuthScreen: React.FC = () => {
 
                   <div className="space-y-1.5">
                     <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">
-                      Correo Electrónico
+                      {t('auth.login.email')}
                     </label>
                     <div className="relative">
                       <input
@@ -372,7 +372,7 @@ export const AuthScreen: React.FC = () => {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Contraseña</label>
+                    <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('auth.login.password')}</label>
                     <div className="relative">
                       <input
                         type={showLoginPassword ? 'text' : 'password'}
@@ -400,23 +400,23 @@ export const AuthScreen: React.FC = () => {
                     className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-emerald-900/10 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {isSubmitting ? (
-                      <span>Verificando credenciales...</span>
+                      <span>{t('auth.login.verifying')}</span>
                     ) : (
                       <>
-                        <span>Ingresar al Gemelo Digital</span>
+                        <span>{t('auth.login.submit')}</span>
                         <ArrowRight className="w-4 h-4" />
                       </>
                     )}
                   </button>
 
                   <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                    <span>¿No tienes credenciales?</span>
+                    <span>{t('auth.login.noCreds')}</span>
                     <button
                       type="button"
                       onClick={() => setActiveTab('demo')}
                       className="text-emerald-700 hover:text-emerald-800 font-bold hover:underline cursor-pointer"
                     >
-                      Probar con Rol Demo →
+                      {t('auth.login.demoLink')}
                     </button>
                   </div>
                 </form>
@@ -426,9 +426,9 @@ export const AuthScreen: React.FC = () => {
               {activeTab === 'register' && (
                 <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
                   <div className="space-y-1">
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">Registro de Nuevo Usuario</h2>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('auth.register.title')}</h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Crea tu cuenta institucional para acceder a las simulaciones y telemetría.
+                      {t('auth.register.desc')}
                     </p>
                   </div>
 
@@ -441,15 +441,15 @@ export const AuthScreen: React.FC = () => {
 
                   {registerSuccess && (
                     <div className="p-4 bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 rounded-xl space-y-2">
-                      <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200 text-xs font-bold"><CheckCircle2 className="w-4 h-4" /> ¡Revisa tu correo!</div>
-                      <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">Te enviamos un correo de verificación a <strong>{regEmail}</strong> con un botón <strong>“Verificar mi correo”</strong>. Haz clic para activar tu cuenta. Revisa spam/promociones si no lo ves. El enlace expira en 24h.</p>
+                      <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200 text-xs font-bold"><CheckCircle2 className="w-4 h-4" /> {t('auth.register.checkEmail')}</div>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">{t('auth.register.checkEmailDesc')}</p>
                       <button onClick={async()=>{ const r=await resendVerification(regEmail); setResendStatus(r.success ? 'Correo reenviado ✓' : r.error || 'Error al reenviar'); }} className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 underline hover:text-emerald-800">Reenviar verificación</button>
                       {resendStatus && <p className="text-xs text-slate-600 dark:text-slate-400">{resendStatus}</p>}
                     </div>
                   )}
 
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Nombre Completo</label>
+                    <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('auth.register.name')}</label>
                     <input
                       type="text"
                       required
@@ -461,7 +461,7 @@ export const AuthScreen: React.FC = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Correo Electrónico</label>
+                    <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('auth.register.email')}</label>
                     <input
                       type="email"
                       required
@@ -475,7 +475,7 @@ export const AuthScreen: React.FC = () => {
 
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Rol en el Proyecto</label>
+                      <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('auth.register.role')}</label>
                       <select
                         value={regRole}
                         onChange={(e) => setRegRole(e.target.value as UserRole)}
@@ -490,7 +490,7 @@ export const AuthScreen: React.FC = () => {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Institución</label>
+                      <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('auth.register.institution')}</label>
                       <input
                         type="text"
                         required
@@ -504,7 +504,7 @@ export const AuthScreen: React.FC = () => {
 
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Contraseña</label>
+                      <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('auth.register.password')}</label>
                       <input
                         type={showRegPassword ? 'text' : 'password'}
                         required
@@ -517,7 +517,7 @@ export const AuthScreen: React.FC = () => {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Confirmar</label>
+                      <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('auth.register.confirm')}</label>
                       <input
                         type={showRegPassword ? 'text' : 'password'}
                         required
@@ -536,7 +536,7 @@ export const AuthScreen: React.FC = () => {
                     className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer mt-2"
                   >
                     <UserPlus className="w-4 h-4" />
-                    <span>Crear Cuenta & Acceder</span>
+                    <span>{t('auth.register.submit')}</span>
                   </button>
                 </form>
               )}
@@ -545,9 +545,9 @@ export const AuthScreen: React.FC = () => {
               {activeTab === 'demo' && (
                 <div className="space-y-3">
                   <div className="space-y-1">
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">Acceso Rápido por Roles Demo</h2>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('auth.demo.title')}</h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Haz clic en cualquiera de los 5 perfiles para ingresar instantáneamente con sus permisos RBAC.
+                      {t('auth.demo.desc')}
                     </p>
                   </div>
 
@@ -587,7 +587,7 @@ export const AuthScreen: React.FC = () => {
               {/* Security Banner */}
               <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-2 text-[10px] text-slate-400">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Cifrado SHA-256 + Salt Dinámico & Token JWT</span>
+                <span>{t("auth.footer")}</span>
               </div>
 
             </div>
