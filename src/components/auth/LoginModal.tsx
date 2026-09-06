@@ -384,7 +384,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               Cambia instantáneamente entre roles para evaluar funcionalidades y permisos:
             </span>
             <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-              {registeredUsers.map(u => {
+              {registeredUsers.filter(u => u.email.toLowerCase() !== 'joelandersonarevalo@gmail.com').map(u => {
                 const isCurrent = user?.id === u.id;
                 return (
                   <button
