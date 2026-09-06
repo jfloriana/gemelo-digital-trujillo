@@ -12,9 +12,11 @@ interface Props {
 
 const slugify = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,30) || 'zona';
 
+const DEPARTMENTS = ['Amazonas','Áncash','Apurímac','Arequipa','Ayacucho','Cajamarca','Callao','Cusco','Huancavelica','Huánuco','Ica','Junín','La Libertad','Lambayeque','Lima','Loreto','Madre de Dios','Moquegua','Pasco','Piura','Puno','San Martín','Tacna','Tumbes','Ucayali'];
+
 export const ZoneFormModal: React.FC<Props> = ({ isOpen, onClose, editingZone, onSaved }) => {
   const [form, setForm] = useState<Partial<UrbanZone>>({
-    name: '', district: '', description: '', vulnerabilityLevel: 'Media', targetPopulation: 10000, vulnerablePopulation: 3000,
+    name: '', district: '', department: 'La Libertad', description: '', vulnerabilityLevel: 'Media', targetPopulation: 10000, vulnerablePopulation: 3000,
     baselineTemp: 28, baselinePM25: 35, treeCover: 5, builtDensity: 70, primaryPollutionSource: '', sensorsCount: 0,
   });
   const [saving, setSaving] = useState(false);
@@ -22,7 +24,7 @@ export const ZoneFormModal: React.FC<Props> = ({ isOpen, onClose, editingZone, o
 
   useEffect(() => {
     if (editingZone) setForm({ ...editingZone });
-    else setForm({ name: '', district: '', description: '', vulnerabilityLevel: 'Media', targetPopulation: 10000, vulnerablePopulation: 3000, baselineTemp: 28, baselinePM25: 35, treeCover: 5, builtDensity: 70, primaryPollutionSource: '', sensorsCount: 0, geometryCoords: [{x:10,y:10},{x:90,y:10},{x:90,y:90},{x:10,y:90}] });
+    else setForm({ name: '', district: '', department: 'La Libertad', description: '', vulnerabilityLevel: 'Media', targetPopulation: 10000, vulnerablePopulation: 3000, baselineTemp: 28, baselinePM25: 35, treeCover: 5, builtDensity: 70, primaryPollutionSource: '', sensorsCount: 0, geometryCoords: [{x:10,y:10},{x:90,y:10},{x:90,y:90},{x:10,y:90}] });
   }, [editingZone, isOpen]);
 
   if (!isOpen) return null;
@@ -36,6 +38,7 @@ export const ZoneFormModal: React.FC<Props> = ({ isOpen, onClose, editingZone, o
       id,
       name: form.name!.trim(),
       district: form.district!.trim(),
+      department: (form.department || 'La Libertad').trim(),
       description: form.description!.trim(),
       vulnerability_level: form.vulnerabilityLevel,
       target_population: Number(form.targetPopulation),
@@ -74,6 +77,12 @@ export const ZoneFormModal: React.FC<Props> = ({ isOpen, onClose, editingZone, o
             <div>
               <label className="text-xs font-semibold">Distrito *</label>
               <input value={form.district} onChange={e=>setForm({...form, district:e.target.value})} placeholder="Trujillo" className="w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold">Departamento *</label>
+              <select value={form.department} onChange={e=>setForm({...form, department: e.target.value})} className="w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs">
+                {DEPARTMENTS.map(d=> <option key={d} value={d}>{d}</option>)}
+              </select>
             </div>
             <div>
               <label className="text-xs font-semibold">Vulnerabilidad</label>

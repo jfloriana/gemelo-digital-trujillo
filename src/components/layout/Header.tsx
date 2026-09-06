@@ -59,11 +59,11 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Live Weather / Microclimate pill for Trujillo */}
+        {/* Live Weather / Microclimate pill — ahora multi-departamento */}
         <div className="hidden md:flex items-center gap-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-1.5 rounded-2xl text-xs text-slate-600 dark:text-slate-300 shadow-xs">
           <div className="flex items-center gap-1.5">
             <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-            <span className="font-semibold text-slate-800 dark:text-slate-100">{t('header.city')}</span>
+            <span className="font-semibold text-slate-800 dark:text-slate-100">{activeZone.district ? `${activeZone.district}, ${activeZone.department}` : t('header.city')}</span>
           </div>
           <span className="text-slate-300">|</span>
           <div className="flex items-center gap-1">

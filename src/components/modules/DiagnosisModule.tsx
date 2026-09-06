@@ -60,6 +60,9 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
   const [metricTab, setMetricTab] = useState<'pm' | 'temp_uhi' | 'gases' | 'calibration'>('pm');
   const [zoneModalOpen, setZoneModalOpen] = useState(false);
   const [editingZone, setEditingZone] = useState<UrbanZone | null>(null);
+  const [deptFilter, setDeptFilter] = useState<string>('Todos');
+  const departments = ['Todos', ...Array.from(new Set(zones.map(z=>z.department))).sort()];
+  const filteredZones = deptFilter==='Todos' ? zones : zones.filter(z=>z.department===deptFilter);
 
   const zoneSensors = sensors.filter(s => s.zoneId === selectedZone.id);
 
@@ -131,10 +134,20 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
         </div>
       </div>
 
+      {/* Filtrar por departamento */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-slate-500 font-medium">Departamento:</span>
+        <select value={deptFilter} onChange={e=>setDeptFilter(e.target.value)} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-semibold">
+          {departments.map(d=> <option key={d} value={d}>{d}</option>)}
+        </select>
+        <span className="text-xs text-slate-400">{filteredZones.length} zonas {deptFilter!=='Todos' ? `en ${deptFilter}` : 'en Perú'}</span>
+        {deptFilter!=='Todos' && <button onClick={()=>setDeptFilter('Todos')} className="text-xs text-emerald-600 hover:underline">Ver todas</button>}
+      </div>
+
       {/* Zone Selector Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {zones.length === 0 && <div className="col-span-6 bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">Sin zonas — usa “Registrar Zona” para crear la primera.</div>}
-        {zones.map((zone) => {
+        {filteredZones.length === 0 && <div className="col-span-6 bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">Sin zonas {deptFilter!=='Todos' ? `en ${deptFilter}` : ''} — usa “Registrar Zona” para crear la primera{deptFilter==='Todos' ? '' : ` en ${deptFilter}`}.</div>}
+        {filteredZones.map((zone) => {
           const isSelected = zone.id === selectedZone.id;
           return (
             <div key={zone.id} className="relative">
@@ -163,7 +176,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
               <h4 className="font-semibold text-xs text-slate-900 line-clamp-1">
                 {zone.name.split(':')[1]?.trim() || zone.name}
               </h4>
-              <p className="text-[11px] text-slate-500 mt-1">{zone.district}</p>
+              <p className="text-[11px] text-slate-500 mt-1">{zone.district} — {zone.department}</p>
               
               <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px]">
                 <span className="text-slate-500">Base: <strong className="text-slate-800">{zone.baselineTemp}°C</strong></span>

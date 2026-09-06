@@ -76,6 +76,7 @@ export interface UrbanZone {
   id: string;
   name: string;
   district: string;
+  department: string; // Departamento del Perú (La Libertad, Lima, Arequipa...)
   description: string;
   vulnerabilityLevel: 'Alta' | 'Muy Alta' | 'Media' | 'Crítica';
   targetPopulation: number;

@@ -10,6 +10,7 @@ function mapZone(r: any): UrbanZone {
     id: r.id,
     name: r.name,
     district: r.district,
+    department: r.department ?? 'La Libertad',
     description: r.description,
     vulnerabilityLevel: r.vulnerability_level,
     targetPopulation: r.target_population,

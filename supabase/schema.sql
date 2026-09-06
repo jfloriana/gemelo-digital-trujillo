@@ -124,6 +124,7 @@ create table if not exists public.urban_zones (
   id text primary key, -- ej: zona-centro
   name text not null,
   district text not null,
+  department text not null default 'La Libertad',
   description text not null,
   vulnerability_level vulnerability_level not null,
   target_population integer not null check (target_population >= 0),
@@ -139,6 +140,7 @@ create table if not exists public.urban_zones (
   updated_at timestamptz not null default now()
 );
 create index if not exists idx_zones_district on public.urban_zones(district);
+create index if not exists idx_zones_department on public.urban_zones(department);
 create index if not exists idx_zones_vuln on public.urban_zones(vulnerability_level);
 
 -- updated_at trigger
