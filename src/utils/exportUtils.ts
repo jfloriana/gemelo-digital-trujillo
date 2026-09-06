@@ -31,8 +31,14 @@ const exT = (lang: ExportLang) => {
       inst: 'Universidad Nacional de Trujillo / Municipalidad Provincial de Trujillo / SENAMHI',
       zonesTitle: 'RESUMEN DE ZONAS CRÍTICAS EVALUADAS',
       zh: ['ID Zona', 'Nombre de Zona', 'Distrito', 'Departamento', 'Vulnerabilidad', 'Población Total', 'Población Vulnerable', 'Temp Base (°C)', 'PM2.5 Base (µg/m³)', 'Cobertura Arbórea (%)', 'Densidad Edificada (%)', 'Fuente Principal'],
+      sh: ['Código Sensor', 'Nombre del Nodo', 'Zona', 'Latitud', 'Longitud', 'Tipo de Sensor', 'Calibración (2 Etapas)', 'R² Crudo', 'R² Calibrado', 'Temp (°C)', 'HR (%)', 'PM2.5 (µg/m³)', 'PM10 (µg/m³)', 'NO2 (ppb)', 'O3 (ppb)', 'CO (ppm)', 'CO2 (ppm)', 'Índice PET (°C)', 'TCS Score', 'Delta UHI (°C)', 'Categoría AQI'],
+      mh: ['Modelo IA / Arquitectura', 'Autor de Referencia', 'Año', 'R² Score', 'RMSE', 'MAE', 'MAPE (%)', 'Tiempo Entrenamiento (s)', 'Inferencia (ms)', 'Resolución Espacial', 'Estado', 'Variables de Entrada (Features)'],
+      nh: ['Nombre de la Intervención NbS', 'Tipo', 'Especies de Flora Recomendadas', 'Costo Unitario (S/.)', 'Mantenimiento Anual (S/.)', 'Enfriamiento Térmico (°C)', 'Reducción PM2.5 (%)', 'Retención Hídrica (L/m²)', 'Captura CO2 (kg/año)', 'Atenuación Acústica (dB)'],
+      oh: ['Objetivo', 'Título del Objetivo', 'Progreso (%)', 'Estado', 'Métrica Evaluada', 'Meta', 'Logrado', 'Cumplimiento'],
       w1: 'Resumen_Zonas', w2: 'Telemetria_Sensores', w3: 'Modelos_ML', w4: 'Catalogo_NbS', w5: 'Validacion_Objetivos', w6: 'Escenario_Simulado',
       file: 'Reporte_Gemelo_Digital_Trujillo',
+      pdfTitle: 'GEMELO DIGITAL DE CALIDAD DEL AIRE A MICROESCALA Y NbS',
+      pdfSub: 'CASO DE ESTUDIO: TRUJILLO, PERÚ | REPORTE DE PREDICCIÓN ML Y SIMULACIÓN NbS',
     },
     en: {
       reportTitle: 'TECHNICAL AND SCIENTIFIC REPORT — TRUJILLO MICRO-SCALE DIGITAL TWIN',
@@ -43,8 +49,14 @@ const exT = (lang: ExportLang) => {
       inst: 'National University of Trujillo / Provincial Municipality of Trujillo / SENAMHI',
       zonesTitle: 'SUMMARY OF CRITICAL ZONES EVALUATED',
       zh: ['Zone ID', 'Zone Name', 'District', 'Department', 'Vulnerability', 'Total Population', 'Vulnerable Pop.', 'Base Temp (°C)', 'Base PM2.5 (µg/m³)', 'Tree Cover (%)', 'Built Density (%)', 'Main Source'],
+      sh: ['Sensor Code', 'Node Name', 'Zone', 'Latitude', 'Longitude', 'Sensor Type', 'Calibration (2 Stages)', 'R² Raw', 'R² Calibrated', 'Temp (°C)', 'RH (%)', 'PM2.5 (µg/m³)', 'PM10 (µg/m³)', 'NO2 (ppb)', 'O3 (ppb)', 'CO (ppm)', 'CO2 (ppm)', 'PET Index (°C)', 'TCS Score', 'UHI Delta (°C)', 'AQI Category'],
+      mh: ['AI Model / Architecture', 'Reference Author', 'Year', 'R² Score', 'RMSE', 'MAE', 'MAPE (%)', 'Training Time (s)', 'Inference (ms)', 'Spatial Resolution', 'Status', 'Input Features'],
+      nh: ['NbS Intervention Name', 'Type', 'Recommended Flora Species', 'Unit Cost (PEN)', 'Annual Maintenance (PEN)', 'Thermal Cooling (°C)', 'PM2.5 Reduction (%)', 'Water Retention (L/m²)', 'CO2 Capture (kg/year)', 'Acoustic Attenuation (dB)'],
+      oh: ['Objective', 'Objective Title', 'Progress (%)', 'Status', 'Evaluated Metric', 'Target', 'Achieved', 'Compliance'],
       w1: 'Zones_Summary', w2: 'Sensors_Telemetry', w3: 'ML_Models', w4: 'NbS_Catalog', w5: 'Objectives_Validation', w6: 'Simulated_Scenario',
       file: 'Trujillo_Digital_Twin_Report',
+      pdfTitle: 'MICRO-SCALE AIR QUALITY DIGITAL TWIN AND NbS',
+      pdfSub: 'CASE STUDY: TRUJILLO, PERU | ML PREDICTION AND NbS SIMULATION REPORT',
     },
     zh: {
       reportTitle: '技术与科学报告 — 特鲁希略微尺度数字孪生',
@@ -55,8 +67,14 @@ const exT = (lang: ExportLang) => {
       inst: '特鲁希略国立大学 / 特鲁希略省市政府 / SENAMHI',
       zonesTitle: '关键区域评估摘要',
       zh: ['区域ID', '区域名称', '区', '省', '脆弱性', '总人口', '脆弱人口', '基准温度 (°C)', '基准 PM2.5', '绿化覆盖率', '建筑密度', '主要来源'],
+      sh: ['传感器代码', '节点名称', '区域', '纬度', '经度', '传感器类型', '校准 (2阶段)', 'R² 原始', 'R² 校准', '温度 (°C)', '湿度 (%)', 'PM2.5', 'PM10', 'NO2', 'O3', 'CO', 'CO2', 'PET 指数', 'TCS 分数', 'UHI 增量', 'AQI 类别'],
+      mh: ['AI 模型 / 架构', '参考文献作者', '年份', 'R² 分数', 'RMSE', 'MAE', 'MAPE (%)', '训练时间 (s)', '推理 (ms)', '空间分辨率', '状态', '输入特征'],
+      nh: ['NbS 干预名称', '类型', '推荐植物种类', '单位成本 (PEN)', '年度维护 (PEN)', '热冷却 (°C)', 'PM2.5 减少 (%)', '保水 (L/m²)', 'CO2 捕获 (kg/年)', '声学衰减 (dB)'],
+      oh: ['目标', '目标标题', '进度 (%)', '状态', '评估指标', '目标', '已达成', '合规性'],
       w1: '区域摘要', w2: '传感器遥测', w3: 'ML模型', w4: 'NbS目录', w5: '目标验证', w6: '模拟场景',
       file: '特鲁希略_数字孪生_报告',
+      pdfTitle: '微尺度空气质量数字孪生与基于自然的解决方案',
+      pdfSub: '案例研究：秘鲁特鲁希略 | ML 预测与 NbS 模拟报告',
     },
     de: {
       reportTitle: 'TECHNISCHER UND WISSENSCHAFTLICHER BERICHT — MIKROSKALIGER DIGITALER ZWILLING TRUJILLO',
@@ -67,8 +85,14 @@ const exT = (lang: ExportLang) => {
       inst: 'Nationale Universität Trujillo / Provinzgemeinde Trujillo / SENAMHI',
       zonesTitle: 'ZUSAMMENFASSUNG KRITISCHER ZONEN',
       zh: ['Zonen-ID', 'Zonenname', 'Bezirk', 'Departement', 'Vulnerabilität', 'Gesamtbevölkerung', 'Vulnerable Bev.', 'Basis Temp (°C)', 'Basis PM2.5', 'Baumbedeckung', 'Bebauungsdichte', 'Hauptquelle'],
+      sh: ['Sensorcode', 'Knotenname', 'Zone', 'Breite', 'Länge', 'Sensortyp', 'Kalibrierung (2 Stufen)', 'R² Roh', 'R² Kalibriert', 'Temp (°C)', 'RF (%)', 'PM2.5', 'PM10', 'NO2', 'O3', 'CO', 'CO2', 'PET Index', 'TCS Wert', 'UHI Delta', 'AQI Kategorie'],
+      mh: ['KI-Modell / Architektur', 'Referenzautor', 'Jahr', 'R² Wert', 'RMSE', 'MAE', 'MAPE (%)', 'Trainingszeit (s)', 'Inferenz (ms)', 'Räumliche Auflösung', 'Status', 'Eingabemerkmale'],
+      nh: ['NbS-Interventionsname', 'Typ', 'Empfohlene Flora', 'Stückkosten (PEN)', 'Jährliche Wartung (PEN)', 'Kühlung (°C)', 'PM2.5 Reduktion (%)', 'Wasserrückhalt (L/m²)', 'CO2-Bindung (kg/Jahr)', 'Schalldämpfung (dB)'],
+      oh: ['Ziel', 'Zieltitel', 'Fortschritt (%)', 'Status', 'Bewertete Metrik', 'Ziel', 'Erreicht', 'Konformität'],
       w1: 'Zonen_Zusammenfassung', w2: 'Sensoren_Telemetrie', w3: 'ML_Modelle', w4: 'NbS_Katalog', w5: 'Ziele_Validierung', w6: 'Simuliertes_Szenario',
       file: 'Trujillo_Digitaler_Zwilling_Bericht',
+      pdfTitle: 'MIKROSKALIGER DIGITALER ZWILLING DER LUFTQUALITÄT UND NBS',
+      pdfSub: 'FALLSTUDIE: TRUJILLO, PERU | ML-VORHERSAGE UND NBS-SIMULATIONSBERICHT',
     },
     fr: {
       reportTitle: 'RAPPORT TECHNIQUE ET SCIENTIFIQUE — JUMEAU NUMÉRIQUE MICRO-ÉCHELLE TRUJILLO',
@@ -79,8 +103,14 @@ const exT = (lang: ExportLang) => {
       inst: 'Université Nationale de Trujillo / Municipalité Provinciale de Trujillo / SENAMHI',
       zonesTitle: 'RÉSUMÉ DES ZONES CRITIQUES ÉVALUÉES',
       zh: ['ID Zone', 'Nom Zone', 'District', 'Département', 'Vulnérabilité', 'Population Totale', 'Pop. Vulnérable', 'Temp Base (°C)', 'PM2.5 Base', 'Couverture Arborée', 'Densité Bâtie', 'Source Principale'],
+      sh: ['Code Capteur', 'Nom Nœud', 'Zone', 'Latitude', 'Longitude', 'Type Capteur', 'Étalonnage (2 Étapes)', 'R² Brut', 'R² Étalonné', 'Temp (°C)', 'HR (%)', 'PM2.5', 'PM10', 'NO2', 'O3', 'CO', 'CO2', 'Indice PET', 'Score TCS', 'Delta UHI', 'Catégorie AQI'],
+      mh: ['Modèle IA / Architecture', 'Auteur Référence', 'Année', 'Score R²', 'RMSE', 'MAE', 'MAPE (%)', 'Temps Entraînement (s)', 'Inférence (ms)', 'Résolution Spatiale', 'Statut', 'Variables Entrée'],
+      nh: ['Nom Intervention NbS', 'Type', 'Flore Recommandée', 'Coût Unitaire (PEN)', 'Maintenance Annuelle (PEN)', 'Refroidissement (°C)', 'Réduction PM2.5 (%)', 'Rétention Eau (L/m²)', 'Capture CO2 (kg/an)', 'Atténuation Acoustique (dB)'],
+      oh: ['Objectif', 'Titre Objectif', 'Progrès (%)', 'Statut', 'Métrique Évaluée', 'Cible', 'Atteint', 'Conformité'],
       w1: 'Résumé_Zones', w2: 'Télémétrie_Capteurs', w3: 'Modèles_ML', w4: 'Catalogue_NbS', w5: 'Validation_Objectifs', w6: 'Scénario_Simulé',
       file: 'Rapport_Jumeau_Numérique_Trujillo',
+      pdfTitle: 'JUMEAU NUMÉRIQUE DE LA QUALITÉ DE L’AIR À MICRO-ÉCHELLE ET NBS',
+      pdfSub: 'ÉTUDE DE CAS : TRUJILLO, PÉROU | RAPPORT DE PRÉDICTION ML ET SIMULATION NBS',
     },
     pt: {
       reportTitle: 'RELATÓRIO TÉCNICO E CIENTÍFICO — GÊMEO DIGITAL MICROESCALA TRUJILLO',
@@ -91,8 +121,14 @@ const exT = (lang: ExportLang) => {
       inst: 'Universidade Nacional de Trujillo / Prefeitura Provincial de Trujillo / SENAMHI',
       zonesTitle: 'RESUMO DAS ZONAS CRÍTICAS AVALIADAS',
       zh: ['ID Zona', 'Nome da Zona', 'Distrito', 'Departamento', 'Vulnerabilidade', 'População Total', 'Pop. Vulnerável', 'Temp Base (°C)', 'PM2.5 Base', 'Cobertura Arbórea', 'Densidade Edificada', 'Fonte Principal'],
+      sh: ['Código Sensor', 'Nome Nó', 'Zona', 'Latitude', 'Longitude', 'Tipo Sensor', 'Calibração (2 Etapas)', 'R² Bruto', 'R² Calibrado', 'Temp (°C)', 'UR (%)', 'PM2.5', 'PM10', 'NO2', 'O3', 'CO', 'CO2', 'Índice PET', 'Score TCS', 'Delta UHI', 'Categoria AQI'],
+      mh: ['Modelo IA / Arquitetura', 'Autor Referência', 'Ano', 'Score R²', 'RMSE', 'MAE', 'MAPE (%)', 'Tempo Treino (s)', 'Inferência (ms)', 'Resolução Espacial', 'Status', 'Variáveis Entrada'],
+      nh: ['Nome Intervenção NbS', 'Tipo', 'Flora Recomendada', 'Custo Unitário (PEN)', 'Manutenção Anual (PEN)', 'Resfriamento (°C)', 'Redução PM2.5 (%)', 'Retenção Hídrica (L/m²)', 'Captura CO2 (kg/ano)', 'Atenuação Acústica (dB)'],
+      oh: ['Objetivo', 'Título Objetivo', 'Progresso (%)', 'Status', 'Métrica Avaliada', 'Meta', 'Atingido', 'Conformidade'],
       w1: 'Resumo_Zonas', w2: 'Telemetria_Sensores', w3: 'Modelos_ML', w4: 'Catálogo_NbS', w5: 'Validação_Objetivos', w6: 'Cenário_Simulado',
       file: 'Relatório_Gêmeo_Digital_Trujillo',
+      pdfTitle: 'GÊMEO DIGITAL DE QUALIDADE DO AR EM MICROESCALA E NBS',
+      pdfSub: 'ESTUDO DE CASO: TRUJILLO, PERU | RELATÓRIO DE PREDIÇÃO ML E SIMULAÇÃO NBS',
     },
   };
   return d[lang] || d.es;
@@ -143,9 +179,7 @@ export const exportToExcel = (
   XLSX.utils.book_append_sheet(wb, wsSummary, tr.w1);
 
   // Sheet 2: Telemetría de Sensores IoT Calibrados (2-Etapas Zhivkov / Cowell)
-  const sensorsData = [
-    ['Código Sensor', 'Nombre del Nodo', 'Zona', 'Latitud', 'Longitud', 'Tipo de Sensor', 'Calibración (2 Etapas)', 'R² Crudo', 'R² Calibrado', 'Temp (°C)', 'HR (%)', 'PM2.5 (µg/m³)', 'PM10 (µg/m³)', 'NO2 (ppb)', 'O3 (ppb)', 'CO (ppm)', 'CO2 (ppm)', 'Índice PET (°C)', 'TCS Score', 'Delta UHI (°C)', 'Categoría AQI']
-  ];
+  const sensorsData = [tr.sh];
 
   sensors.forEach(s => {
     sensorsData.push([
@@ -177,9 +211,7 @@ export const exportToExcel = (
   XLSX.utils.book_append_sheet(wb, wsSensors, tr.w2);
 
   // Sheet 3: Comparativa de Modelos Machine Learning y Deep Learning
-  const modelsData = [
-    ['Modelo IA / Arquitectura', 'Autor de Referencia', 'Año', 'R² Score', 'RMSE', 'MAE', 'MAPE (%)', 'Tiempo Entrenamiento (s)', 'Inferencia (ms)', 'Resolución Espacial', 'Estado', 'Variables de Entrada (Features)']
-  ];
+  const modelsData = [tr.mh];
 
   models.forEach(m => {
     modelsData.push([
@@ -202,9 +234,7 @@ export const exportToExcel = (
   XLSX.utils.book_append_sheet(wb, wsModels, tr.w3);
 
   // Sheet 4: Catálogo y Eficacia de Soluciones Basadas en la Naturaleza (NbS)
-  const nbsData = [
-    ['Nombre de la Intervención NbS', 'Tipo', 'Especies de Flora Recomendadas', 'Costo Unitario (S/.)', 'Mantenimiento Anual (S/.)', 'Enfriamiento Térmico (°C)', 'Reducción PM2.5 (%)', 'Retención Hídrica (L/m²)', 'Captura CO2 (kg/año)', 'Atenuación Acústica (dB)']
-  ];
+  const nbsData = [tr.nh];
 
   nbsList.forEach(n => {
     nbsData.push([
@@ -225,9 +255,7 @@ export const exportToExcel = (
   XLSX.utils.book_append_sheet(wb, wsNbs, tr.w4);
 
   // Sheet 5: Cumplimiento de Objetivos de Tesis
-  const objData = [
-    ['Objetivo', 'Título del Objetivo', 'Progreso (%)', 'Estado', 'Métrica Evaluada', 'Meta', 'Logrado', 'Cumplimiento']
-  ];
+  const objData = [tr.oh];
 
   objectives.forEach(obj => {
     obj.metrics.forEach(m => {
