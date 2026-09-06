@@ -104,15 +104,6 @@ export const AuthScreen: React.FC = () => {
 
   const demoAccounts = [
     {
-      id: 'user-investigador-01',
-      name: 'Demo Investigador UNT',
-      email: 'investigador.demo@unt.edu.pe',
-      role: 'Investigador Demo',
-      badge: 'Acceso Total',
-      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      desc: 'Simulación ML (1D-CNN/GNN), inyección IoT, exportación de reportes y calibración.'
-    },
-    {
       id: 'user-planificador-02',
       name: 'Dra. María Elena Cruz',
       email: 'mcruz@munitrujillo.gob.pe',
