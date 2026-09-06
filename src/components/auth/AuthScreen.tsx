@@ -246,15 +246,21 @@ export const AuthScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* Author Credit — ambos tesistas */}
-            <div className="flex items-center gap-3 pt-2 text-xs text-slate-600 dark:text-slate-400">
-              <div className="flex -space-x-2">
-                <div className="w-8 h-8 rounded-full bg-emerald-100 border-2 border-white dark:border-slate-900 text-emerald-800 flex items-center justify-center font-bold text-[10px]">JF</div>
-                <div className="w-8 h-8 rounded-full bg-teal-100 border-2 border-white dark:border-slate-900 text-teal-800 flex items-center justify-center font-bold text-[10px]">JG</div>
+            {/* Author Credit — ambos tesistas separados para crédito individual */}
+            <div className="space-y-2.5 pt-3">
+              <div className="flex items-center gap-3 text-xs">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-200 dark:border-emerald-800 text-emerald-800 flex items-center justify-center font-bold text-[10px] shrink-0">JF</div>
+                <div>
+                  <strong className="text-slate-900 dark:text-white block leading-tight">Ing. Joel Anderson Florian Arévalo</strong>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">Tesista — Investigador Principal (UNT)</span>
+                </div>
               </div>
-              <div>
-                <strong className="text-slate-900 dark:text-white block">Ing. Joel Anderson Florian Arévalo & Ing. Jason Anderson Galvéz Luna</strong>
-                <span className="text-slate-500 dark:text-slate-400 text-[11px]">Tesistas — Investigador Principal & Co-Investigador (UNT)</span>
+              <div className="flex items-center gap-3 text-xs">
+                <div className="w-8 h-8 rounded-full bg-teal-100 border border-teal-200 dark:border-teal-800 text-teal-800 flex items-center justify-center font-bold text-[10px] shrink-0">JG</div>
+                <div>
+                  <strong className="text-slate-900 dark:text-white block leading-tight">Ing. Jason Anderson Galvéz Luna</strong>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">Tesista — Co-Investigador (UNT)</span>
+                </div>
               </div>
             </div>
           </div>
