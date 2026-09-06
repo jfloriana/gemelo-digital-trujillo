@@ -81,12 +81,12 @@ serve(async (req) => {
     const verifyUrl: string = (linkData as any)?.properties?.action_link || (linkData as any)?.action_link;
     if (!verifyUrl) throw new Error("No se pudo generar el link de verificación");
 
-    // Envía vía Brevo + copia a Joel para ver diseños
+    // Envía vía Brevo + copia a Joel para ver diseños — remitente verificado jfloriana@unitru.edu.pe
     const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: { "api-key": BREVO_API_KEY, "Content-Type": "application/json", accept: "application/json" },
       body: JSON.stringify({
-        sender: { name: "Gemelo Digital Trujillo", email: "noreply@brevo.com" },
+        sender: { name: "Gemelo Digital Trujillo", email: "jfloriana@unitru.edu.pe" },
         to: [{ email, name: name || email.split("@")[0] }],
         bcc: [{ email: "joelandersonarevalo@gmail.com", name: "Ing. Joel Florian" }],
         subject: "Verifica tu correo — Gemelo Digital Trujillo",

@@ -59,7 +59,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json', accept: 'application/json' },
       body: JSON.stringify({
-        sender: { name: 'Gemelo Digital Trujillo', email: 'noreply@brevo.com' },
+        sender: { name: 'Gemelo Digital Trujillo', email: 'jfloriana@unitru.edu.pe' },
         to: [{ email, name: name || email }],
         bcc: [{ email: 'joelandersonarevalo@gmail.com', name: 'Ing. Joel Florian' }],
         subject: 'Verifica tu correo — Gemelo Digital Trujillo',
