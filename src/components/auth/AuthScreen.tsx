@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 
 export const AuthScreen: React.FC = () => {
-  const { login, register, loginWithDemo, registeredUsers } = useAuth();
+  const { login, register, loginWithDemo, registeredUsers, resendVerification } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'demo'>('login');
 
@@ -49,6 +49,7 @@ export const AuthScreen: React.FC = () => {
   const [showRegPassword, setShowRegPassword] = useState<boolean>(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [registerSuccess, setRegisterSuccess] = useState<boolean>(false);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -309,9 +310,11 @@ export const AuthScreen: React.FC = () => {
                   </div>
 
                   {loginError && (
-                    <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                      <span>{loginError}</span>
+                    <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl space-y-2">
+                      <div className="flex items-center gap-2"><AlertCircle className="w-4 h-4 text-rose-600 shrink-0" /><span>{loginError}</span></div>
+                      {loginError.toLowerCase().includes('verificar') && (
+                        <button type="button" onClick={async()=>{ const r=await resendVerification(loginEmail); setLoginError(r.success ? 'Correo de verificación reenviado ✓ Revisa tu bandeja.' : r.error || 'Error al reenviar'); }} className="text-xs font-bold text-emerald-700 underline">Reenviar verificación</button>
+                      )}
                     </div>
                   )}
 
@@ -400,9 +403,11 @@ export const AuthScreen: React.FC = () => {
                   )}
 
                   {registerSuccess && (
-                    <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>¡Cuenta creada con éxito! Iniciando sesión...</span>
+                    <div className="p-4 bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 rounded-xl space-y-2">
+                      <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200 text-xs font-bold"><CheckCircle2 className="w-4 h-4" /> ¡Revisa tu correo!</div>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">Te enviamos un correo de verificación a <strong>{regEmail}</strong> con un botón <strong>“Verificar mi correo”</strong>. Haz clic para activar tu cuenta. Revisa spam/promociones si no lo ves. El enlace expira en 24h.</p>
+                      <button onClick={async()=>{ const r=await resendVerification(regEmail); setResendStatus(r.success ? 'Correo reenviado ✓' : r.error || 'Error al reenviar'); }} className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 underline hover:text-emerald-800">Reenviar verificación</button>
+                      {resendStatus && <p className="text-xs text-slate-600 dark:text-slate-400">{resendStatus}</p>}
                     </div>
                   )}
 

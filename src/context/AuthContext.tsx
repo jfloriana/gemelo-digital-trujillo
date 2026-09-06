@@ -13,6 +13,7 @@ export interface RegisterData {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isDemo: boolean;
   registeredUsers: User[];
   permissions: UserPermissions;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
@@ -22,6 +23,7 @@ interface AuthContextType {
   switchRole: (role: UserRole) => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
+  resendVerification: (email: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 // Mapeo DB -> User app
@@ -77,12 +79,21 @@ export const getRolePermissions = (role?: UserRole): UserPermissions => {
   }
 };
 
+const getDemoPermissions = (): UserPermissions => ({
+  canSimulateMl: false,
+  canInjectIoT: false,
+  canExportReports: false,
+  canModifyZones: false,
+  canManageUsers: false,
+});
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState<boolean>(() => localStorage.getItem('trujillo_is_demo') === 'true');
 
   const hasSupabase = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY && !String(import.meta.env.VITE_SUPABASE_URL).includes('placeholder'));
 
@@ -119,11 +130,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
-        if (profile) {
-          setUser(profile);
-          // actualizar last_login
-          await supabase.from('profiles').update({ last_login: new Date().toISOString() }).eq('id', session.user.id);
+        // si el email no está confirmado, no dejar pasar (excepto demo)
+        if (!session.user.email_confirmed_at && !localStorage.getItem('trujillo_is_demo')) {
+          await supabase.auth.signOut();
+          setUser(null);
+        } else {
+          const profile = await fetchProfile(session.user.id);
+          if (profile) {
+            setUser(profile);
+            await supabase.from('profiles').update({ last_login: new Date().toISOString() }).eq('id', session.user.id);
+          }
         }
       }
       await fetchAllProfiles();
@@ -133,11 +149,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
+        if (!session.user.email_confirmed_at && !localStorage.getItem('trujillo_is_demo')) {
+          await supabase.auth.signOut();
+          setUser(null);
+          return;
+        }
         const profile = await fetchProfile(session.user.id);
         if (profile) setUser(profile);
         await fetchAllProfiles();
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
+        localStorage.removeItem('trujillo_is_demo');
+        setIsDemo(false);
       } else if (event === 'TOKEN_REFRESHED' && session?.user) {
         const profile = await fetchProfile(session.user.id);
         if (profile) setUser(profile);
@@ -155,28 +178,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     if (!hasSupabase) {
-      // fallback legacy localStorage
       const normalized = email.trim().toLowerCase();
       const found = registeredUsers.find(u => u.email.toLowerCase() === normalized);
       if (!found) return { success: false, error: 'No se encontró usuario con este correo.' };
-      // permite trujillo2026 sin hash
       if (password === 'trujillo2026' || password === 'admin123') {
         setUser(found);
         localStorage.setItem('trujillo_digital_twin_active_user', JSON.stringify(found));
+        localStorage.removeItem('trujillo_is_demo');
+        setIsDemo(false);
         return { success: true };
       }
       return { success: false, error: 'Modo sin Supabase: usa trujillo2026' };
     }
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error) {
-      // permite demo password aunque hash difiera
+      if (error.message.toLowerCase().includes('email not confirmed') || error.message.toLowerCase().includes('email not confirmed')) {
+        return { success: false, error: 'Debes verificar tu correo. Revisa tu bandeja y haz clic en “Verificar mi correo”. ¿No lo ves? usa Reenviar verificación.' };
+      }
       if (error.message.includes('Invalid login credentials')) {
         return { success: false, error: 'Credenciales inválidas. Verifica correo y contraseña.' };
       }
       return { success: false, error: error.message };
     }
-    // onAuthStateChange poblará user
+    if (data.user && !data.user.email_confirmed_at) {
+      await supabase.auth.signOut();
+      return { success: false, error: 'Debes verificar tu correo antes de ingresar. Revisa tu bandeja y haz clic en “Verificar mi correo”.' };
+    }
+    localStorage.removeItem('trujillo_is_demo');
+    setIsDemo(false);
     return { success: true };
+  };
+
+  const sendVerificationViaBrevo = async (email: string, name: string) => {
+    try {
+      const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/verify` : undefined;
+      await supabase.functions.invoke('send-verification-email', { body: { email, name, redirect_to: redirectTo } });
+    } catch (e) {
+      console.warn('Brevo verification send fallback', e);
+    }
   };
 
   const register = async (data: RegisterData): Promise<{ success: boolean; error?: string }> => {
@@ -193,21 +232,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('trujillo_digital_twin_active_user', JSON.stringify(newUser));
       return { success: true };
     }
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email: data.email.trim(),
       password: data.password,
-      options: { data: { name: data.name.trim(), role: data.role, institution: data.institution.trim() || 'Comunidad Digital Trujillo' } }
+      options: {
+        data: { name: data.name.trim(), role: data.role, institution: data.institution.trim() || 'Comunidad Digital Trujillo' },
+        emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/verify` : undefined,
+      }
     });
     if (error) {
       if (error.message.includes('already registered')) return { success: false, error: 'Ya existe cuenta con este correo.' };
       return { success: false, error: error.message };
     }
-    // Si email confirmation está desactivado, ya está logueado; si no, pide confirmar
+    // Envía correo profesional vía Brevo Edge Function (no bloquea registro si falla, Supabase ya envió uno por SMTP si está configurado)
+    if (signUpData.user && !signUpData.user.email_confirmed_at) {
+      await sendVerificationViaBrevo(data.email.trim(), data.name.trim());
+    }
     return { success: true };
+  };
+
+  const resendVerification = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    if (!hasSupabase) return { success: false, error: 'Supabase no configurado' };
+    try {
+      const { error } = await supabase.auth.resend({ type: 'signup', email: email.trim(), options: { emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/verify` : undefined } });
+      if (error) throw error;
+      await sendVerificationViaBrevo(email.trim(), email.split('@')[0]);
+      return { success: true };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return { success: false, error: msg };
+    }
   };
 
   const loginWithDemo = async (userId: string) => {
     const email = DEMO_EMAIL_BY_ID[userId] || userId;
+    localStorage.setItem('trujillo_is_demo', 'true');
+    setIsDemo(true);
     if (!hasSupabase) {
       const found = registeredUsers.find(u => u.id === userId) || DEMO_FALLBACK_USERS.find(u => u.id === userId);
       if (found) {
@@ -216,19 +276,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return;
     }
-    // Intenta login demo con password estándar
     const { error } = await supabase.auth.signInWithPassword({ email, password: 'trujillo2026' });
     if (error) {
       console.warn('loginWithDemo fallo', error.message);
-      // fallback: si no existe, crea demo al vuelo
       if (error.message.includes('Invalid login credentials')) {
-        // intenta crear
         await supabase.auth.signUp({ email, password: 'trujillo2026', options: { data: { name: email.split('@')[0], role: 'ciudadano', institution: 'Demo' } } });
       }
     }
   };
 
   const logout = async () => {
+    localStorage.removeItem('trujillo_is_demo');
+    setIsDemo(false);
     if (!hasSupabase) {
       setUser(null);
       localStorage.removeItem('trujillo_digital_twin_active_user');
@@ -294,18 +353,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await fetchAllProfiles();
   };
 
-  const permissions = getRolePermissions(user?.role);
+  const permissions = isDemo ? getDemoPermissions() : getRolePermissions(user?.role);
 
   if (loading) {
     return (
-      <AuthContext.Provider value={{ user: null, isAuthenticated: false, registeredUsers: [], permissions, login, register, loginWithDemo, logout, switchRole, updateProfile, deleteUser }}>
+      <AuthContext.Provider value={{ user: null, isAuthenticated: false, isDemo: false, registeredUsers: [], permissions, login, register, loginWithDemo, logout, switchRole, updateProfile, deleteUser, resendVerification }}>
         <div className="min-h-screen grid place-items-center bg-slate-50 text-slate-500 text-sm">Cargando sesión…</div>
       </AuthContext.Provider>
     );
   }
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, registeredUsers, permissions, login, register, loginWithDemo, logout, switchRole, updateProfile, deleteUser }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isDemo, registeredUsers, permissions, login, register, loginWithDemo, logout, switchRole, updateProfile, deleteUser, resendVerification }}>
       {children}
     </AuthContext.Provider>
   );

@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { I18nProvider, useI18n } from './context/I18nContext';
 import { Header } from './components/layout/Header';
+import { VerifyEmail } from './components/auth/VerifyEmail';
 import { DigitalTwinCanvas } from './components/digitaltwin/DigitalTwinCanvas';
 import { DiagnosisModule } from './components/modules/DiagnosisModule';
 import { ArchitectureModule } from './components/modules/ArchitectureModule';
@@ -45,7 +46,7 @@ type ActiveModule =
   | 'reports';
 
 function MainAppContent() {
-  const { user } = useAuth();
+  const { user, isDemo } = useAuth();
   const { t } = useI18n();
   const { zones: TRUJILLO_ZONES, sensors: SENSOR_NODES, models: AI_MODELS_BENCHMARK, nbs: NBS_CATALOG, objectives: THESIS_OBJECTIVES_DATA } = useSupabaseData();
   const [activeModule, setActiveModule] = useState<ActiveModule>('digital_twin');
@@ -121,6 +122,13 @@ function MainAppContent() {
         onOpenLogin={() => setIsLoginOpen(true)}
         onQuickExport={handleQuickExport}
       />
+
+      {isDemo && (
+        <div className="bg-amber-50 dark:bg-amber-950 border-b border-amber-200 dark:border-amber-800 px-4 lg:px-8 py-2.5 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between">
+          <span>Modo demo — acceso limitado (solo visualización). Verifica tu correo tras registrarte para acceso completo (simulación, inyección IoT, zonas).</span>
+          <button onClick={() => { localStorage.removeItem('trujillo_is_demo'); location.reload(); }} className="font-bold underline">Salir demo</button>
+        </div>
+      )}
 
       {/* Main Navigation Bar */}
       <nav className="bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 sticky top-[61px] z-30 px-4 lg:px-8 shadow-xs">
@@ -426,6 +434,18 @@ function MainAppContent() {
 }
 
 export default function App() {
+  const isVerify = typeof window !== 'undefined' && (window.location.pathname === '/verify' || window.location.hash.includes('type=recovery') || window.location.search.includes('type=signup'));
+  if (isVerify) {
+    return (
+      <ThemeProvider>
+        <I18nProvider>
+          <AuthProvider>
+            <VerifyEmail />
+          </AuthProvider>
+        </I18nProvider>
+      </ThemeProvider>
+    );
+  }
   return (
     <ThemeProvider>
       <I18nProvider>
