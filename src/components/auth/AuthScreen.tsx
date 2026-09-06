@@ -32,9 +32,9 @@ export const AuthScreen: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'demo'>('login');
 
-  // Login form state
-  const [loginEmail, setLoginEmail] = useState<string>('joelandersonarevalo@gmail.com');
-  const [loginPassword, setLoginPassword] = useState<string>('trujillo2026');
+  // Login form state — vacío al entrar (sin datos precargados)
+  const [loginEmail, setLoginEmail] = useState<string>('');
+  const [loginPassword, setLoginPassword] = useState<string>('');
   const [showLoginPassword, setShowLoginPassword] = useState<boolean>(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);

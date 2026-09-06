@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation } from '../types';
+import { TRUJILLO_ZONES as FALLBACK_ZONES, SENSOR_NODES as FALLBACK_SENSORS, AI_MODELS_BENCHMARK as FALLBACK_MODELS, NBS_CATALOG as FALLBACK_NBS, THESIS_OBJECTIVES_DATA as FALLBACK_OBJECTIVES } from '../data/trujilloData';
 
 const hasSupabase = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY && !String(import.meta.env.VITE_SUPABASE_URL).includes('placeholder'));
 
@@ -43,7 +44,7 @@ function mapSensor(r: any): SensorNode {
     status: r.status,
     rssi: r.rssi ?? undefined,
     batteryPct: r.battery_pct ?? undefined,
-    lastReading: r.last_reading ?? { timestamp:'', pm25:0, pm10:0, no2:0, o3:0, co:0, co2:0, temperature:0, humidity:0, windSpeed:0, windDirection:'SO', solarRadiation:0, heatIndex:0, uhiDelta:0, petScore:0, tcsScore:0, aqiIndex:0, aqiCategory:'Moderada' },
+    lastReading: r.last_reading ?? FALLBACK_SENSORS.find(s=>s.id===r.id)?.lastReading ?? { timestamp:'', pm25:0, pm10:0, no2:0, o3:0, co:0, co2:0, temperature:0, humidity:0, windSpeed:0, windDirection:'SO', solarRadiation:0, heatIndex:0, uhiDelta:0, petScore:0, tcsScore:0, aqiIndex:0, aqiCategory:'Moderada' },
     hourlyHistory: [],
   };
 }
@@ -95,12 +96,12 @@ function mapObjective(r: any, metrics: any[]): ThesisObjectiveEvaluation {
 }
 
 export function useSupabaseData() {
-  const [zones, setZones] = useState<UrbanZone[]>([]);
-  const [sensors, setSensors] = useState<SensorNode[]>([]);
-  const [models, setModels] = useState<AiModelMetric[]>([]);
-  const [nbs, setNbs] = useState<NbsIntervention[]>([]);
-  const [objectives, setObjectives] = useState<ThesisObjectiveEvaluation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [zones, setZones] = useState<UrbanZone[]>(FALLBACK_ZONES);
+  const [sensors, setSensors] = useState<SensorNode[]>(FALLBACK_SENSORS);
+  const [models, setModels] = useState<AiModelMetric[]>(FALLBACK_MODELS);
+  const [nbs, setNbs] = useState<NbsIntervention[]>(FALLBACK_NBS);
+  const [objectives, setObjectives] = useState<ThesisObjectiveEvaluation[]>(FALLBACK_OBJECTIVES);
+  const [loading, setLoading] = useState(hasSupabase);
 
   useEffect(() => {
     if (!hasSupabase) { setLoading(false); return; }
@@ -116,10 +117,11 @@ export function useSupabaseData() {
           supabase.from('thesis_objective_metrics').select('*'),
         ]);
         if (!mounted) return;
-        setZones((zRes.data ?? []).map(mapZone));
-        let mappedSensors = (sRes.data ?? []).map(mapSensor);
-        if (mappedSensors.length) {
-          const { data: readings } = await supabase.from('environmental_readings').select('*').order('measured_at', { ascending: true }).limit(300);
+        if (zRes.data?.length) setZones(zRes.data.map(mapZone));
+        // enrich sensors hourlyHistory desde environmental_readings (últimas 12)
+        let mappedSensors = sRes.data?.length ? sRes.data.map(mapSensor) : FALLBACK_SENSORS;
+        if (mappedSensors !== FALLBACK_SENSORS) {
+          const { data: readings } = await supabase.from('environmental_readings').select('*').order('measured_at', { ascending: true }).limit(200);
           if (readings?.length) {
             const bySensor: Record<string, any[]> = {};
             readings.forEach((r:any)=>{
@@ -132,16 +134,15 @@ export function useSupabaseData() {
                 petScore: Number(r.pet_score), tcsScore: Number(r.tcs_score), aqiIndex: Number(r.aqi_index), aqiCategory: r.aqi_category,
               });
             });
-            mappedSensors = mappedSensors.map(sn => ({ ...sn, hourlyHistory: bySensor[sn.id]?.slice(-12) ?? [] }));
+            mappedSensors = mappedSensors.map(sn => ({ ...sn, hourlyHistory: bySensor[sn.id]?.slice(-12) ?? sn.hourlyHistory }));
           }
         }
         setSensors(mappedSensors);
-        setModels((mRes.data ?? []).map(mapModel));
-        setNbs((nRes.data ?? []).map(mapNbs));
+        if (mRes.data?.length) setModels(mRes.data.map(mapModel));
+        if (nRes.data?.length) setNbs(nRes.data.map(mapNbs));
         if (oRes.data?.length) setObjectives(oRes.data.map((r:any)=> mapObjective(r, omRes.data ?? [])));
-        else setObjectives([]);
       } catch (e) {
-        console.warn('[SupabaseData] error', e);
+        console.warn('[SupabaseData] fallback a hardcoded', e);
       } finally {
         if (mounted) setLoading(false);
       }
