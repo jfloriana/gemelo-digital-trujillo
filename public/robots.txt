@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://gemelo-digital-trujillo.vercel.app/sitemap.xml

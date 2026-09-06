@@ -9,15 +9,23 @@ import { ThemeProvider } from './context/ThemeContext';
 import { I18nProvider, useI18n } from './context/I18nContext';
 import { Header } from './components/layout/Header';
 import { VerifyEmail } from './components/auth/VerifyEmail';
-import { DigitalTwinCanvas } from './components/digitaltwin/DigitalTwinCanvas';
-import { DiagnosisModule } from './components/modules/DiagnosisModule';
-import { ArchitectureModule } from './components/modules/ArchitectureModule';
-import { AiEngineModule } from './components/modules/AiEngineModule';
-import { NbsSimulatorModule } from './components/modules/NbsSimulatorModule';
-import { ValidationPolicyModule } from './components/modules/ValidationPolicyModule';
-import { ReportsModule } from './components/modules/ReportsModule';
 import { LoginModal } from './components/auth/LoginModal';
 import { AuthScreen } from './components/auth/AuthScreen';
+const DigitalTwinCanvas = React.lazy(() => import('./components/digitaltwin/DigitalTwinCanvas').then(m => ({ default: m.DigitalTwinCanvas })));
+const DiagnosisModule = React.lazy(() => import('./components/modules/DiagnosisModule').then(m => ({ default: m.DiagnosisModule })));
+const ArchitectureModule = React.lazy(() => import('./components/modules/ArchitectureModule').then(m => ({ default: m.ArchitectureModule })));
+const AiEngineModule = React.lazy(() => import('./components/modules/AiEngineModule').then(m => ({ default: m.AiEngineModule })));
+const NbsSimulatorModule = React.lazy(() => import('./components/modules/NbsSimulatorModule').then(m => ({ default: m.NbsSimulatorModule })));
+const ValidationPolicyModule = React.lazy(() => import('./components/modules/ValidationPolicyModule').then(m => ({ default: m.ValidationPolicyModule })));
+const ReportsModule = React.lazy(() => import('./components/modules/ReportsModule').then(m => ({ default: m.ReportsModule })));
+
+// Fallback para lazy
+const ModuleFallback: React.FC = () => (
+  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-10 text-center text-sm text-slate-500 dark:text-slate-400">
+    <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+    Cargando módulo…
+  </div>
+);
 import { AssistantChatbot } from './components/chatbot/AssistantChatbot';
 import { useSupabaseData } from './hooks/useSupabaseData';
 import { UrbanZone, SimulationScenario } from './types';
@@ -274,14 +282,16 @@ function MainAppContent() {
             </div>
 
             {/* 3D Digital Twin Visualizer Component */}
-            <DigitalTwinCanvas
-              zone={selectedZone}
-              sensors={SENSOR_NODES}
-              selectedNbs={appliedNbs}
-              nbsCatalog={NBS_CATALOG}
-              isSimulationActive={isSimActive}
-              onApplyNbsQuick={handleQuickApplyNbs}
-            />
+            <React.Suspense fallback={<ModuleFallback />}>
+              <DigitalTwinCanvas
+                zone={selectedZone}
+                sensors={SENSOR_NODES}
+                selectedNbs={appliedNbs}
+                nbsCatalog={NBS_CATALOG}
+                isSimulationActive={isSimActive}
+                onApplyNbsQuick={handleQuickApplyNbs}
+              />
+            </React.Suspense>
 
             {/* Quick Interactive Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -326,58 +336,70 @@ function MainAppContent() {
 
         {/* VIEW 2: OE1 Diagnosis */}
         {activeModule === 'diagnosis' && (
-          <DiagnosisModule
-            zones={TRUJILLO_ZONES}
-            sensors={SENSOR_NODES}
-            selectedZone={selectedZone}
-            onSelectZone={setSelectedZone}
-            onExportReports={handleQuickExport}
-          />
+          <React.Suspense fallback={<ModuleFallback />}>
+            <DiagnosisModule
+              zones={TRUJILLO_ZONES}
+              sensors={SENSOR_NODES}
+              selectedZone={selectedZone}
+              onSelectZone={setSelectedZone}
+              onExportReports={handleQuickExport}
+            />
+          </React.Suspense>
         )}
 
         {/* VIEW 3: OE2 Architecture */}
         {activeModule === 'architecture' && (
-          <ArchitectureModule onExportReports={handleQuickExport} />
+          <React.Suspense fallback={<ModuleFallback />}>
+            <ArchitectureModule onExportReports={handleQuickExport} />
+          </React.Suspense>
         )}
 
         {/* VIEW 4: OE3 AI Engine */}
         {activeModule === 'ai_engine' && (
-          <AiEngineModule
-            models={AI_MODELS_BENCHMARK}
-            selectedZone={selectedZone}
-            onExportReports={handleQuickExport}
-          />
+          <React.Suspense fallback={<ModuleFallback />}>
+            <AiEngineModule
+              models={AI_MODELS_BENCHMARK}
+              selectedZone={selectedZone}
+              onExportReports={handleQuickExport}
+            />
+          </React.Suspense>
         )}
 
         {/* VIEW 5: OE4 NbS Simulator */}
         {activeModule === 'nbs_simulator' && (
-          <NbsSimulatorModule
-            nbsCatalog={NBS_CATALOG}
-            selectedZone={selectedZone}
-            onExportReports={handleQuickExport}
-            onScenarioSaved={(scen) => setActiveScenario(scen)}
-          />
+          <React.Suspense fallback={<ModuleFallback />}>
+            <NbsSimulatorModule
+              nbsCatalog={NBS_CATALOG}
+              selectedZone={selectedZone}
+              onExportReports={handleQuickExport}
+              onScenarioSaved={(scen) => setActiveScenario(scen)}
+            />
+          </React.Suspense>
         )}
 
         {/* VIEW 6: OE5 Validation & Policies */}
         {activeModule === 'validation' && (
-          <ValidationPolicyModule
-            objectives={THESIS_OBJECTIVES_DATA}
-            zones={TRUJILLO_ZONES}
-            onExportReports={handleQuickExport}
-          />
+          <React.Suspense fallback={<ModuleFallback />}>
+            <ValidationPolicyModule
+              objectives={THESIS_OBJECTIVES_DATA}
+              zones={TRUJILLO_ZONES}
+              onExportReports={handleQuickExport}
+            />
+          </React.Suspense>
         )}
 
         {/* VIEW 7: Reports & Multiformat Exporter */}
         {activeModule === 'reports' && (
-          <ReportsModule
-            zones={TRUJILLO_ZONES}
-            sensors={SENSOR_NODES}
-            models={AI_MODELS_BENCHMARK}
-            nbsCatalog={NBS_CATALOG}
-            objectives={THESIS_OBJECTIVES_DATA}
-            activeScenario={activeScenario}
-          />
+          <React.Suspense fallback={<ModuleFallback />}>
+            <ReportsModule
+              zones={TRUJILLO_ZONES}
+              sensors={SENSOR_NODES}
+              models={AI_MODELS_BENCHMARK}
+              nbsCatalog={NBS_CATALOG}
+              objectives={THESIS_OBJECTIVES_DATA}
+              activeScenario={activeScenario}
+            />
+          </React.Suspense>
         )}
       </main>
 

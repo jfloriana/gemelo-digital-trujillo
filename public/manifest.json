@@ -1,0 +1,12 @@
+{
+  "name": "Gemelo Digital Microescala Trujillo",
+  "short_name": "Gemelo Trujillo",
+  "description": "Gemelo digital de calidad del aire a microescala y soluciones basadas en naturaleza urbana para Trujillo, Perú.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#059669",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

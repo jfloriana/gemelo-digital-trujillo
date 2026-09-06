@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NbsIntervention, UrbanZone, SimulationScenario, SimulationModelType, SimulationMlParams } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 import { 
   Trees, 
   Leaf, 
@@ -217,8 +218,28 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
     }
   };
 
-  const handleSaveScenario = () => {
+  const handleSaveScenario = async () => {
     if (onScenarioSaved) onScenarioSaved(currentScenario);
+    // Persiste en Supabase si hay sesión y permiso
+    if (user) {
+      try {
+        const { data: inserted, error } = await supabase.from('simulation_scenarios').insert({
+          user_id: user.id,
+          name: currentScenario.name,
+          zone_id: currentScenario.zoneId,
+          zone_name: currentScenario.zoneName,
+          ml_params: currentScenario.mlParams,
+          ambient_wind_speed: currentScenario.ambientWindSpeed,
+          ambient_solar_radiation: currentScenario.ambientSolarRadiation,
+          simulation_hours: currentScenario.simulationHours,
+          results: currentScenario.results,
+        }).select('id').single();
+        if (!error && inserted) {
+          const rows = currentScenario.selectedNbs.map(n => ({ scenario_id: inserted.id, nbs_id: n.nbsId, quantity_or_area: n.quantityOrArea }));
+          if (rows.length) await supabase.from('simulation_scenario_nbs').insert(rows);
+        }
+      } catch (e) { console.warn('No se pudo guardar escenario en Supabase', e); }
+    }
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 2000);
   };
