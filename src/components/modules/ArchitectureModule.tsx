@@ -27,13 +27,13 @@ export const ArchitectureModule: React.FC<ArchitectureModuleProps> = ({ onExport
   const [activeReflectStep, setActiveReflectStep] = useState<number>(1);
 
   const reflectFramework = [
-    { step: 1, name: 'Retrieve', description: 'Adquisición continua de datos meteorológicos y sensores IoT de bajo costo en Trujillo.' },
-    { step: 2, name: 'Establish', description: 'Construcción del modelo geométrico 3D de cañones urbanos y albedo superficial.' },
-    { step: 3, name: 'Facilitate', description: 'Discretización de mallas espaciales 5x5m y calibración higroscópica en 2 etapas.' },
-    { step: 4, name: 'Lump', description: 'Agrupación y acoplamiento de variables de tráfico, viento y radiación solar.' },
-    { step: 5, name: 'Examine', description: 'Evaluación de dispersión de contaminantes mediante 1D-CNN y GNN topológica.' },
-    { step: 6, name: 'Cognition', description: 'Simulación de escenarios de Soluciones basadas en la Naturaleza (NbS).' },
-    { step: 7, name: 'Take', description: 'Retroalimentación bidireccional y toma de decisiones para la Municipalidad de Trujillo.' },
+    { step: 1, name: t('architecture.reflect.step1.name'), description: t('architecture.reflect.step1.desc') },
+    { step: 2, name: t('architecture.reflect.step2.name'), description: t('architecture.reflect.step2.desc') },
+    { step: 3, name: t('architecture.reflect.step3.name'), description: t('architecture.reflect.step3.desc') },
+    { step: 4, name: t('architecture.reflect.step4.name'), description: t('architecture.reflect.step4.desc') },
+    { step: 5, name: t('architecture.reflect.step5.name'), description: t('architecture.reflect.step5.desc') },
+    { step: 6, name: t('architecture.reflect.step6.name'), description: t('architecture.reflect.step6.desc') },
+    { step: 7, name: t('architecture.reflect.step7.name'), description: t('architecture.reflect.step7.desc') },
   ];
 
   return (
