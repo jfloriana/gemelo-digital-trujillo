@@ -47,17 +47,21 @@ type ActiveModule =
 function MainAppContent() {
   const { user } = useAuth();
   const { t } = useI18n();
-  const { zones: TRUJILLO_ZONES, sensors: SENSOR_NODES, models: AI_MODELS_BENCHMARK, nbs: NBS_CATALOG, objectives: THESIS_OBJECTIVES_DATA } = useSupabaseData();
+  const { zones: TRUJILLO_ZONES, sensors: SENSOR_NODES, models: AI_MODELS_BENCHMARK, nbs: NBS_CATALOG, objectives: THESIS_OBJECTIVES_DATA, loading: dataLoading } = useSupabaseData();
   const [activeModule, setActiveModule] = useState<ActiveModule>('digital_twin');
-  const [selectedZone, setSelectedZone] = useState<UrbanZone>(() => TRUJILLO_ZONES[0]);
+  const [selectedZone, setSelectedZone] = useState<UrbanZone | null>(null);
   const [isLoginOpen, setIsLoginOpen] = useState<boolean>(false);
   const [isChatbotOpen, setIsChatbotOpen] = useState<boolean>(false);
   const [activeScenario, setActiveScenario] = useState<SimulationScenario | null>(null);
 
-  // Sincroniza selectedZone cuando llegan datos de Supabase
+  // Sincroniza selectedZone cuando llegan datos de Supabase (vacío -> null)
   React.useEffect(() => {
-    if (TRUJILLO_ZONES.length && !TRUJILLO_ZONES.find(z => z.id === selectedZone.id)) {
-      setSelectedZone(TRUJILLO_ZONES[0]);
+    if (TRUJILLO_ZONES.length) {
+      if (!selectedZone || !TRUJILLO_ZONES.find(z => z.id === selectedZone.id)) {
+        setSelectedZone(TRUJILLO_ZONES[0]);
+      }
+    } else {
+      setSelectedZone(null);
     }
   }, [TRUJILLO_ZONES]);
 
@@ -92,6 +96,22 @@ function MainAppContent() {
     setIsSimActive(true);
   };
 
+  const EMPTY_ZONE: UrbanZone = {
+    id: 'empty', name: 'Sin zonas registradas', district: '—', description: 'No hay zonas en Supabase. Crea la primera en Table Editor → urban_zones.', vulnerabilityLevel: 'Media', targetPopulation: 0, vulnerablePopulation: 0, baselineTemp: 0, baselinePM25: 0, treeCover: 0, builtDensity: 0, primaryPollutionSource: '—', geometryCoords: [], sensorsCount: 0,
+  };
+  const activeZoneForHeader = selectedZone ?? EMPTY_ZONE;
+
+  if (dataLoading) {
+    return (
+      <div className="min-h-screen grid place-items-center bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 text-sm">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+          Cargando datos desde Supabase…
+        </div>
+      </div>
+    );
+  }
+
   // FIX: Chatbot debe ser visible incluso sin autenticación (ayuda al login).
   // Antes: if (!user) return <AuthScreen /> ocultaba el chatbot en la pantalla de login.
   if (!user) {
@@ -102,7 +122,7 @@ function MainAppContent() {
           currentModule={activeModule}
           onNavigateModule={(mod) => setActiveModule(mod as ActiveModule)}
           zones={TRUJILLO_ZONES}
-          selectedZone={selectedZone}
+          selectedZone={selectedZone ?? EMPTY_ZONE}
           onSelectZone={(z) => setSelectedZone(z)}
           onExport={handleQuickExport}
           activeScenario={activeScenario}
@@ -117,7 +137,7 @@ function MainAppContent() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-white">
       {/* Header */}
       <Header
-        activeZone={selectedZone}
+        activeZone={activeZoneForHeader}
         onOpenLogin={() => setIsLoginOpen(true)}
         onQuickExport={handleQuickExport}
       />
@@ -225,8 +245,15 @@ function MainAppContent() {
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8 space-y-6">
         {/* VIEW 1: Interactive 3D Digital Twin Canvas Hub */}
         {activeModule === 'digital_twin' && (
-          <div className="space-y-6">
-            {/* Thesis Title Highlight Banner */}
+          TRUJILLO_ZONES.length === 0 ? (
+            <div className="bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-10 text-center space-y-3">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 grid place-items-center"><MapPin className="w-6 h-6 text-slate-400" /></div>
+              <h3 className="font-semibold text-slate-800 dark:text-white">Sin zonas registradas</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto">No hay datos precargados. Ve a <span className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Supabase Table Editor → urban_zones → Insert row</span> o ejecuta <span className="font-mono text-xs">supabase/seed.sql</span> para cargar las 6 zonas demo.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Thesis Title Highlight Banner */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-sm dark:shadow-none">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="space-y-1.5 max-w-3xl">
@@ -248,7 +275,7 @@ function MainAppContent() {
                 <div className="flex flex-col gap-1.5 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700">
                   <span className="text-xs text-slate-600 dark:text-slate-300 font-semibold">{t('banner.activeZone')}</span>
                   <select
-                    value={selectedZone.id}
+                    value={selectedZone!.id}
                     onChange={(e) => {
                       const found = TRUJILLO_ZONES.find(z => z.id === e.target.value);
                       if (found) setSelectedZone(found);
@@ -267,7 +294,7 @@ function MainAppContent() {
 
             {/* 3D Digital Twin Visualizer Component */}
             <DigitalTwinCanvas
-              zone={selectedZone}
+              zone={selectedZone!}
               sensors={SENSOR_NODES}
               selectedNbs={appliedNbs}
               nbsCatalog={NBS_CATALOG}
@@ -314,6 +341,7 @@ function MainAppContent() {
               </div>
             </div>
           </div>
+          )
         )}
 
         {/* VIEW 2: OE1 Diagnosis */}
@@ -321,7 +349,7 @@ function MainAppContent() {
           <DiagnosisModule
             zones={TRUJILLO_ZONES}
             sensors={SENSOR_NODES}
-            selectedZone={selectedZone}
+            selectedZone={selectedZone ?? EMPTY_ZONE}
             onSelectZone={setSelectedZone}
             onExportReports={handleQuickExport}
           />
@@ -336,7 +364,7 @@ function MainAppContent() {
         {activeModule === 'ai_engine' && (
           <AiEngineModule
             models={AI_MODELS_BENCHMARK}
-            selectedZone={selectedZone}
+            selectedZone={selectedZone ?? EMPTY_ZONE}
             onExportReports={handleQuickExport}
           />
         )}
@@ -345,7 +373,7 @@ function MainAppContent() {
         {activeModule === 'nbs_simulator' && (
           <NbsSimulatorModule
             nbsCatalog={NBS_CATALOG}
-            selectedZone={selectedZone}
+            selectedZone={selectedZone ?? EMPTY_ZONE}
             onExportReports={handleQuickExport}
             onScenarioSaved={(scen) => setActiveScenario(scen)}
           />
@@ -414,7 +442,7 @@ function MainAppContent() {
         currentModule={activeModule}
         onNavigateModule={(mod) => setActiveModule(mod as ActiveModule)}
         zones={TRUJILLO_ZONES}
-        selectedZone={selectedZone}
+        selectedZone={selectedZone ?? EMPTY_ZONE}
         onSelectZone={(z) => setSelectedZone(z)}
         onExport={handleQuickExport}
         activeScenario={activeScenario}
