@@ -3,10 +3,10 @@ import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveE
 export const DEMO_USERS: User[] = [
   {
     id: 'user-1',
-    name: 'Ing. Joel Arevalo (Tesista)',
-    email: 'joelandersonarevalo@gmail.com',
+    name: 'Demo Investigador UNT',
+    email: 'investigador.demo@unt.edu.pe',
     role: 'investigador',
-    institution: 'Universidad Nacional de Trujillo - Posgrado / Tesista Líder',
+    institution: 'Universidad Nacional de Trujillo - Demo',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
   },
   {

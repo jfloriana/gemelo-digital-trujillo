@@ -37,23 +37,23 @@ const mapProfileToUser = (p: any): User => ({
   token: undefined,
 });
 
-// Demo fallback si Supabase no está configurado (sin env)
+// Demo fallback si Supabase no está configurado (sin env) — sin correo personal
 const DEMO_FALLBACK_USERS: User[] = [
-  { id: 'user-investigador-01', name: 'Ing. Joel Arevalo', email: 'joelandersonarevalo@gmail.com', role: 'investigador', institution: 'Universidad Nacional de Trujillo - Posgrado / Tesista Líder', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80' },
+  { id: 'user-investigador-01', name: 'Demo Investigador UNT', email: 'investigador.demo@unt.edu.pe', role: 'investigador', institution: 'Universidad Nacional de Trujillo - Demo', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80' },
   { id: 'user-planificador-02', name: 'Arq. María Fernández', email: 'mfernandez@munitrujillo.gob.pe', role: 'planificador', institution: 'Municipalidad Provincial de Trujillo - Gerencia de Desarrollo Urbano' },
   { id: 'user-analista-03', name: 'Dr. Carlos Mendoza', email: 'cmendoza@oefa.gob.pe', role: 'analista', institution: 'OEFA / SENAMHI La Libertad - Fiscalización Ambiental' },
   { id: 'user-admin-iot-04', name: 'Ing. Roberto Sánchez', email: 'rsanchez.iot@trujillo.gob.pe', role: 'admin_iot', institution: 'Red de Sensores IoT & Smart City Trujillo' },
   { id: 'user-ciudadano-05', name: 'Lucía Torres', email: 'lucia.torres.trujillo@gmail.com', role: 'ciudadano', institution: 'Comité Ambiental Ciudadano - Centro Histórico Trujillo' },
 ];
 
-// Mapa demoId -> email para login rápido (acepta id legado o email)
+// Mapa demoId -> email para login rápido (acepta id legado o email) — tu correo personal solo en Supabase, no como demo
 const DEMO_EMAIL_BY_ID: Record<string, string> = {
-  'user-investigador-01': 'joelandersonarevalo@gmail.com',
+  'user-investigador-01': 'investigador.demo@unt.edu.pe',
   'user-planificador-02': 'mfernandez@munitrujillo.gob.pe',
   'user-analista-03': 'cmendoza@oefa.gob.pe',
   'user-admin-iot-04': 'rsanchez.iot@trujillo.gob.pe',
   'user-ciudadano-05': 'lucia.torres.trujillo@gmail.com',
-  'user-1': 'joelandersonarevalo@gmail.com',
+  'user-1': 'investigador.demo@unt.edu.pe',
   'user-2': 'mfernandez@munitrujillo.gob.pe',
   'user-3': 'cmendoza@oefa.gob.pe',
   'user-4': 'lucia.torres.trujillo@gmail.com',
