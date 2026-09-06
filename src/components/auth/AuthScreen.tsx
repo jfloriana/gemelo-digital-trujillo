@@ -106,7 +106,7 @@ export const AuthScreen: React.FC = () => {
   const demoAccounts = [
     {
       id: 'user-planificador-02',
-      name: 'Dra. María Elena Cruz',
+      name: 'Demo Planificador Urbano',
       email: 'mcruz@munitrujillo.gob.pe',
       role: 'Planificador Urbano MPT',
       badge: 'Gestión Municipal',
@@ -115,7 +115,7 @@ export const AuthScreen: React.FC = () => {
     },
     {
       id: 'user-analista-03',
-      name: 'Lic. Carlos Mendoza',
+      name: 'Demo Analista Ambiental',
       email: 'cmendoza@oefa.gob.pe',
       role: 'Analista Ambiental OEFA / SENAMHI',
       badge: 'Fiscalización',
@@ -124,7 +124,7 @@ export const AuthScreen: React.FC = () => {
     },
     {
       id: 'user-admin-iot-04',
-      name: 'Ing. Roberto Sánchez',
+      name: 'Demo Administrador IoT',
       email: 'rsanchez.iot@trujillo.gob.pe',
       role: 'Administrador de Red IoT',
       badge: 'Infraestructura',
@@ -133,7 +133,7 @@ export const AuthScreen: React.FC = () => {
     },
     {
       id: 'user-ciudadano-05',
-      name: 'Lucía Torres',
+      name: 'Demo Ciudadano',
       email: 'lucia.torres.trujillo@gmail.com',
       role: 'Ciudadano / Veedor Ambiental',
       badge: 'Consulta Pública',

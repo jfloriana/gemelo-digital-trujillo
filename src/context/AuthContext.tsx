@@ -39,13 +39,13 @@ const mapProfileToUser = (p: any): User => ({
   token: undefined,
 });
 
-// Demo fallback si Supabase no está configurado (sin env) — sin correo personal
+// Demo fallback si Supabase no está configurado (sin env) — genérico sin nombres personales
 const DEMO_FALLBACK_USERS: User[] = [
   { id: 'user-investigador-01', name: 'Demo Investigador UNT', email: 'investigador.demo@unt.edu.pe', role: 'investigador', institution: 'Universidad Nacional de Trujillo - Demo', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80' },
-  { id: 'user-planificador-02', name: 'Arq. María Fernández', email: 'mfernandez@munitrujillo.gob.pe', role: 'planificador', institution: 'Municipalidad Provincial de Trujillo - Gerencia de Desarrollo Urbano' },
-  { id: 'user-analista-03', name: 'Dr. Carlos Mendoza', email: 'cmendoza@oefa.gob.pe', role: 'analista', institution: 'OEFA / SENAMHI La Libertad - Fiscalización Ambiental' },
-  { id: 'user-admin-iot-04', name: 'Ing. Roberto Sánchez', email: 'rsanchez.iot@trujillo.gob.pe', role: 'admin_iot', institution: 'Red de Sensores IoT & Smart City Trujillo' },
-  { id: 'user-ciudadano-05', name: 'Lucía Torres', email: 'lucia.torres.trujillo@gmail.com', role: 'ciudadano', institution: 'Comité Ambiental Ciudadano - Centro Histórico Trujillo' },
+  { id: 'user-planificador-02', name: 'Demo Planificador Urbano', email: 'mcruz@munitrujillo.gob.pe', role: 'planificador', institution: 'Municipalidad Provincial de Trujillo - Demo' },
+  { id: 'user-analista-03', name: 'Demo Analista Ambiental', email: 'cmendoza@oefa.gob.pe', role: 'analista', institution: 'OEFA / SENAMHI - Demo' },
+  { id: 'user-admin-iot-04', name: 'Demo Administrador IoT', email: 'rsanchez.iot@trujillo.gob.pe', role: 'admin_iot', institution: 'Red de Sensores IoT - Demo' },
+  { id: 'user-ciudadano-05', name: 'Demo Ciudadano', email: 'lucia.torres.trujillo@gmail.com', role: 'ciudadano', institution: 'Comité Ambiental Ciudadano - Demo' },
 ];
 
 // Mapa demoId -> email para login rápido (acepta id legado o email) — tu correo personal solo en Supabase, no como demo
@@ -210,12 +210,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const sendVerificationViaBrevo = async (email: string, name: string) => {
+    const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/verify` : undefined;
+    // 1) Intenta Vercel serverless (tiene BREVO_API_KEY + SERVICE_ROLE, mejor para prod)
     try {
-      const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/verify` : undefined;
+      const r = await fetch('/api/send-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name, redirect_to: redirectTo }),
+      });
+      if (r.ok) return;
+      console.warn('Vercel /api/send-verification fallo', await r.text().then(t=>t.slice(0,400)));
+    } catch (e) { console.warn('Vercel verification fallback', e); }
+    // 2) Fallback Supabase Edge Function
+    try {
       await supabase.functions.invoke('send-verification-email', { body: { email, name, redirect_to: redirectTo } });
-    } catch (e) {
-      console.warn('Brevo verification send fallback', e);
-    }
+      return;
+    } catch (e) { console.warn('Edge Function fallback', e); }
+    // 3) Fallback nativo Supabase resend (usa SMTP configurado en Dashboard, o default)
+    try {
+      await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: redirectTo } });
+    } catch (e) { console.warn('Supabase resend fallback', e); }
   };
 
   const register = async (data: RegisterData): Promise<{ success: boolean; error?: string }> => {
