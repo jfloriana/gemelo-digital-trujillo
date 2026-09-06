@@ -406,7 +406,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
                     readOnly
                     value={mqttBroker}
                     className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 font-mono"
-                  / autoComplete="off">
+                  />
                   <button
                     onClick={() => copyToClipboard(mqttBroker, 'broker')}
                     className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500"
@@ -425,7 +425,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
                     readOnly
                     value={mqttTopic}
                     className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-emerald-800 font-mono font-semibold"
-                  / autoComplete="off">
+                  />
                   <button
                     onClick={() => copyToClipboard(mqttTopic, 'topic')}
                     className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500"
@@ -457,7 +457,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
                     readOnly
                     value={apiEndpoint}
                     className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 font-mono"
-                  / autoComplete="off">
+                  />
                   <button
                     onClick={() => copyToClipboard(apiEndpoint, 'endpoint')}
                     className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500"
@@ -598,7 +598,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
                 max="180"
                 step="1"
                 value={injectPM25}
-                onChange={(e) = autoComplete="off"> setInjectPM25(Number(e.target.value))}
+                onChange={(e) => setInjectPM25(Number(e.target.value))}
                 className="w-full accent-emerald-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
               />
             </div>
@@ -615,7 +615,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
                 max="42"
                 step="0.1"
                 value={injectTemp}
-                onChange={(e) = autoComplete="off"> setInjectTemp(Number(e.target.value))}
+                onChange={(e) => setInjectTemp(Number(e.target.value))}
                 className="w-full accent-emerald-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
               />
             </div>
@@ -632,7 +632,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
                 max="95"
                 step="1"
                 value={injectHumidity}
-                onChange={(e) = autoComplete="off"> setInjectHumidity(Number(e.target.value))}
+                onChange={(e) => setInjectHumidity(Number(e.target.value))}
                 className="w-full accent-emerald-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
               />
             </div>
@@ -649,7 +649,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
                 max="80"
                 step="1"
                 value={injectO3}
-                onChange={(e) = autoComplete="off"> setInjectO3(Number(e.target.value))}
+                onChange={(e) => setInjectO3(Number(e.target.value))}
                 className="w-full accent-emerald-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
               />
             </div>

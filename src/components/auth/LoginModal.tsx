@@ -214,8 +214,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             <div className="space-y-1">
               <label className="text-xs text-slate-700 font-semibold block">Correo Electrónico Institucional</label>
               <input
-                type="email" autoComplete="email"
+                type="email"
                 required
+                autoComplete="email"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
                 placeholder="investigador@unitru.edu.pe"
@@ -286,7 +287,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                   required
                   placeholder="Ej. Ing. Joel Arevalo"
                   value={regName}
-                  onChange={(e) = autoComplete="off"> setRegName(e.target.value)}
+                  onChange={(e) => setRegName(e.target.value)}
                   className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-xs"
                 />
               </div>
@@ -294,8 +295,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <div className="space-y-1">
                 <label className="text-xs text-slate-700 font-semibold block">Correo Electrónico</label>
                 <input
-                  type="email" autoComplete="email"
+                  type="email"
                   required
+                  autoComplete="email"
                   placeholder="investigador@trujillo.edu.pe"
                   value={regEmail}
                   onChange={(e) => setRegEmail(e.target.value)}
@@ -326,7 +328,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                   type="text"
                   placeholder="Ej. Municipalidad Provincial de Trujillo"
                   value={regInstitution}
-                  onChange={(e) = autoComplete="off"> setRegInstitution(e.target.value)}
+                  onChange={(e) => setRegInstitution(e.target.value)}
                   className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-xs"
                 />
               </div>
@@ -339,6 +341,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                   <input
                     type={showRegPassword ? 'text' : 'password'}
                     required
+                    autoComplete="new-password"
                     placeholder="••••••••"
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
@@ -359,6 +362,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 <input
                   type={showRegPassword ? 'text' : 'password'}
                   required
+                  autoComplete="new-password"
                   placeholder="••••••••"
                   value={regConfirmPassword}
                   onChange={(e) => setRegConfirmPassword(e.target.value)}

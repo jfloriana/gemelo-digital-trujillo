@@ -947,7 +947,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
             <input
               type="text"
               value={inputQuery}
-              onChange={(e) = autoComplete="off"> setInputQuery(e.target.value)}
+              onChange={(e) => setInputQuery(e.target.value)}
               placeholder={isListening ? '🎙️ Escuchando tu voz...' : 'Escribe o dicta por voz tu consulta científica...'}
               className={`flex-1 bg-slate-50 border rounded-2xl px-4 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 shadow-xs transition-colors ${
                 isListening
