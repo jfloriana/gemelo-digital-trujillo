@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UrbanZone, SensorNode } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../context/I18nContext';
 import { supabase } from '../../lib/supabase';
 import { ZoneFormModal } from './ZoneFormModal';
 import { 
@@ -54,6 +55,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
   onExportReports
 }) => {
   const { permissions } = useAuth();
+  const { t } = useI18n();
   const [selectedSensor, setSelectedSensor] = useState<SensorNode>(
     sensors.find(s => s.zoneId === selectedZone.id) || sensors[0]
   );
@@ -98,11 +100,10 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
                 Objetivo Específico 1 (OE1)
               </span>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
-                Diagnóstico de Variabilidad Microescalar en Trujillo
+                {t('oe1.title')}
               </h2>
               <p className="text-slate-600 dark:text-slate-400 text-sm max-w-3xl mt-1">
-                Monitoreo de alta resolución espacial en zonas críticas de Trujillo. Evaluación de cañones urbanos, 
-                efecto de isla de calor urbano (UHI) y calibración en dos etapas de sensores ópticos de bajo costo (Zhivkov et al., 2025).
+                {t('oe1.desc')}
               </p>
             </div>
 
