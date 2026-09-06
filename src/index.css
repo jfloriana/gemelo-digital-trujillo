@@ -1,1 +1,12 @@
 @import "tailwindcss";
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-slate-900: #0f172a;
+}
+
+/* Scrollbar hide + smooth dark transition */
+html { scrollbar-gutter: stable; }
+html, body { transition: background-color 0.3s, color 0.3s; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
