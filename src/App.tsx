@@ -16,13 +16,7 @@ import { ReportsModule } from './components/modules/ReportsModule';
 import { LoginModal } from './components/auth/LoginModal';
 import { AuthScreen } from './components/auth/AuthScreen';
 import { AssistantChatbot } from './components/chatbot/AssistantChatbot';
-import { 
-  TRUJILLO_ZONES, 
-  SENSOR_NODES, 
-  AI_MODELS_BENCHMARK, 
-  NBS_CATALOG, 
-  THESIS_OBJECTIVES_DATA 
-} from './data/trujilloData';
+import { useSupabaseData } from './hooks/useSupabaseData';
 import { UrbanZone, SimulationScenario } from './types';
 import { exportToExcel, exportToPDF, exportToWord, exportToCSV } from './utils/exportUtils';
 import { 
@@ -50,11 +44,19 @@ type ActiveModule =
 
 function MainAppContent() {
   const { user } = useAuth();
+  const { zones: TRUJILLO_ZONES, sensors: SENSOR_NODES, models: AI_MODELS_BENCHMARK, nbs: NBS_CATALOG, objectives: THESIS_OBJECTIVES_DATA } = useSupabaseData();
   const [activeModule, setActiveModule] = useState<ActiveModule>('digital_twin');
-  const [selectedZone, setSelectedZone] = useState<UrbanZone>(TRUJILLO_ZONES[0]);
+  const [selectedZone, setSelectedZone] = useState<UrbanZone>(() => TRUJILLO_ZONES[0]);
   const [isLoginOpen, setIsLoginOpen] = useState<boolean>(false);
   const [isChatbotOpen, setIsChatbotOpen] = useState<boolean>(false);
   const [activeScenario, setActiveScenario] = useState<SimulationScenario | null>(null);
+
+  // Sincroniza selectedZone cuando llegan datos de Supabase
+  React.useEffect(() => {
+    if (TRUJILLO_ZONES.length && !TRUJILLO_ZONES.find(z => z.id === selectedZone.id)) {
+      setSelectedZone(TRUJILLO_ZONES[0]);
+    }
+  }, [TRUJILLO_ZONES]);
 
   // Active NbS configuration state applied to digital twin canvas
   const [appliedNbs, setAppliedNbs] = useState<{ nbsId: string; quantityOrArea: number }[]>([
