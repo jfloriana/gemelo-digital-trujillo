@@ -326,7 +326,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 text-slate-900 relative overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 text-slate-900 dark:text-white relative overflow-hidden shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
@@ -338,10 +338,10 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
                 Broker MQTT Activo
               </span>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mt-2">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
               Adquisición, Procesamiento QA/QC y Calibración de Sensores de Bajo Costo
             </h2>
-            <p className="text-slate-600 text-sm max-w-3xl mt-1">
+            <p className="text-slate-600 dark:text-slate-400 text-sm max-w-3xl mt-1">
               Recepción continua de telemetría ambiental (PM2.5, PM10, O3, NO2, Temperatura y Humedad) vía <strong>MQTT Broker</strong> y <strong>REST API</strong> con algoritmo de calibración en 2 etapas (Zhivkov et al., 2025 / Cowell et al., 2025).
             </p>
           </div>
@@ -349,7 +349,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => onExportReports('csv')}
-              className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-medium border border-slate-200 shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-3.5 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
               title="Descargar dataset crudo y calibrado en CSV"
             >
               <FileCode className="w-3.5 h-3.5 text-amber-600" />
@@ -370,17 +370,17 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
       {/* Protocol Architecture & Configuration Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Protocol Settings Card */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Radio className="w-4 h-4 text-sky-600" />
               Protocolo de Comunicación IoT
             </h3>
-            <div className="flex bg-slate-100 p-0.5 rounded-lg text-[10px] font-semibold">
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg text-[10px] font-semibold">
               <button
                 onClick={() => setActiveProtocol('MQTT')}
                 className={`px-2 py-1 rounded-md transition-all ${
-                  activeProtocol === 'MQTT' ? 'bg-white text-sky-800 shadow-2xs font-bold' : 'text-slate-600'
+                  activeProtocol === 'MQTT' ? 'bg-white dark:bg-slate-800 text-sky-800 dark:text-sky-300 shadow-2xs font-bold' : 'text-slate-600'
                 }`}
               >
                 MQTT v5.0
@@ -388,7 +388,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
               <button
                 onClick={() => setActiveProtocol('REST_API')}
                 className={`px-2 py-1 rounded-md transition-all ${
-                  activeProtocol === 'REST_API' ? 'bg-white text-sky-800 shadow-2xs font-bold' : 'text-slate-600'
+                  activeProtocol === 'REST_API' ? 'bg-white dark:bg-slate-800 text-sky-800 dark:text-sky-300 shadow-2xs font-bold' : 'text-slate-600'
                 }`}
               >
                 REST API
@@ -399,17 +399,17 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
           {activeProtocol === 'MQTT' ? (
             <div className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="text-slate-600 font-medium block">Broker MQTT (TLS 1.3 Seguro):</label>
+                <label className="text-slate-600 dark:text-slate-400 font-medium block">Broker MQTT (TLS 1.3 Seguro):</label>
                 <div className="flex items-center gap-1.5">
                   <input
                     type="text"
                     readOnly
                     value={mqttBroker}
-                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 font-mono"
+                    className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 font-mono"
                   />
                   <button
                     onClick={() => copyToClipboard(mqttBroker, 'broker')}
-                    className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500"
+                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                     title="Copiar URL"
                   >
                     <Copy className="w-3.5 h-3.5" />
@@ -418,17 +418,17 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
               </div>
 
               <div className="space-y-1">
-                <label className="text-slate-600 font-medium block">Tópico de Telemetría (Topic):</label>
+                <label className="text-slate-600 dark:text-slate-400 font-medium block">Tópico de Telemetría (Topic):</label>
                 <div className="flex items-center gap-1.5">
                   <input
                     type="text"
                     readOnly
                     value={mqttTopic}
-                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-emerald-800 font-mono font-semibold"
+                    className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-emerald-800 font-mono font-semibold"
                   />
                   <button
                     onClick={() => copyToClipboard(mqttTopic, 'topic')}
-                    className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500"
+                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                     title="Copiar Topic"
                   >
                     <Copy className="w-3.5 h-3.5" />
@@ -437,12 +437,12 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
               </div>
 
               <div className="grid grid-cols-2 gap-2 pt-1">
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <span className="text-[11px] text-slate-500 block">Nivel QoS</span>
-                  <strong className="text-xs text-slate-800 font-semibold font-mono">QoS 1 (At least once)</strong>
+                <div className="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Nivel QoS</span>
+                  <strong className="text-xs text-slate-800 dark:text-slate-100 font-semibold font-mono">QoS 1 (At least once)</strong>
                 </div>
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <span className="text-[11px] text-slate-500 block">Autenticación</span>
+                <div className="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Autenticación</span>
                   <strong className="text-xs text-emerald-700 font-semibold font-mono">X.509 + Token</strong>
                 </div>
               </div>
@@ -450,17 +450,17 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
           ) : (
             <div className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="text-slate-600 font-medium block">Endpoint Ingestión HTTP POST:</label>
+                <label className="text-slate-600 dark:text-slate-400 font-medium block">Endpoint Ingestión HTTP POST:</label>
                 <div className="flex items-center gap-1.5">
                   <input
                     type="text"
                     readOnly
                     value={apiEndpoint}
-                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 font-mono"
+                    className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 font-mono"
                   />
                   <button
                     onClick={() => copyToClipboard(apiEndpoint, 'endpoint')}
-                    className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500"
+                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                   >
                     <Copy className="w-3.5 h-3.5" />
                   </button>
@@ -468,16 +468,16 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
               </div>
 
               <div className="space-y-1">
-                <label className="text-slate-600 font-medium block">Bearer API Key Token:</label>
+                <label className="text-slate-600 dark:text-slate-400 font-medium block">Bearer API Key Token:</label>
                 <input
                   type="password"
                   readOnly
                   value={apiKey}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 font-mono"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 font-mono"
                 />
               </div>
 
-              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-[11px] text-slate-600">
+              <div className="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] text-slate-600 dark:text-slate-400">
                 <span>Header requerido: <code>Authorization: Bearer {apiKey.slice(0, 12)}...</code></span>
               </div>
             </div>
@@ -491,8 +491,8 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
           )}
 
           {/* Auto-Streaming Toggle */}
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-700">Simulación Flujo Continuo:</span>
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Simulación Flujo Continuo:</span>
             <button
               onClick={() => setIsAutoStreaming(!isAutoStreaming)}
               className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
@@ -505,9 +505,9 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
         </div>
 
         {/* 2-Stage Calibration Math & QA/QC Engine Card */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
               Pipeline QA/QC y Algoritmo de Calibración
             </h3>
@@ -518,29 +518,29 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
 
           <div className="space-y-2.5 text-xs">
             {/* Step 1 */}
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-1">
-              <div className="flex items-center justify-between text-slate-800 font-semibold">
+            <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-1">
+              <div className="flex items-center justify-between text-slate-800 dark:text-slate-100 font-semibold">
                 <span>1. Corrección Crecimiento Higroscópico</span>
                 <span className="text-[10px] text-sky-700 font-mono">Etapa 1</span>
               </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed font-mono bg-white p-1.5 rounded-lg border border-slate-200/60">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-mono bg-white dark:bg-slate-900 p-1.5 rounded-lg border border-slate-200 dark:border-slate-700/60">
                 PM_hygro = PM_raw / [ 1 + 0.25 * (RH² / (1 - RH)) ]
               </p>
-              <span className="text-[10px] text-slate-500 block">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
                 Elimina sobrestimación por humedad costera de Trujillo (garúa matutina).
               </span>
             </div>
 
             {/* Step 2 */}
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-1">
-              <div className="flex items-center justify-between text-slate-800 font-semibold">
+            <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-1">
+              <div className="flex items-center justify-between text-slate-800 dark:text-slate-100 font-semibold">
                 <span>2. Compensación Térmica y Deriva</span>
                 <span className="text-[10px] text-emerald-700 font-mono">Etapa 2</span>
               </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed font-mono bg-white p-1.5 rounded-lg border border-slate-200/60">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-mono bg-white dark:bg-slate-900 p-1.5 rounded-lg border border-slate-200 dark:border-slate-700/60">
                 PM_calib = PM_hygro - 0.18 * (T_actual - 24.0°C)
               </p>
-              <span className="text-[10px] text-slate-500 block">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
                 Compensa calor acumulado y auto-calentamiento interno del sensor (-0.6°C).
               </span>
             </div>
@@ -560,23 +560,23 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
         </div>
 
         {/* Live Packet Injector Card */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Send className="w-4 h-4 text-emerald-600" />
               Inyector de Paquetes en Vivo
             </h3>
-            <span className="text-[10px] text-slate-500">Prueba Manual API/MQTT</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">Prueba Manual API/MQTT</span>
           </div>
 
           <div className="space-y-3">
             {/* Target sensor dropdown */}
             <div className="space-y-1">
-              <label className="text-xs text-slate-700 font-semibold block">Nodo Sensor Destino:</label>
+              <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Nodo Sensor Destino:</label>
               <select
                 value={selectedSensorId}
                 onChange={(e) => setSelectedSensorId(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
               >
                 {sensors.map(s => (
                   <option key={s.id} value={s.id}>
@@ -589,8 +589,8 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
             {/* Slider PM2.5 */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-slate-600 font-medium">PM2.5 Crudo:</span>
-                <strong className="font-mono text-slate-900">{injectPM25} µg/m³</strong>
+                <span className="text-slate-600 dark:text-slate-400 font-medium">PM2.5 Crudo:</span>
+                <strong className="font-mono text-slate-900 dark:text-white">{injectPM25} µg/m³</strong>
               </div>
               <input
                 type="range"
@@ -606,8 +606,8 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
             {/* Slider Temperatura */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-slate-600 font-medium">Temperatura Cruda:</span>
-                <strong className="font-mono text-slate-900">{injectTemp} °C</strong>
+                <span className="text-slate-600 dark:text-slate-400 font-medium">Temperatura Cruda:</span>
+                <strong className="font-mono text-slate-900 dark:text-white">{injectTemp} °C</strong>
               </div>
               <input
                 type="range"
@@ -623,8 +623,8 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
             {/* Slider Humedad Relativa */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-slate-600 font-medium">Humedad Relativa (HR):</span>
-                <strong className="font-mono text-slate-900">{injectHumidity} %</strong>
+                <span className="text-slate-600 dark:text-slate-400 font-medium">Humedad Relativa (HR):</span>
+                <strong className="font-mono text-slate-900 dark:text-white">{injectHumidity} %</strong>
               </div>
               <input
                 type="range"
@@ -640,8 +640,8 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
             {/* Slider Ozono O3 */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-slate-600 font-medium">Ozono Troposférico O3:</span>
-                <strong className="font-mono text-slate-900">{injectO3} ppb</strong>
+                <span className="text-slate-600 dark:text-slate-400 font-medium">Ozono Troposférico O3:</span>
+                <strong className="font-mono text-slate-900 dark:text-white">{injectO3} ppb</strong>
               </div>
               <input
                 type="range"
@@ -668,14 +668,14 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
       </div>
 
       {/* Fleet Sensor Live Status Matrix */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 space-y-4 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-3">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 space-y-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-3">
           <div>
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Database className="w-5 h-5 text-sky-600" />
               Flota de Nodos Sensores IoT Desplegados en Trujillo
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Estado de telemetría en tiempo real, calibración 2-etapas e impacto en el gemelo digital.
             </p>
           </div>
@@ -687,8 +687,8 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-700">
-            <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] font-mono border-b border-slate-200/80">
+          <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-mono border-b border-slate-200/80 dark:border-slate-700">
               <tr>
                 <th className="py-2.5 px-3">Nodo Sensor</th>
                 <th className="py-2.5 px-3">Zona Trujillo</th>
@@ -713,19 +713,19 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                         <div>
-                          <strong className="text-slate-900 font-mono">{s.code}</strong>
-                          <span className="text-[10px] text-slate-500 block">{s.name}</span>
+                          <strong className="text-slate-900 dark:text-white font-mono">{s.code}</strong>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 block">{s.name}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="py-2.5 px-3 font-semibold text-slate-800">{s.zoneName}</td>
-                    <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600">{s.sensorType}</td>
-                    <td className="py-2.5 px-3 font-mono text-slate-900 font-semibold">{s.lastReading.temperature} °C</td>
+                    <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-100">{s.zoneName}</td>
+                    <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600 dark:text-slate-400">{s.sensorType}</td>
+                    <td className="py-2.5 px-3 font-mono text-slate-900 dark:text-white font-semibold">{s.lastReading.temperature} °C</td>
                     <td className="py-2.5 px-3 font-mono font-bold text-amber-700">{s.lastReading.pm25} µg/m³</td>
-                    <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600">
+                    <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600 dark:text-slate-400">
                       {s.lastReading.o3} / {s.lastReading.no2} ppb
                     </td>
-                    <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600">
+                    <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600 dark:text-slate-400">
                       <div className="flex items-center gap-1.5">
                         <Wifi className="w-3 h-3 text-sky-600" />
                         <span>{s.rssi || -68} dBm</span>
@@ -745,7 +745,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
                         className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
                           isSelected 
                             ? 'bg-sky-600 text-white shadow-2xs' 
-                            : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                            : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                         }`}
                       >
                         {isSelected ? 'Seleccionado' : 'Inspeccionar'}
@@ -760,15 +760,15 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
       </div>
 
       {/* Real-time Ingestion Stream Activity Log */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 space-y-4 shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 space-y-4 shadow-sm">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
           <div className="flex items-center gap-2">
             <Terminal className="w-5 h-5 text-emerald-600" />
-            <h3 className="text-base font-bold text-slate-900">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
               Registro de Ingestión en Tiempo Real (Telemetry Logs)
             </h3>
           </div>
-          <span className="text-xs font-mono text-slate-500">
+          <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
             {logs.length} paquetes auditados
           </span>
         </div>
@@ -777,28 +777,28 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
           {logs.map(log => (
             <div 
               key={log.id} 
-              className="bg-slate-50 hover:bg-slate-100/80 p-3 rounded-xl border border-slate-200/80 flex flex-wrap items-center justify-between gap-3 transition-colors"
+              className="bg-slate-50 dark:bg-slate-800 hover:bg-slate-100/80 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <span className="text-[11px] text-slate-400 font-semibold">{log.timestamp}</span>
                 <span className="px-2 py-0.5 rounded bg-sky-100 text-sky-800 text-[10px] font-bold">
                   {log.protocol}
                 </span>
-                <span className="font-bold text-slate-900">{log.sensorCode}</span>
-                <span className="text-slate-500 text-[11px] hidden sm:inline">{log.topicOrEndpoint}</span>
+                <span className="font-bold text-slate-900 dark:text-white">{log.sensorCode}</span>
+                <span className="text-slate-500 dark:text-slate-400 text-[11px] hidden sm:inline">{log.topicOrEndpoint}</span>
               </div>
 
               <div className="flex items-center gap-4 text-[11px]">
                 <div>
                   <span className="text-slate-400">PM2.5: </span>
-                  <span className="text-slate-500 line-through mr-1">{log.rawPM25}</span>
+                  <span className="text-slate-500 dark:text-slate-400 line-through mr-1">{log.rawPM25}</span>
                   <strong className="text-emerald-700 font-bold">{log.calibratedPM25} µg/m³</strong>
                 </div>
 
                 <div>
                   <span className="text-slate-400">Temp: </span>
-                  <span className="text-slate-500 line-through mr-1">{log.rawTemp}</span>
-                  <strong className="text-slate-800 font-bold">{log.calibratedTemp} °C</strong>
+                  <span className="text-slate-500 dark:text-slate-400 line-through mr-1">{log.rawTemp}</span>
+                  <strong className="text-slate-800 dark:text-slate-100 font-bold">{log.calibratedTemp} °C</strong>
                 </div>
 
                 <span className="text-[10px] text-slate-400 font-mono">

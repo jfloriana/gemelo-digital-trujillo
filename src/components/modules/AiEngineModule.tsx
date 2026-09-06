@@ -101,16 +101,16 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 text-slate-900 relative overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 text-slate-900 dark:text-white relative overflow-hidden shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <span className="px-3 py-1 bg-purple-50 text-purple-700 border border-purple-200/60 text-xs font-semibold rounded-lg uppercase tracking-wider">
               Objetivo Específico 3 (OE3)
             </span>
-            <h2 className="text-2xl font-bold text-slate-900 mt-2">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
               Modelos de Machine Learning & Deep Learning a Microescala
             </h2>
-            <p className="text-slate-600 text-sm max-w-3xl mt-1">
+            <p className="text-slate-600 dark:text-slate-400 text-sm max-w-3xl mt-1">
               Adaptación y comparación de algoritmos avanzados de aprendizaje supervisado y profundo: 
               <strong> 1D-CNN</strong> (Naveed et al., 2025), <strong>GNN</strong> (Zhivkov et al., 2025), 
               <strong> Bi-LSTM</strong> y <strong>Modelado Espaciotemporal Bayesiano</strong> (Li et al., 2026).
@@ -120,7 +120,7 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => onExportReports('xlsx')}
-              className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-medium border border-slate-200 shadow-xs flex items-center gap-1.5 transition-all"
+              className="px-3.5 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 shadow-xs flex items-center gap-1.5 transition-all"
             >
               <Download className="w-3.5 h-3.5 text-purple-600" />
               Métricas en Excel
@@ -147,7 +147,7 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
               className={`p-4 rounded-xl text-left border transition-all ${
                 isSelected
                   ? 'bg-purple-50/80 border-purple-500 ring-2 ring-purple-500/20 text-slate-900 shadow-sm'
-                  : 'bg-white border-slate-200/80 hover:border-slate-300 text-slate-700 shadow-xs'
+                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-700 dark:text-slate-300 shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between text-xs mb-1.5">
@@ -160,19 +160,19 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
                   {model.status}
                 </span>
               </div>
-              <h4 className="font-bold text-xs text-slate-900 line-clamp-1">{model.name}</h4>
+              <h4 className="font-bold text-xs text-slate-900 dark:text-white line-clamp-1">{model.name}</h4>
               <div className="mt-3 space-y-1 text-[11px] font-mono">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">R² Score:</span>
+                  <span className="text-slate-500 dark:text-slate-400">R² Score:</span>
                   <span className="font-bold text-emerald-700">{model.r2.toFixed(4)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">MAPE:</span>
+                  <span className="text-slate-500 dark:text-slate-400">MAPE:</span>
                   <span className="font-bold text-amber-700">{model.mape}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Inferencia:</span>
-                  <span className="text-slate-700">{model.inferenceTimeMs} ms</span>
+                  <span className="text-slate-500 dark:text-slate-400">Inferencia:</span>
+                  <span className="text-slate-700 dark:text-slate-300">{model.inferenceTimeMs} ms</span>
                 </div>
               </div>
             </button>
@@ -181,16 +181,16 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
       </div>
 
       {/* Selected Model Technical Deep-Dive */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 shadow-sm grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Training Loss & Forecast Engine */}
         <div className="lg:col-span-2 space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
             <div>
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Cpu className="w-5 h-5 text-purple-600" />
                 Arquitectura: {selectedModel.name}
               </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Capas: <code className="text-purple-800 bg-purple-50 px-2 py-0.5 rounded font-mono text-[11px] border border-purple-200">{selectedModel.architecture}</code>
               </p>
             </div>
@@ -216,11 +216,11 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
 
           {/* Loss Curve Chart */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-slate-700">
+            <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
               <span className="font-semibold">Curva de Convergencia (Loss vs Épocas de Entrenamiento)</span>
-              <span className="text-slate-500 font-mono">Épocas: 50 | Optimizer: Adam (lr=0.001)</span>
+              <span className="text-slate-500 dark:text-slate-400 font-mono">Épocas: 50 | Optimizer: Adam (lr=0.001)</span>
             </div>
-            <div className="h-[220px] w-full bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+            <div className="h-[220px] w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={lossData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -240,11 +240,11 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
           {/* Horizon Forecast in Trujillo */}
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-800">
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
                 Pronóstico Predictivo a Futuro en {selectedZone.name.split(':')[1]?.trim() || selectedZone.name}
               </span>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500">Horizonte:</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">Horizonte:</span>
                 {[6, 12, 24].map(h => (
                   <button
                     key={h}
@@ -259,7 +259,7 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
               </div>
             </div>
 
-            <div className="h-[220px] w-full bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+            <div className="h-[220px] w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={forecastData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -280,8 +280,8 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
 
         {/* Right 1 Col: Feature Importance & Academic Benchmark */}
         <div className="space-y-4">
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-3">
-            <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+          <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-3">
+            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
               <BarChart3 className="w-4 h-4 text-purple-600" />
               Importancia de Variables (Feature Importance)
             </h4>
@@ -289,7 +289,7 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
               {featureImportanceData.map((f, idx) => (
                 <div key={idx} className="space-y-1">
                   <div className="flex justify-between text-[11px]">
-                    <span className="text-slate-700">{f.feature}</span>
+                    <span className="text-slate-700 dark:text-slate-300">{f.feature}</span>
                     <span className="font-mono font-bold text-purple-700">{f.importance}%</span>
                   </div>
                   <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
@@ -309,12 +309,12 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
               <ShieldCheck className="w-4 h-4 text-purple-600" />
               Validación Científica del Modelo
             </div>
-            <p className="text-xs text-slate-700 leading-relaxed">
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
               El modelo <strong>1D-CNN (Naveed et al., 2025)</strong> demostró el mejor ajuste para Trujillo con un <strong>R² = {selectedModel.r2.toFixed(4)}</strong> y un error porcentual absoluto medio (MAPE) de solo <strong>{selectedModel.mape}%</strong>, permitiendo inferencias ultrarrápidas de <strong>{selectedModel.inferenceTimeMs} ms</strong> compatibles con el gemelo digital en tiempo real.
             </p>
-            <div className="text-[11px] text-slate-500 border-t border-purple-200/60 pt-2 flex items-center justify-between">
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 border-t border-purple-200/60 pt-2 flex items-center justify-between">
               <span>Resolución Espacial:</span>
-              <strong className="text-slate-800">{selectedModel.spatialResolution}</strong>
+              <strong className="text-slate-800 dark:text-slate-100">{selectedModel.spatialResolution}</strong>
             </div>
           </div>
         </div>

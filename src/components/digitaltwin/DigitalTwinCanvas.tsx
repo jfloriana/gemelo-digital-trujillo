@@ -407,16 +407,16 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
   };
 
   return (
-    <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm flex flex-col">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm flex flex-col">
       {/* Top Controller Bar */}
-      <div className="bg-slate-50/90 px-4 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-slate-50 dark:bg-slate-800/90 px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
           <div>
-            <h3 className="text-slate-900 text-sm font-semibold flex items-center gap-2">
+            <h3 className="text-slate-900 dark:text-white text-sm font-semibold flex items-center gap-2">
               Gemelo Digital 3D a Microescala: {zone.name.split(':')[1]?.trim() || zone.name}
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Malla discretizada 5x5m | Simulación CFD / LBM + Dispersión Gaussiana & NbS
             </p>
           </div>
@@ -427,7 +427,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
           <button
             onClick={() => setShowAirflow(!showAirflow)}
             className={`px-3 py-1.5 text-xs rounded-xl font-medium flex items-center gap-1.5 transition-all ${
-              showAirflow ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              showAirflow ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 hover:bg-slate-50'
             }`}
             title="Vórtices de viento y flujo LBM en cañón urbano"
           >
@@ -438,7 +438,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
           <button
             onClick={() => setShowThermalLayer(!showThermalLayer)}
             className={`px-3 py-1.5 text-xs rounded-xl font-medium flex items-center gap-1.5 transition-all ${
-              showThermalLayer ? 'bg-amber-50 text-amber-700 border border-amber-300 shadow-xs' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              showThermalLayer ? 'bg-amber-50 text-amber-700 border border-amber-300 shadow-xs' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 hover:bg-slate-50'
             }`}
             title="Gradiente térmico de Isla de Calor Urbano (UHI)"
           >
@@ -449,7 +449,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
           <button
             onClick={() => setShowParticles(!showParticles)}
             className={`px-3 py-1.5 text-xs rounded-xl font-medium flex items-center gap-1.5 transition-all ${
-              showParticles ? 'bg-red-50 text-red-700 border border-red-300 shadow-xs' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              showParticles ? 'bg-red-50 text-red-700 border border-red-300 shadow-xs' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 hover:bg-slate-50'
             }`}
             title="Partículas suspendidas PM2.5 / PM10"
           >
@@ -460,7 +460,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
           <button
             onClick={() => setShowBeforeAfterSplit(!showBeforeAfterSplit)}
             className={`px-3 py-1.5 text-xs rounded-xl font-medium flex items-center gap-1.5 transition-all ${
-              showBeforeAfterSplit ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 shadow-xs' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              showBeforeAfterSplit ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 shadow-xs' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 hover:bg-slate-50'
             }`}
           >
             <Eye className="w-3.5 h-3.5" />
@@ -470,7 +470,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
       </div>
 
       {/* Main Canvas Area */}
-      <div className="relative w-full aspect-[16/9] min-h-[380px] bg-slate-100 flex items-center justify-center">
+      <div className="relative w-full aspect-[16/9] min-h-[380px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
         <canvas
           ref={canvasRef}
           width={880}
@@ -480,15 +480,15 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
         />
 
         {/* Live Simulation Overlay HUD */}
-        <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md p-3.5 rounded-2xl border border-slate-200/80 shadow-lg max-w-xs text-xs space-y-2 text-slate-800">
-          <div className="flex items-center justify-between text-slate-700 font-semibold pb-1 border-b border-slate-100">
+        <div className="absolute top-4 left-4 bg-white dark:bg-slate-900/95 dark:bg-slate-900/95 backdrop-blur-md p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-lg max-w-xs text-xs space-y-2 text-slate-800 dark:text-slate-100">
+          <div className="flex items-center justify-between text-slate-700 dark:text-slate-300 font-semibold pb-1 border-b border-slate-100 dark:border-slate-800">
             <span>Telemetría en Vivo (Microescala)</span>
             <span className="text-emerald-600 font-mono text-[11px]">Sincronizado</span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 pt-1">
-            <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
-              <span className="text-slate-500 block text-[10px] font-medium">Temp. Microescala</span>
+            <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+              <span className="text-slate-500 dark:text-slate-400 block text-[10px] font-medium">Temp. Microescala</span>
               <span className={`text-base font-bold font-mono ${effectiveTemp > 30 ? 'text-red-600' : 'text-emerald-600'}`}>
                 {effectiveTemp} °C
               </span>
@@ -499,8 +499,8 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
               )}
             </div>
 
-            <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
-              <span className="text-slate-500 block text-[10px] font-medium">PM2.5 Calibrado</span>
+            <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+              <span className="text-slate-500 dark:text-slate-400 block text-[10px] font-medium">PM2.5 Calibrado</span>
               <span className={`text-base font-bold font-mono ${effectivePM25 > 55 ? 'text-red-600' : effectivePM25 > 35 ? 'text-amber-600' : 'text-emerald-600'}`}>
                 {effectivePM25} µg/m³
               </span>
@@ -512,14 +512,14 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-slate-700 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
+          <div className="flex items-center justify-between text-[11px] text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-100 dark:border-slate-800">
             <span className="font-medium">Delta Isla de Calor (UHI):</span>
             <span className="font-semibold text-amber-700 font-mono">
               +{(Math.max(0.8, (effectiveTemp - 24.5) * 0.6)).toFixed(1)} °C
             </span>
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-slate-700 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
+          <div className="flex items-center justify-between text-[11px] text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-100 dark:border-slate-800">
             <span className="font-medium">Confort Térmico (PET):</span>
             <span className="font-semibold text-teal-700 font-mono">
               {(effectiveTemp + 2.8).toFixed(1)} °C
@@ -528,7 +528,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
         </div>
 
         {/* Quick Interaction Panel (Plant tree or roof on canvas) */}
-        <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-md p-3 rounded-2xl border border-slate-200/80 shadow-lg flex items-center gap-2">
+        <div className="absolute bottom-4 right-4 bg-white dark:bg-slate-900/95 dark:bg-slate-900/95 backdrop-blur-md p-3 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-lg flex items-center gap-2">
           <button
             onClick={() => setIsPlacingTree(!isPlacingTree)}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs ${
@@ -543,7 +543,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
 
           <button
             onClick={() => setCustomTrees([])}
-            className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 transition-colors"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 transition-colors"
             title="Reiniciar árboles colocados"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -552,19 +552,19 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
       </div>
 
       {/* Bottom Summary Bar */}
-      <div className="bg-slate-50 px-4 py-2.5 border-t border-slate-200 flex flex-wrap items-center justify-between text-xs text-slate-500">
+      <div className="bg-slate-50 dark:bg-slate-800 px-4 py-2.5 border-t border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-slate-400">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            Flora nativa recomendada: <strong className="text-slate-700">Molle Costeño & Huarango</strong>
+            Flora nativa recomendada: <strong className="text-slate-700 dark:text-slate-300">Molle Costeño & Huarango</strong>
           </span>
           <span className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-cyan-500" />
-            Viento predominante: <strong className="text-slate-700">Suroeste (SO 2.1 m/s)</strong>
+            Viento predominante: <strong className="text-slate-700 dark:text-slate-300">Suroeste (SO 2.1 m/s)</strong>
           </span>
         </div>
-        <div className="text-slate-500">
-          Referencia: <strong className="text-slate-700">Li et al. (2026) & Zhivkov et al. (2025)</strong>
+        <div className="text-slate-500 dark:text-slate-400">
+          Referencia: <strong className="text-slate-700 dark:text-slate-300">Li et al. (2026) & Zhivkov et al. (2025)</strong>
         </div>
       </div>
     </div>

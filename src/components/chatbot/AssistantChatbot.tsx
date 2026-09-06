@@ -604,7 +604,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
       {/* FLOATING TRIGGER BUTTON (Always visible at bottom right) — z-[60] garantiza estar sobre AuthScreen */}
       {!isOpen && (
         <div className="fixed bottom-6 right-6 z-[60] flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 bg-white/95 backdrop-blur-md border border-slate-200/90 text-slate-800 text-xs font-semibold px-3.5 py-2 rounded-2xl shadow-lg animate-bounce">
+          <div className="hidden sm:flex items-center gap-2 bg-white dark:bg-slate-900/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs font-semibold px-3.5 py-2 rounded-2xl shadow-lg animate-bounce">
             <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
             <span>¿Dudas o simulación guiada? ¡Pregúntame!</span>
           </div>
@@ -627,7 +627,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
             isExpanded
               ? 'inset-4 sm:inset-8 md:inset-12'
               : 'bottom-4 right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-2rem)] sm:w-[460px] h-[640px] max-h-[calc(100vh-2rem)]'
-          } bg-white rounded-3xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden`}
+          } bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden`}
         >
           {/* Header */}
           <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 text-white px-5 py-4 flex items-center justify-between shrink-0">
@@ -672,7 +672,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
                 className={`p-2 rounded-xl transition-all cursor-pointer ${
                   isVoiceOutputEnabled
                     ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-400/40'
-                    : 'hover:bg-white/10 hover:text-white text-slate-400'
+                    : 'hover:bg-white/10 dark:hover:bg-slate-800/50 hover:text-white text-slate-400'
                 }`}
                 title={isVoiceOutputEnabled ? 'Voz automática activada (clic para silenciar)' : 'Activar lectura por voz del asistente'}
               >
@@ -685,7 +685,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
 
               <button
                 onClick={handleClearChat}
-                className="p-2 hover:bg-white/10 hover:text-white rounded-xl transition-all cursor-pointer"
+                className="p-2 hover:bg-white dark:bg-slate-900/10 hover:text-white rounded-xl transition-all cursor-pointer"
                 title="Reiniciar conversación"
               >
                 <RotateCcw className="w-4 h-4" />
@@ -693,7 +693,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
 
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="p-2 hover:bg-white/10 hover:text-white rounded-xl transition-all cursor-pointer"
+                className="p-2 hover:bg-white dark:bg-slate-900/10 hover:text-white rounded-xl transition-all cursor-pointer"
                 title={isExpanded ? 'Ventana compacta' : 'Expandir ventana'}
               >
                 {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -714,35 +714,35 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
           </div>
 
           {/* Assistant Guided Category Quick Toolbar */}
-          <div className="bg-slate-50 border-b border-slate-200/80 px-4 py-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0 text-[11px]">
+          <div className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200/80 dark:border-slate-700 px-4 py-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0 text-[11px]">
             <span className="text-slate-400 font-semibold flex items-center gap-1 shrink-0">
               <Sliders className="w-3 h-3 text-slate-400" />
               Guías:
             </span>
             <button
               onClick={() => startGuidedFlow('tour')}
-              className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 hover:border-emerald-300 rounded-lg font-medium whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
+              className="px-2.5 py-1 bg-white dark:bg-slate-900 hover:bg-emerald-50 text-slate-700 dark:text-slate-300 hover:text-emerald-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 rounded-lg font-medium whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
             >
               <Compass className="w-3 h-3 text-emerald-600" />
               Tour Tesis
             </button>
             <button
               onClick={() => startGuidedFlow('nbs_guide')}
-              className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 hover:border-emerald-300 rounded-lg font-medium whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
+              className="px-2.5 py-1 bg-white dark:bg-slate-900 hover:bg-emerald-50 text-slate-700 dark:text-slate-300 hover:text-emerald-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 rounded-lg font-medium whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
             >
               <Trees className="w-3 h-3 text-teal-600" />
               Simulador NbS
             </button>
             <button
               onClick={() => startGuidedFlow('iot_guide')}
-              className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 hover:border-emerald-300 rounded-lg font-medium whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
+              className="px-2.5 py-1 bg-white dark:bg-slate-900 hover:bg-emerald-50 text-slate-700 dark:text-slate-300 hover:text-emerald-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 rounded-lg font-medium whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
             >
               <Boxes className="w-3 h-3 text-purple-600" />
               Calibración IoT
             </button>
             <button
               onClick={() => startGuidedFlow('regulations')}
-              className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 hover:border-emerald-300 rounded-lg font-medium whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
+              className="px-2.5 py-1 bg-white dark:bg-slate-900 hover:bg-emerald-50 text-slate-700 dark:text-slate-300 hover:text-emerald-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 rounded-lg font-medium whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
             >
               <ShieldCheck className="w-3 h-3 text-sky-600" />
               ECA-Aire MINAM
@@ -750,7 +750,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
           </div>
 
           {/* Messages Body */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/50">
+          <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50 dark:bg-slate-800/50">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -766,12 +766,12 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
                   className={`max-w-[85%] sm:max-w-[80%] rounded-2xl p-3.5 text-xs shadow-xs leading-relaxed ${
                     msg.sender === 'user'
                       ? 'bg-emerald-600 text-white rounded-tr-none'
-                      : 'bg-white text-slate-800 border border-slate-200/80 rounded-tl-none'
+                      : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border border-slate-200/80 rounded-tl-none'
                   }`}
                 >
                   {/* Speaker Button on Bot Messages */}
                   {msg.sender === 'bot' && (
-                    <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-100/80">
+                    <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-100 dark:border-slate-800/80">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
                         <Bot className="w-3 h-3 text-emerald-600" />
                         Respuesta Asistente
@@ -809,12 +809,12 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
 
                   {/* Quick Action Interactive Buttons (if any) */}
                   {msg.quickActions && msg.quickActions.length > 0 && (
-                    <div className="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap gap-1.5">
+                    <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-1.5">
                       {msg.quickActions.map((action, actionIdx) => (
                         <button
                           key={actionIdx}
                           onClick={() => handleActionClick(action)}
-                          className="px-2.5 py-1.5 bg-slate-50 hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 border border-slate-200 hover:border-emerald-300 rounded-xl text-[11px] font-semibold transition-all flex items-center gap-1.5 shadow-2xs group cursor-pointer"
+                          className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-emerald-50 text-slate-800 dark:text-slate-100 hover:text-emerald-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 rounded-xl text-[11px] font-semibold transition-all flex items-center gap-1.5 shadow-2xs group cursor-pointer"
                         >
                           <span>{action.label}</span>
                           <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-emerald-700 transition-transform group-hover:translate-x-0.5" />
@@ -846,7 +846,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
                 <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-xs">
                   <Bot className="w-4 h-4 animate-spin" />
                 </div>
-                <div className="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs text-slate-500 flex items-center gap-1.5">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-2.5 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                   <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
                   <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-bounce"></span>
@@ -862,13 +862,13 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
           {isListening && (
             <div className="bg-gradient-to-r from-rose-500 to-red-600 text-white px-4 py-2 flex items-center justify-between shrink-0 shadow-inner">
               <div className="flex items-center gap-2.5">
-                <span className="w-3 h-3 rounded-full bg-white animate-ping"></span>
+                <span className="w-3 h-3 rounded-full bg-white dark:bg-slate-900 animate-ping"></span>
                 <div className="flex items-center gap-1">
-                  <span className="w-1 h-3.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                  <span className="w-1 h-5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                  <span className="w-1 h-4 bg-white rounded-full animate-bounce"></span>
-                  <span className="w-1 h-6 bg-white rounded-full animate-bounce [animation-delay:-0.2s]"></span>
-                  <span className="w-1 h-3 bg-white rounded-full animate-bounce"></span>
+                  <span className="w-1 h-3.5 bg-white dark:bg-slate-900 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                  <span className="w-1 h-5 bg-white dark:bg-slate-900 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                  <span className="w-1 h-4 bg-white dark:bg-slate-900 rounded-full animate-bounce"></span>
+                  <span className="w-1 h-6 bg-white dark:bg-slate-900 rounded-full animate-bounce [animation-delay:-0.2s]"></span>
+                  <span className="w-1 h-3 bg-white dark:bg-slate-900 rounded-full animate-bounce"></span>
                 </div>
                 <span className="font-bold text-xs">
                   {voiceStatusText || 'Escuchando tu voz... Habla ahora en español'}
@@ -877,7 +877,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
               <button
                 type="button"
                 onClick={toggleListening}
-                className="px-2.5 py-1 bg-white text-rose-700 hover:bg-rose-50 rounded-xl text-[11px] font-bold shadow-xs cursor-pointer transition-all"
+                className="px-2.5 py-1 bg-white dark:bg-slate-900 text-rose-700 hover:bg-rose-50 rounded-xl text-[11px] font-bold shadow-xs cursor-pointer transition-all"
               >
                 Listo / Detener
               </button>
@@ -885,13 +885,13 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
           )}
 
           {/* Quick Frequent Suggestions Pills */}
-          <div className="bg-white px-3 py-2 border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0 text-[10px]">
+          <div className="bg-white dark:bg-slate-900 px-3 py-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0 text-[10px]">
             <span className="text-slate-400 font-bold shrink-0">Sugerencias:</span>
             <button
               onClick={() => {
                 setInputQuery('¿Cómo funciona el modelo 1D-CNN vs GNN?');
               }}
-              className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full whitespace-nowrap cursor-pointer transition-colors"
+              className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-full whitespace-nowrap cursor-pointer transition-colors"
             >
               🧠 1D-CNN vs GNN
             </button>
@@ -899,7 +899,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
               onClick={() => {
                 setInputQuery('¿Qué especies de árboles nativos convienen en Trujillo?');
               }}
-              className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full whitespace-nowrap cursor-pointer transition-colors"
+              className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-full whitespace-nowrap cursor-pointer transition-colors"
             >
               🌿 Especies Nativas
             </button>
@@ -907,7 +907,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
               onClick={() => {
                 setInputQuery('¿Cómo se calcula el confort térmico GREENPASS y PET?');
               }}
-              className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full whitespace-nowrap cursor-pointer transition-colors"
+              className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-full whitespace-nowrap cursor-pointer transition-colors"
             >
               🌡️ Confort GREENPASS / PET
             </button>
@@ -915,7 +915,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
               onClick={() => {
                 setInputQuery('¿Cuáles son los límites de PM2.5 según MINAM?');
               }}
-              className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full whitespace-nowrap cursor-pointer transition-colors"
+              className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-full whitespace-nowrap cursor-pointer transition-colors"
             >
               ⚖️ ECA-Aire Perú
             </button>
@@ -924,7 +924,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
           {/* Input Form Footer (Voice & Text) */}
           <form
             onSubmit={handleSendMessage}
-            className="p-3 bg-white border-t border-slate-200 flex items-center gap-2 shrink-0"
+            className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 flex items-center gap-2 shrink-0"
           >
             {/* Microphone Dictation Button */}
             <button

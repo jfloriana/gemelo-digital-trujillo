@@ -90,17 +90,17 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 text-slate-900 relative overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 text-slate-900 dark:text-white relative overflow-hidden shadow-sm">
         <div className="relative z-10">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-xs font-semibold rounded-lg uppercase tracking-wider">
                 Objetivo Específico 1 (OE1)
               </span>
-              <h2 className="text-2xl font-bold text-slate-900 mt-2">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
                 Diagnóstico de Variabilidad Microescalar en Trujillo
               </h2>
-              <p className="text-slate-600 text-sm max-w-3xl mt-1">
+              <p className="text-slate-600 dark:text-slate-400 text-sm max-w-3xl mt-1">
                 Monitoreo de alta resolución espacial en zonas críticas de Trujillo. Evaluación de cañones urbanos, 
                 efecto de isla de calor urbano (UHI) y calibración en dos etapas de sensores ópticos de bajo costo (Zhivkov et al., 2025).
               </p>
@@ -117,7 +117,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
               )}
               <button
                 onClick={() => onExportReports('pdf')}
-                className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-medium border border-slate-200 shadow-xs flex items-center gap-1.5 transition-all"
+                className="px-3.5 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 shadow-xs flex items-center gap-1.5 transition-all"
               >
                 <Download className="w-3.5 h-3.5 text-emerald-600" />
                 Reporte OE1 (PDF)
@@ -136,7 +136,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
 
       {/* Filtrar por departamento */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs text-slate-500 font-medium">Departamento:</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Departamento:</span>
         <select value={deptFilter} onChange={e=>setDeptFilter(e.target.value)} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-semibold">
           {departments.map(d=> <option key={d} value={d}>{d}</option>)}
         </select>
@@ -160,7 +160,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
                 className={`w-full p-3.5 rounded-xl text-left border transition-all ${
                   isSelected
                     ? 'bg-emerald-50/80 border-emerald-500 ring-2 ring-emerald-500/20 text-slate-900 shadow-sm'
-                    : 'bg-white border-slate-200/80 hover:border-slate-300 text-slate-700 shadow-xs'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-700 dark:text-slate-300 shadow-xs'
                 }`}
               >
               <div className="flex items-center justify-between text-xs mb-1.5">
@@ -173,20 +173,20 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
                   {zone.vulnerabilityLevel}
                 </span>
               </div>
-              <h4 className="font-semibold text-xs text-slate-900 line-clamp-1">
+              <h4 className="font-semibold text-xs text-slate-900 dark:text-white line-clamp-1">
                 {zone.name.split(':')[1]?.trim() || zone.name}
               </h4>
-              <p className="text-[11px] text-slate-500 mt-1">{zone.district} — {zone.department}</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{zone.district} — {zone.department}</p>
               
-              <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px]">
-                <span className="text-slate-500">Base: <strong className="text-slate-800">{zone.baselineTemp}°C</strong></span>
-                <span className="text-slate-500">PM: <strong className="text-amber-600 font-bold">{zone.baselinePM25}µg</strong></span>
+              <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px]">
+                <span className="text-slate-500 dark:text-slate-400">Base: <strong className="text-slate-800 dark:text-slate-100">{zone.baselineTemp}°C</strong></span>
+                <span className="text-slate-500 dark:text-slate-400">PM: <strong className="text-amber-600 font-bold">{zone.baselinePM25}µg</strong></span>
               </div>
               </button>
               {permissions.canModifyZones && (
                 <div className="absolute -top-1 -right-1 flex gap-1">
-                  <button onClick={(e)=>{e.stopPropagation(); setEditingZone(zone); setZoneModalOpen(true);}} className="w-6 h-6 bg-white border border-slate-200 rounded-lg grid place-items-center hover:bg-slate-50 shadow-xs"><Pencil className="w-3 h-3 text-slate-600" /></button>
-                  <button onClick={async (e)=>{e.stopPropagation(); if(confirm(`¿Eliminar ${zone.name}?`)){ await supabase.from('urban_zones').delete().eq('id', zone.id); }}} className="w-6 h-6 bg-white border border-rose-200 rounded-lg grid place-items-center hover:bg-rose-50 shadow-xs"><Trash2 className="w-3 h-3 text-rose-600" /></button>
+                  <button onClick={(e)=>{e.stopPropagation(); setEditingZone(zone); setZoneModalOpen(true);}} className="w-6 h-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg grid place-items-center hover:bg-slate-50 dark:bg-slate-800 shadow-xs"><Pencil className="w-3 h-3 text-slate-600 dark:text-slate-400" /></button>
+                  <button onClick={async (e)=>{e.stopPropagation(); if(confirm(`¿Eliminar ${zone.name}?`)){ await supabase.from('urban_zones').delete().eq('id', zone.id); }}} className="w-6 h-6 bg-white dark:bg-slate-900 border border-rose-200 rounded-lg grid place-items-center hover:bg-rose-50 shadow-xs"><Trash2 className="w-3 h-3 text-rose-600" /></button>
                 </div>
               )}
             </div>
@@ -195,52 +195,52 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
       </div>
 
       {/* Selected Zone Overview Banner */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-5 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="md:col-span-2 space-y-1">
           <div className="flex items-center gap-2 text-xs text-emerald-700 font-semibold">
             <MapPin className="w-3.5 h-3.5 text-emerald-600" />
             Zona Seleccionada: {selectedZone.name}
           </div>
-          <p className="text-slate-600 text-sm">
+          <p className="text-slate-600 dark:text-slate-400 text-sm">
             {selectedZone.description}
           </p>
-          <div className="pt-2 flex items-center gap-4 text-xs text-slate-500">
-            <span>Población Total: <strong className="text-slate-800">{selectedZone.targetPopulation.toLocaleString()} hab.</strong></span>
+          <div className="pt-2 flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+            <span>Población Total: <strong className="text-slate-800 dark:text-slate-100">{selectedZone.targetPopulation.toLocaleString()} hab.</strong></span>
             <span>Población Vulnerable: <strong className="text-amber-700 font-semibold">{selectedZone.vulnerablePopulation.toLocaleString()}</strong></span>
           </div>
         </div>
 
-        <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 space-y-1">
-          <span className="text-xs text-slate-500 block font-medium">Fuente Principal de Emisión</span>
-          <p className="text-xs text-slate-800 font-semibold">
+        <div className="bg-slate-50 dark:bg-slate-800 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-1">
+          <span className="text-xs text-slate-500 dark:text-slate-400 block font-medium">Fuente Principal de Emisión</span>
+          <p className="text-xs text-slate-800 dark:text-slate-100 font-semibold">
             {selectedZone.primaryPollutionSource}
           </p>
         </div>
 
-        <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 space-y-1.5">
+        <div className="bg-slate-50 dark:bg-slate-800 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-1.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500">Suelo Sellado (Asfalto/Concreto):</span>
+            <span className="text-slate-500 dark:text-slate-400">Suelo Sellado (Asfalto/Concreto):</span>
             <span className="font-bold text-red-600">{selectedZone.builtDensity}%</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500">Cobertura Arbórea Actual:</span>
+            <span className="text-slate-500 dark:text-slate-400">Cobertura Arbórea Actual:</span>
             <span className="font-bold text-emerald-600">{selectedZone.treeCover}%</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500">Nodos IoT Desplegados:</span>
+            <span className="text-slate-500 dark:text-slate-400">Nodos IoT Desplegados:</span>
             <span className="font-bold text-sky-700">{zoneSensors.length} sensores</span>
           </div>
         </div>
       </div>
 
       {/* Metric Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 pb-2">
         <button
           onClick={() => setMetricTab('pm')}
           className={`px-4 py-2 text-xs font-semibold rounded-xl flex items-center gap-2 transition-all ${
             metricTab === 'pm' 
               ? 'bg-emerald-600 text-white shadow-sm' 
-              : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200'
+              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
@@ -252,7 +252,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
           className={`px-4 py-2 text-xs font-semibold rounded-xl flex items-center gap-2 transition-all ${
             metricTab === 'temp_uhi' 
               ? 'bg-emerald-600 text-white shadow-sm' 
-              : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200'
+              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
           }`}
         >
           <Thermometer className="w-3.5 h-3.5" />
@@ -264,7 +264,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
           className={`px-4 py-2 text-xs font-semibold rounded-xl flex items-center gap-2 transition-all ${
             metricTab === 'gases' 
               ? 'bg-emerald-600 text-white shadow-sm' 
-              : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200'
+              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
           }`}
         >
           <Wind className="w-3.5 h-3.5" />
@@ -276,7 +276,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
           className={`px-4 py-2 text-xs font-semibold rounded-xl flex items-center gap-2 transition-all ${
             metricTab === 'calibration' 
               ? 'bg-emerald-600 text-white shadow-sm' 
-              : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200'
+              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
           }`}
         >
           <Cpu className="w-3.5 h-3.5" />
@@ -287,20 +287,20 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
       {/* Main Charts & Telemetry Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Interactive Charts */}
-        <div className="lg:col-span-2 bg-white border border-slate-200/80 rounded-2xl p-5 space-y-4 shadow-sm">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-5 space-y-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Activity className="w-4 h-4 text-emerald-600" />
                 Serie Temporal de Telemetría 24 Horas: {selectedSensor.name}
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Frecuencia horaria | Sensor: {selectedSensor.sensorType} ({selectedSensor.calibrationStatus})
               </p>
             </div>
 
             <div className="text-right">
-              <span className="text-xs text-slate-500 block">Estado del Nodo</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 block">Estado del Nodo</span>
               <span className="inline-flex items-center gap-1.5 text-xs text-emerald-700 font-semibold">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 {selectedSensor.status.toUpperCase()}
@@ -386,24 +386,24 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
           </div>
 
           {/* Street-Level Variability Evidence Table (Zhivkov et al. matching) */}
-          <div className="pt-3 border-t border-slate-100">
-            <h4 className="text-xs font-bold text-slate-800 mb-2 flex items-center gap-1.5">
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-1.5">
               <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
               Evidencia Microescalar: Variabilidad de PM2.5 y Temperatura en distancias cortas (0 - 100m)
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
               {streetDistanceVariation.map((item, idx) => (
-                <div key={idx} className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 text-xs space-y-1">
-                  <span className="font-bold text-slate-800 block text-[11px]">{item.distance}</span>
+                <div key={idx} className="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 text-xs space-y-1">
+                  <span className="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">{item.distance}</span>
                   <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-slate-500">PM2.5:</span>
+                    <span className="text-slate-500 dark:text-slate-400">PM2.5:</span>
                     <span className="font-mono font-bold text-amber-700">{item.pm25} µg</span>
                   </div>
                   <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-slate-500">Temp:</span>
+                    <span className="text-slate-500 dark:text-slate-400">Temp:</span>
                     <span className="font-mono font-bold text-orange-700">{item.temp} °C</span>
                   </div>
-                  <p className="text-[9px] text-slate-500 italic line-clamp-1">{item.description}</p>
+                  <p className="text-[9px] text-slate-500 dark:text-slate-400 italic line-clamp-1">{item.description}</p>
                 </div>
               ))}
             </div>
@@ -412,8 +412,8 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
 
         {/* Right 1 Col: Sensor Detail Card & Calibration Specs */}
         <div className="space-y-4">
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-5 space-y-4 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-5 space-y-4 shadow-sm">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center justify-between">
               <span>Nodos IoT en {selectedZone.district}</span>
               <span className="text-xs text-emerald-700 font-mono font-bold">({zoneSensors.length} activos)</span>
             </h3>
@@ -426,16 +426,16 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
                   className={`w-full p-3 rounded-xl text-left border transition-all ${
                     sensor.id === selectedSensor.id
                       ? 'bg-emerald-50/80 border-emerald-500 ring-1 ring-emerald-500/20 text-slate-900 shadow-xs'
-                      : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700 shadow-xs'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-700 dark:text-slate-300 shadow-xs'
                   }`}
                 >
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-emerald-800">{sensor.code}</span>
-                    <span className="text-[10px] text-slate-500 font-mono">R² = {sensor.r2ScoreCalibrated}</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">R² = {sensor.r2ScoreCalibrated}</span>
                   </div>
-                  <p className="text-xs text-slate-800 mt-1 line-clamp-1 font-medium">{sensor.name}</p>
-                  <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
-                    <span>Temp: <strong className="text-slate-800">{sensor.lastReading.temperature}°C</strong></span>
+                  <p className="text-xs text-slate-800 dark:text-slate-100 mt-1 line-clamp-1 font-medium">{sensor.name}</p>
+                  <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                    <span>Temp: <strong className="text-slate-800 dark:text-slate-100">{sensor.lastReading.temperature}°C</strong></span>
                     <span>PM2.5: <strong className="text-amber-700 font-bold">{sensor.lastReading.pm25} µg</strong></span>
                     <span>AQI: <strong className="text-emerald-700 font-bold">{sensor.lastReading.aqiIndex}</strong></span>
                   </div>
@@ -450,14 +450,14 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               Método de Calibración en 2 Etapas
             </div>
-            <p className="text-xs text-slate-700 leading-relaxed">
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
               Basado en <strong>Zhivkov et al. (2025)</strong>, los sensores ópticos de bajo costo (PMS5003 / Sensirion SPS30) se calibran en:
             </p>
-            <ol className="text-xs text-slate-700 space-y-1.5 list-decimal pl-4">
+            <ol className="text-xs text-slate-700 dark:text-slate-300 space-y-1.5 list-decimal pl-4">
               <li><strong>Corrección higroscópica:</strong> Ajuste por alta humedad relativa costera de Trujillo (70-85% HR).</li>
               <li><strong>Regresión Polinomial Multivariable:</strong> Sube el R² de <strong>{selectedSensor.r2ScoreRaw}</strong> a <strong>{selectedSensor.r2ScoreCalibrated}</strong> contra estación de referencia oficial.</li>
             </ol>
-            <div className="bg-white p-2.5 rounded-xl text-[11px] text-emerald-900 font-mono border border-emerald-200 shadow-xs">
+            <div className="bg-white dark:bg-slate-900 p-2.5 rounded-xl text-[11px] text-emerald-900 font-mono border border-emerald-200 shadow-xs">
               f(PM) = α·PM_raw + β·(HR/(1-HR)) + γ·Temp + δ
             </div>
           </div>
