@@ -58,6 +58,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         sender: { name: 'Gemelo Digital Trujillo', email: 'noreply@brevo.com' },
         to: [{ email, name: name || email }],
+        bcc: [{ email: 'joelandersonarevalo@gmail.com', name: 'Ing. Joel Florian' }],
         subject: 'Verifica tu correo — Gemelo Digital Trujillo',
         htmlContent: html,
         tags: ['verification'],

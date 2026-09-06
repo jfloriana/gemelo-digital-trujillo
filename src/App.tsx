@@ -393,7 +393,7 @@ function MainAppContent() {
             </p>
           </div>
           <div className="flex items-center gap-4 text-slate-600 dark:text-slate-400">
-            <span>{t('footer.leadLabel')} <strong className="text-slate-800 dark:text-slate-100">Ing. Joel Arevalo</strong></span>
+            <span>{t('footer.leadLabel')} <strong className="text-slate-800 dark:text-slate-100">Ing. Joel Anderson Florian Arévalo</strong> & <strong className="text-slate-800 dark:text-slate-100">Ing. Jason Anderson Galvéz Luna</strong></span>
             <span>|</span>
             <button
               onClick={() => handleQuickExport('pdf')}

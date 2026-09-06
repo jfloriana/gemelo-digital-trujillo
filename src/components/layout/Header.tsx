@@ -144,7 +144,7 @@ export const Header: React.FC<HeaderProps> = ({
                 title={t('header.profile')}
               >
                 <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[10px]">
-                  {user.name.charAt(0)}
+                  {user.name.replace(/^Ing\.\s*/,'').split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase().slice(0,2)}
                 </div>
                 <div className="hidden lg:block text-left">
                   <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 block line-clamp-1">{user.name}</span>
