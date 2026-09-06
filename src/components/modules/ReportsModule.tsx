@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, SimulationScenario } from '../../types';
+import { useI18n } from '../../context/I18nContext';
 import { 
   FileSpreadsheet, 
   FileText, 
@@ -32,19 +33,20 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
   objectives,
   activeScenario
 }) => {
+  const { lang } = useI18n();
   const [isExporting, setIsExporting] = useState<string | null>(null);
 
   const handleExport = async (format: 'xlsx' | 'pdf' | 'docx' | 'csv') => {
     setIsExporting(format);
     try {
       if (format === 'xlsx') {
-        exportToExcel(zones, sensors, models, nbsCatalog, objectives, activeScenario);
+        exportToExcel(zones, sensors, models, nbsCatalog, objectives, activeScenario, lang as any);
       } else if (format === 'pdf') {
-        exportToPDF(zones, sensors, models, nbsCatalog, objectives, activeScenario);
+        exportToPDF(zones, sensors, models, nbsCatalog, objectives, activeScenario, lang as any);
       } else if (format === 'docx') {
-        await exportToWord(zones, sensors, models, nbsCatalog, objectives, activeScenario);
+        await exportToWord(zones, sensors, models, nbsCatalog, objectives, activeScenario, lang as any);
       } else if (format === 'csv') {
-        exportToCSV(sensors);
+        exportToCSV(sensors, lang as any);
       }
     } catch (e) {
       console.error('Export error', e);
