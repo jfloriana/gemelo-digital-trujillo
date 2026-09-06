@@ -190,9 +190,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return { success: false, error: 'Modo sin Supabase: usa trujillo2026' };
     }
-    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    // Verifica Brevo primero (email_verified en profiles)
+    const normalized = email.trim().toLowerCase();
+    const { data: prof } = await supabase.from('profiles').select('email_verified').eq('email', normalized).single();
+    if (prof && (prof as any).email_verified === false) {
+      return { success: false, error: 'Debes verificar tu correo. Revisa tu bandeja y haz clic en “Verificar mi correo”. ¿No lo ves? usa Reenviar verificación.' };
+    }
+    const { data, error } = await supabase.auth.signInWithPassword({ email: normalized, password });
     if (error) {
-      if (error.message.toLowerCase().includes('email not confirmed') || error.message.toLowerCase().includes('email not confirmed')) {
+      if (error.message.toLowerCase().includes('email not confirmed')) {
         return { success: false, error: 'Debes verificar tu correo. Revisa tu bandeja y haz clic en “Verificar mi correo”. ¿No lo ves? usa Reenviar verificación.' };
       }
       if (error.message.includes('Invalid login credentials')) {
@@ -200,9 +206,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return { success: false, error: error.message };
     }
-    if (data.user && !data.user.email_confirmed_at) {
-      await supabase.auth.signOut();
-      return { success: false, error: 'Debes verificar tu correo antes de ingresar. Revisa tu bandeja y haz clic en “Verificar mi correo”.' };
+    if (data.user) {
+      const { data: prof2 } = await supabase.from('profiles').select('email_verified').eq('id', data.user.id).single();
+      if (prof2 && (prof2 as any).email_verified === false) {
+        await supabase.auth.signOut();
+        return { success: false, error: 'Debes verificar tu correo antes de ingresar. Revisa tu bandeja y haz clic en “Verificar mi correo”.' };
+      }
     }
     localStorage.removeItem('trujillo_is_demo');
     setIsDemo(false);
@@ -211,7 +220,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const sendVerificationViaBrevo = async (email: string, name: string) => {
     const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/verify` : undefined;
-    // 1) Intenta Vercel serverless (tiene BREVO_API_KEY + SERVICE_ROLE, mejor para prod)
+    // Brevo puro: token propio en email_verifications (24h) + BCC a Joel
     try {
       const r = await fetch('/api/send-verification', {
         method: 'POST',
@@ -219,17 +228,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({ email, name, redirect_to: redirectTo }),
       });
       if (r.ok) return;
-      console.warn('Vercel /api/send-verification fallo', await r.text().then(t=>t.slice(0,400)));
-    } catch (e) { console.warn('Vercel verification fallback', e); }
-    // 2) Fallback Supabase Edge Function
-    try {
-      await supabase.functions.invoke('send-verification-email', { body: { email, name, redirect_to: redirectTo } });
-      return;
-    } catch (e) { console.warn('Edge Function fallback', e); }
-    // 3) Fallback nativo Supabase resend (usa SMTP configurado en Dashboard, o default)
-    try {
-      await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: redirectTo } });
-    } catch (e) { console.warn('Supabase resend fallback', e); }
+      const txt = await r.text().then(t=>t.slice(0,800));
+      console.warn('Vercel /api/send-verification fallo', txt);
+      throw new Error(txt);
+    } catch (e) {
+      console.warn('Brevo verification fallback a Supabase resend', e);
+      try {
+        await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: redirectTo } });
+      } catch {}
+    }
   };
 
   const register = async (data: RegisterData): Promise<{ success: boolean; error?: string }> => {

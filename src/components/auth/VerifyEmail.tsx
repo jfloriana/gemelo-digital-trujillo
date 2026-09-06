@@ -7,41 +7,41 @@ export const VerifyEmail: React.FC = () => {
   const [message, setMessage] = useState<string>('');
 
   useEffect(() => {
-    const hash = window.location.hash;
     const search = window.location.search;
-    // Supabase PKCE: ?code=...  o hash #access_token=...
-    const params = new URLSearchParams(hash.replace(/^#/, '') + '&' + search.replace(/^\?/, ''));
-    const hasCode = params.has('code') || params.has('access_token') || params.has('token_hash');
+    const params = new URLSearchParams(search);
+    const token = params.get('token');
+    const email = params.get('email');
 
-    // Si no hay token, pero hay sesión (usuario ya verificado y logueado), muestra success
+    // Flujo Brevo puro: /verify?token=...&email=...
+    if (token && email) {
+      fetch(`/api/verify?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`)
+        .then(r => r.json().then(j => ({ ok: r.ok, j })))
+        .then(({ ok, j }) => {
+          if (ok) setStatus('success');
+          else { setStatus('error'); setMessage(j.error || 'Token inválido o expirado'); }
+        })
+        .catch(() => { setStatus('error'); setMessage('Error de red al verificar'); });
+      return;
+    }
+
+    // Fallback Supabase PKCE/hash
+    const hash = window.location.hash;
+    const all = new URLSearchParams(hash.replace(/^#/, '') + '&' + search.replace(/^\?/, ''));
+    const hasCode = all.has('code') || all.has('access_token') || all.has('token_hash');
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user?.email_confirmed_at) {
-        setStatus('success');
-        return;
-      }
-      if (!hasCode) {
-        setStatus('error');
-        setMessage('Enlace inválido o expirado. Solicita un nuevo correo de verificación desde el login.');
-        return;
-      }
-      // Si hay code, Supabase ya manejó el intercambio vía detectSessionInUrl (supabase-js)
-      // Esperamos un poco a que onAuthStateChange setee la sesión
+      if (data.session?.user?.email_confirmed_at) { setStatus('success'); return; }
+      if (!hasCode) { setStatus('error'); setMessage('Enlace inválido o expirado. Solicita reenvío desde el login.'); return; }
       setTimeout(async () => {
         const { data: s2 } = await supabase.auth.getSession();
         if (s2.session?.user?.email_confirmed_at) setStatus('success');
         else {
-          // Intenta verificar via OTP si viene token_hash
-          const token_hash = params.get('token_hash');
-          const type = params.get('type') as any;
-          const email = params.get('email');
-          if (token_hash && type && email) {
-            const { error } = await supabase.auth.verifyOtp({ token_hash, type, email } as any);
-            if (!error) setStatus('success');
-            else { setStatus('error'); setMessage(error.message); }
-          } else {
-            setStatus('error');
-            setMessage('No se pudo verificar. El enlace puede haber expirado.');
-          }
+          const token_hash = all.get('token_hash');
+          const type = all.get('type') as any;
+          const em = all.get('email');
+          if (token_hash && type && em) {
+            const { error } = await supabase.auth.verifyOtp({ token_hash, type, email: em } as any);
+            if (!error) setStatus('success'); else { setStatus('error'); setMessage(error.message); }
+          } else { setStatus('error'); setMessage('No se pudo verificar. Enlace expirado.'); }
         }
       }, 800);
     });
