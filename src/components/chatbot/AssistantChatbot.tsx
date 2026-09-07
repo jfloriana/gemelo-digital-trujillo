@@ -286,37 +286,44 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
         newMsg = {
           id: `msg-${Date.now()}`,
           sender: 'bot',
-          text: `🌳 **Asistente Guiado de Intervenciones NbS**\n\nVamos a diseñar una intervención adaptada a la microescala de Trujillo.\n\nActualmente tienes seleccionada la zona: **${selectedZone.name}**\n- Temperatura Base: **${selectedZone.baselineTemp} °C**\n- Contaminación $PM_{2.5}$: **${selectedZone.baselinePM25} µg/m³**\n- Población expuesta: **${selectedZone.targetPopulation.toLocaleString()} hab.**\n\n¿Qué problemática ambiental priorizamos mitigar en esta zona?`,
+          text: t('assistant.g.nbs.body')
+            .replace('{zone}', selectedZone.name)
+            .replace('{temp}', String(selectedZone.baselineTemp))
+            .replace('{pm}', String(selectedZone.baselinePM25))
+            .replace('{pop}', selectedZone.targetPopulation.toLocaleString()),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           category: 'nbs_assistant',
           quickActions: [
-            { label: '🔥 Mitigar Calor Extremo & UHI (-3.5°C)', actionType: 'trigger_guided', target: 'nbs_heat_plan' },
-            { label: '💨 Filtrar Material Particulado PM2.5 (-35%)', actionType: 'trigger_guided', target: 'nbs_pm_plan' },
-            { label: '🌿 Plan Verde Integral Balanceado', actionType: 'trigger_guided', target: 'nbs_balanced_plan' },
-            { label: '🏙️ Cambiar a Otra Zona Urbana', actionType: 'trigger_guided', target: 'choose_zone' }
+            { label: t('assistant.g.nbs.a1'), actionType: 'trigger_guided', target: 'nbs_heat_plan' },
+            { label: t('assistant.g.nbs.a2'), actionType: 'trigger_guided', target: 'nbs_pm_plan' },
+            { label: t('assistant.g.nbs.a3'), actionType: 'trigger_guided', target: 'nbs_balanced_plan' },
+            { label: t('assistant.g.nbs.a4'), actionType: 'trigger_guided', target: 'choose_zone' }
           ]
         };
       } else if (flowKey === 'nbs_heat_plan') {
         newMsg = {
           id: `msg-${Date.now()}`,
           sender: 'bot',
-          text: `❄️ **Recomendación para Islas de Calor Extremo (UHI)**\n\nPara contrarrestar el calor urbano en **${selectedZone.name}**, el modelo **1D-CNN (Naveed 2025)** y el estándar **GREENPASS®** recomiendan:\n\n- **180 Árboles de Molle Costeño y Huarango:** Alto dosel de sombra y evapotranspiración con bajo consumo hídrico.\n- **3,200 m² de Techos Verdes Extensivos:** Reducción del flujo térmico hacia cubiertas con sustrato xerófilo (*Sedum spp.*).\n- **4,500 m² de Pavimento Permeable / Grass Paver:** Incremento del albedo superficial ($0.20 \\rightarrow 0.45$).\n\n📉 **Impacto Proyectado:**\n- Descenso Térmico: **-3.4 °C**\n- Confort Térmico PET: **Mejora de +28 puntos (TCS)**\n- Presupuesto Estimado: **S/. 1,027,000 PEN**\n\n¿Deseas abrir el simulador con estos parámetros o descargar el informe?`,
+          text: t('assistant.g.heat.body').replace('{zone}', selectedZone.name),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           quickActions: [
-            { label: '🚀 Cargar Parámetros en Simulador NbS', actionType: 'navigate', target: 'nbs_simulator' },
-            { label: '📄 Descargar Reporte en Excel', actionType: 'export', target: 'xlsx' },
-            { label: '📊 Descargar Reporte en PDF', actionType: 'export', target: 'pdf' }
+            { label: t('assistant.g.heat.a1'), actionType: 'navigate', target: 'nbs_simulator' },
+            { label: t('assistant.g.heat.a2'), actionType: 'export', target: 'xlsx' },
+            { label: t('assistant.g.heat.a3'), actionType: 'export', target: 'pdf' }
           ]
         };
       } else if (flowKey === 'nbs_pm_plan') {
         newMsg = {
           id: `msg-${Date.now()}`,
           sender: 'bot',
-          text: `🍃 **Recomendación para Reducción Crítica de PM2.5**\n\nEn cañones urbanos de tráfico vehicular denso (como Av. España o Mercado Hermelinda):\n\n- **Muros Verdes Verticales (1,400 m²):** Intercepción laminar de material particulado a la altura respirable de peatones.\n- **Corredor Arbóreo Denso con Jacarandá & Tecoma stans (220 árboles):** Retención foliar de micropartículas mediante vellosidades foliares.\n- **Jardines de Lluvia con grava volcánica (950 m²):** Fijación de sedimentos y drenaje.\n\n📉 **Impacto Proyectado:**\n- Reducción de $PM_{2.5}$: **-38.6%** (De ${selectedZone.baselinePM25} a ${(selectedZone.baselinePM25 * 0.614).toFixed(1)} µg/m³)\n- Reducción de $NO_2$: **-29.4%**\n- Población protegida: **${Math.round(selectedZone.targetPopulation * 0.85).toLocaleString()} ciudadanos**`,
+          text: t('assistant.g.pm.body')
+            .replace('{pm}', String(selectedZone.baselinePM25))
+            .replace('{pmAfter}', (selectedZone.baselinePM25 * 0.614).toFixed(1))
+            .replace('{popProt}', Math.round(selectedZone.targetPopulation * 0.85).toLocaleString()),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           quickActions: [
-            { label: '🚀 Aplicar en Módulo NbS', actionType: 'navigate', target: 'nbs_simulator' },
-            { label: '📥 Exportar Síntesis PDF', actionType: 'export', target: 'pdf' }
+            { label: t('assistant.g.pm.a1'), actionType: 'navigate', target: 'nbs_simulator' },
+            { label: t('assistant.g.pm.a2'), actionType: 'export', target: 'pdf' }
           ]
         };
       } else if (flowKey === 'choose_zone') {
@@ -403,11 +410,11 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: `📍 **Módulo OE1: Diagnóstico de Microescala**\n\nEn este módulo puedes explorar la línea base ambiental de las 6 zonas de Trujillo (temperatura, $PM_{2.5}$, arbolado, población vulnerable y densidad edificada).\n\n¿Quieres que te traslade a ese módulo?`,
+        text: t('assistant.r.oe1.body'),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         quickActions: [
-          { label: '👉 Ir a Diagnóstico Microescala', actionType: 'navigate', target: 'diagnosis' },
-          { label: '📊 Ver Zonas en Excel', actionType: 'export', target: 'xlsx' }
+          { label: t('assistant.r.oe1.a1'), actionType: 'navigate', target: 'diagnosis' },
+          { label: t('assistant.r.oe1.a2'), actionType: 'export', target: 'xlsx' }
         ]
       };
     }
@@ -416,11 +423,11 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: `📡 **Módulo OE2: Arquitectura IoT y Calibración en 2 Etapas**\n\nAquí se supervisa la telemetría en tiempo real de los nodos sensores, el protocolo MQTT/REST y el algoritmo de calibración higroscópica que eleva el $R^2$ a 0.94.\n\n¿Deseas inspeccionar la red IoT?`,
+        text: t('assistant.r.oe2.body'),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         quickActions: [
-          { label: '👉 Ir a Arquitectura IoT (OE2)', actionType: 'navigate', target: 'architecture' },
-          { label: '🧪 Explicar Algoritmo de Calibración', actionType: 'trigger_guided', target: 'iot_guide' }
+          { label: t('assistant.r.oe2.a1'), actionType: 'navigate', target: 'architecture' },
+          { label: t('assistant.r.oe2.a2'), actionType: 'trigger_guided', target: 'iot_guide' }
         ]
       };
     }
@@ -429,11 +436,11 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: `🤖 **Módulo OE3: Modelos de Inteligencia Artificial & Benchmarks**\n\nComparamos 5 arquitecturas predictivas:\n- **1D-CNN (Naveed et al. 2025):** $R^2 = 0.9925$ | Inferencia: 4.8 ms (Modelo Óptimo)\n- **GNN (Zhivkov et al. 2025):** $R^2 = 0.9880$ | Basado en grafos y morfología de cañón\n- **Random Forest:** $R^2 = 0.9610$ | 300 árboles\n- **Bi-LSTM (Li et al. 2026):** $R^2 = 0.9740$ | Serie temporal\n- **XGBoost:** $R^2 = 0.9530$\n\n¿Deseas probar inferencias en vivo?`,
+        text: t('assistant.r.oe3.body'),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         quickActions: [
-          { label: '👉 Ir al Motor de IA (OE3)', actionType: 'navigate', target: 'ai_engine' },
-          { label: '📈 Ver Tabla Comparativa de Modelos', actionType: 'navigate', target: 'ai_engine' }
+          { label: t('assistant.r.oe3.a1'), actionType: 'navigate', target: 'ai_engine' },
+          { label: t('assistant.r.oe3.a2'), actionType: 'navigate', target: 'ai_engine' }
         ]
       };
     }
@@ -442,11 +449,11 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: `🌳 **Módulo OE4: Simulador de Microclima y NbS**\n\nPermite modificar el cañón urbano ($H/W$), viento, radiación y añadir arbolado nativo (*Schinus molle, Prosopis pallida*), techos verdes extensivos y pavimentos permeables calculando el confort GREENPASS® (PET y TCS).\n\n¿Quieres abrir el simulador?`,
+        text: t('assistant.r.oe4.body'),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         quickActions: [
-          { label: '👉 Ir al Simulador NbS (OE4)', actionType: 'navigate', target: 'nbs_simulator' },
-          { label: '🎯 Asistente Guiado de Planes NbS', actionType: 'trigger_guided', target: 'nbs_guide' }
+          { label: t('assistant.r.oe4.a1'), actionType: 'navigate', target: 'nbs_simulator' },
+          { label: t('assistant.r.oe4.a2'), actionType: 'trigger_guided', target: 'nbs_guide' }
         ]
       };
     }
@@ -455,14 +462,14 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: `📄 **Generador de Reportes Multiformato**\n\nPuedo exportar de inmediato los datos del Gemelo Digital en el formato que requieras:`,
+        text: t('assistant.r.rep.body'),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         quickActions: [
-          { label: '📗 Descargar Libro Excel (.xlsx)', actionType: 'export', target: 'xlsx' },
-          { label: '📕 Descargar Informe Técnico (.pdf)', actionType: 'export', target: 'pdf' },
-          { label: '📘 Descargar Manuscrito Word (.docx)', actionType: 'export', target: 'docx' },
-          { label: '📊 Descargar Dataset IoT (.csv)', actionType: 'export', target: 'csv' },
-          { label: '👉 Ir al Módulo de Reportes', actionType: 'navigate', target: 'reports' }
+          { label: t('assistant.r.rep.a1'), actionType: 'export', target: 'xlsx' },
+          { label: t('assistant.r.rep.a2'), actionType: 'export', target: 'pdf' },
+          { label: t('assistant.r.rep.a3'), actionType: 'export', target: 'docx' },
+          { label: t('assistant.r.rep.a4'), actionType: 'export', target: 'csv' },
+          { label: t('assistant.r.rep.a5'), actionType: 'navigate', target: 'reports' }
         ]
       };
     }
@@ -471,12 +478,12 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: `🎓 **Información de la Investigación de Tesis**\n\n- **Título:** *"Gemelo digital de calidad del aire a microescala y soluciones basadas en naturaleza urbana para reducir la exposición a contaminantes y calor extremo"*\n- **Investigador Principal:** Ing. Joel Arevalo\n- **Institución:** Universidad Nacional de Trujillo (UNT) / MPT / SENAMHI\n- **Estado Global:** 96% de cumplimiento de hipótesis científica.\n\n¿Deseas revisar la matriz de validación de objetivos o exportar el documento formal?`,
+        text: t('assistant.r.thesis.body'),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         quickActions: [
-          { label: '👉 Ver Validación de Tesis (OE5)', actionType: 'navigate', target: 'validation' },
-          { label: '📄 Descargar Tesis en Word (.docx)', actionType: 'export', target: 'docx' },
-          { label: '📄 Descargar Reporte en PDF', actionType: 'export', target: 'pdf' }
+          { label: t('assistant.r.thesis.a1'), actionType: 'navigate', target: 'validation' },
+          { label: t('assistant.r.thesis.a2'), actionType: 'export', target: 'docx' },
+          { label: t('assistant.r.thesis.a3'), actionType: 'export', target: 'pdf' }
         ]
       };
     }
@@ -485,10 +492,10 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: `🌿 **Catálogo de Flora Urbana Adaptada a Trujillo**\n\n1. **Molle Costeño (*Schinus terebinthifolius / molle*):** Excelente follaje perenne, gran capacidad de retención de polvo ($PM_{2.5}$), muy baja demanda de agua.\n2. **Huarango / Algarrobo (*Prosopis pallida*):** Nativo del desierto costero, raíces profundas, alta fijación de nitrógeno y sombra refrescante.\n3. **Jacarandá (*Jacaranda mimosifolia*):** Dosel amplio, floración primaveral y alta atenuación acústica.\n4. **Tecoma stans (Flor amarilla):** Arbusto denso ideal para separadores viales y filtros de cañón urbano.\n\n¿Quieres simular su plantación en el Gemelo Digital?`,
+        text: t('assistant.r.flora.body'),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         quickActions: [
-          { label: '🌳 Probar en Simulador NbS', actionType: 'navigate', target: 'nbs_simulator' }
+          { label: t('assistant.r.flora.a1'), actionType: 'navigate', target: 'nbs_simulator' }
         ]
       };
     }
@@ -497,11 +504,11 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: `⚖️ **Normativa Ambiental Peruana (ECA-Aire D.S. 003-2017-MINAM)**\n\nEl Gemelo Digital verifica continuamente el cumplimiento de:\n- **$PM_{2.5}$:** $50\\;\\mu g/m^3$ (24h) | $25\\;\\mu g/m^3$ (Anual)\n- **$PM_{10}$:** $100\\;\\mu g/m^3$ (24h)\n- **$NO_2$:** $200\\;\\mu g/m^3$ (1h)\n- **$O_3$:** $100\\;\\mu g/m^3$ (8h)\n\nZonas como el Mercado Hermelinda y Av. España superan los umbrales recomendados por OMS y demandan intervenciones NbS urgentes.`,
+        text: t('assistant.r.reg.body'),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         quickActions: [
-          { label: '📋 Ver Propuestas de Ordenanza MPT', actionType: 'navigate', target: 'validation' },
-          { label: '📥 Descargar Informe Legal OEFA (PDF)', actionType: 'export', target: 'pdf' }
+          { label: t('assistant.r.reg.a1'), actionType: 'navigate', target: 'validation' },
+          { label: t('assistant.r.reg.a2'), actionType: 'export', target: 'pdf' }
         ]
       };
     }
@@ -510,12 +517,12 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: `¡Saludos! 🤖 Estoy aquí para asistirte en todo lo relacionado con el **Gemelo Digital de Calidad del Aire y NbS en Trujillo**.\n\nPuedes preguntarme sobre:\n- Diagnósticos de las 6 zonas de Trujillo (Centro, Av. España, Hermelinda, Ovalo Larco, etc.).\n- Cómo funciona la calibración de sensores IoT en 2 etapas.\n- Modelos de Deep Learning (1D-CNN vs GNN) y cómo calcular cañones urbanos.\n- Diseño y simulación de techos verdes, arbolado y confort térmico (GREENPASS® / PET).\n- Generación de reportes automáticos en Excel, PDF, Word y CSV.\n\n¿Por dónde te gustaría comenzar?`,
+        text: t('assistant.r.hi.body'),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         quickActions: [
-          { label: '🚀 Iniciar Tour Guiado', actionType: 'trigger_guided', target: 'tour' },
+          { label: t('assistant.r.hi.a1'), actionType: 'trigger_guided', target: 'tour' },
           { label: t('assistant.quick.nbs'), actionType: 'trigger_guided', target: 'nbs_guide' },
-          { label: '📊 Descargar Informe Completo', actionType: 'export', target: 'pdf' }
+          { label: t('assistant.r.hi.a3'), actionType: 'export', target: 'pdf' }
         ]
       };
     }
@@ -524,13 +531,13 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
     return {
       id: `bot-${Date.now()}`,
       sender: 'bot',
-      text: `Entendido. Con respecto a *"**${query}**"*, en el marco del Gemelo Digital de Trujillo podemos abordarlo desde varios frentes científicos:\n\n1. **Evaluación de microescala y cañón urbano:** Relación $H/W$ y vórtices de viento.\n2. **Inferencia predictiva:** Algoritmo 1D-CNN ($R^2=0.9925$) para $PM_{2.5}$ y temperatura.\n3. **Intervención verde NbS:** Arbolado nativo (*Molle/Huarango*) y techos verdes.\n4. **Generación documental:** Exportación de resultados a Excel o PDF.\n\nSelecciona una acción directa o indícame qué aspecto específico deseas profundizar:`,
+      text: t('assistant.r.fallback.body').replace('{query}', query),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       quickActions: [
-        { label: '🌳 Simular en Zona Activa', actionType: 'navigate', target: 'nbs_simulator' },
-        { label: '🧠 Consultar Modelos de IA', actionType: 'navigate', target: 'ai_engine' },
-        { label: '📡 Ver Calibración IoT', actionType: 'navigate', target: 'architecture' },
-        { label: '📄 Exportar Reporte Técnico', actionType: 'export', target: 'pdf' }
+        { label: t('assistant.r.fallback.a1'), actionType: 'navigate', target: 'nbs_simulator' },
+        { label: t('assistant.r.fallback.a2'), actionType: 'navigate', target: 'ai_engine' },
+        { label: t('assistant.r.fallback.a3'), actionType: 'navigate', target: 'architecture' },
+        { label: t('assistant.r.fallback.a4'), actionType: 'export', target: 'pdf' }
       ]
     };
   };
@@ -578,8 +585,8 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
             .replace('{pm}', String(action.param.baselinePM25)),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           quickActions: [
-            { label: '🌳 Simular Intervención en esta Zona', actionType: 'navigate', target: 'nbs_simulator' },
-            { label: '🔍 Ver Diagnóstico Detallado', actionType: 'navigate', target: 'diagnosis' }
+            { label: t('assistant.z.a1'), actionType: 'navigate', target: 'nbs_simulator' },
+            { label: t('assistant.z.a2'), actionType: 'navigate', target: 'diagnosis' }
           ]
         }
       ]);
@@ -596,10 +603,10 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
         text: t('assistant.reset'),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         quickActions: [
-          { label: '🚀 Tour Guiado', actionType: 'trigger_guided', target: 'tour' },
+          { label: t('assistant.clear.a1'), actionType: 'trigger_guided', target: 'tour' },
           { label: t('assistant.quick.nbs'), actionType: 'trigger_guided', target: 'nbs_guide' },
           { label: t('assistant.quick.iot'), actionType: 'trigger_guided', target: 'iot_guide' },
-          { label: '🤖 Modelos de IA', actionType: 'navigate', target: 'ai_engine' }
+          { label: t('assistant.clear.a4'), actionType: 'navigate', target: 'ai_engine' }
         ]
       }
     ]);
