@@ -17,6 +17,7 @@ const ArchitectureModule = React.lazy(() => import('./components/modules/Archite
 const AiEngineModule = React.lazy(() => import('./components/modules/AiEngineModule').then(m => ({ default: m.AiEngineModule })));
 const NbsSimulatorModule = React.lazy(() => import('./components/modules/NbsSimulatorModule').then(m => ({ default: m.NbsSimulatorModule })));
 const ValidationPolicyModule = React.lazy(() => import('./components/modules/ValidationPolicyModule').then(m => ({ default: m.ValidationPolicyModule })));
+const CrispDmModule = React.lazy(() => import('./components/modules/CrispDmModule').then(m => ({ default: m.CrispDmModule })));
 const ReportsModule = React.lazy(() => import('./components/modules/ReportsModule').then(m => ({ default: m.ReportsModule })));
 
 // Fallback para lazy
@@ -39,21 +40,23 @@ import {
   Boxes, 
   Cpu, 
   Trees, 
-  Award, 
-  FileSpreadsheet, 
+  Award,
+  FileSpreadsheet,
   MapPin,
   Flame,
   ShieldCheck,
-  Bot
+  Bot,
+  Workflow
 } from 'lucide-react';
 
-type ActiveModule = 
-  | 'digital_twin' 
-  | 'diagnosis' 
-  | 'architecture' 
-  | 'ai_engine' 
-  | 'nbs_simulator' 
-  | 'validation' 
+type ActiveModule =
+  | 'digital_twin'
+  | 'diagnosis'
+  | 'architecture'
+  | 'ai_engine'
+  | 'nbs_simulator'
+  | 'validation'
+  | 'crisp_dm'
   | 'reports';
 
 function MainAppContent() {
@@ -225,6 +228,18 @@ function MainAppContent() {
           >
             <Award className="w-4 h-4" />
             {t('nav.validation')}
+          </button>
+
+          <button
+            onClick={() => setActiveModule('crisp_dm')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition-all ${
+              activeModule === 'crisp_dm'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Workflow className="w-4 h-4" />
+            {t('nav.crisp_dm')}
           </button>
 
           <button
@@ -400,6 +415,13 @@ function MainAppContent() {
               zones={TRUJILLO_ZONES}
               onExportReports={handleQuickExport}
             />
+          </React.Suspense>
+        )}
+
+        {/* VIEW: CRISP-DM Methodology (simulación de proceso de minería de datos) */}
+        {activeModule === 'crisp_dm' && (
+          <React.Suspense fallback={<ModuleFallback />}>
+            <CrispDmModule onExportReports={handleQuickExport} />
           </React.Suspense>
         )}
 
