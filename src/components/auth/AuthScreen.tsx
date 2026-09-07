@@ -229,7 +229,7 @@ export const AuthScreen: React.FC = () => {
             </div>
 
             {/* Scientific Highlights Grid */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="bg-white dark:bg-slate-900/80 dark:bg-slate-900/80 backdrop-blur-xs border border-slate-200/80 dark:border-slate-700 p-3.5 rounded-2xl shadow-xs space-y-1">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-100">
                   <Activity className="w-4 h-4 text-emerald-600" />
@@ -482,7 +482,7 @@ export const AuthScreen: React.FC = () => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('auth.register.password')}</label>
                       <input

@@ -425,7 +425,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
         </div>
 
         {/* View mode toggles */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setShowAirflow(!showAirflow)}
             className={`px-3 py-1.5 text-xs rounded-xl font-medium flex items-center gap-1.5 transition-all ${
@@ -472,7 +472,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
       </div>
 
       {/* Main Canvas Area */}
-      <div className="relative w-full aspect-[16/9] min-h-[380px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+      <div className="relative w-full aspect-[16/9] min-h-[240px] sm:min-h-[380px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
         <canvas
           ref={canvasRef}
           width={880}
@@ -482,7 +482,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
         />
 
         {/* Live Simulation Overlay HUD */}
-        <div className="absolute top-4 left-4 bg-white dark:bg-slate-900/95 dark:bg-slate-900/95 backdrop-blur-md p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-lg max-w-xs text-xs space-y-2 text-slate-800 dark:text-slate-100">
+        <div className="absolute top-2 left-2 sm:top-4 sm:left-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-lg max-w-[46vw] sm:max-w-xs text-[10px] sm:text-xs space-y-1.5 sm:space-y-2 text-slate-800 dark:text-slate-100">
           <div className="flex items-center justify-between text-slate-700 dark:text-slate-300 font-semibold pb-1 border-b border-slate-100 dark:border-slate-800">
             <span>{t('canvas.hudTitle')}</span>
             <span className="text-emerald-600 font-mono text-[11px]">{t('canvas.hudSynced')}</span>
@@ -530,7 +530,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
         </div>
 
         {/* Quick Interaction Panel (Plant tree or roof on canvas) */}
-        <div className="absolute bottom-4 right-4 bg-white dark:bg-slate-900/95 dark:bg-slate-900/95 backdrop-blur-md p-3 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-lg flex items-center gap-2">
+        <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-2 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-lg flex items-center gap-2">
           <button
             onClick={() => setIsPlacingTree(!isPlacingTree)}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs ${

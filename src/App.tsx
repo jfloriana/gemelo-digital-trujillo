@@ -136,23 +136,25 @@ function MainAppContent() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-white">
-      {/* Header */}
-      <Header
-        activeZone={selectedZone}
-        onOpenLogin={() => setIsLoginOpen(true)}
-        onQuickExport={handleQuickExport}
-      />
+      {/* Sticky top region: header + demo banner + nav travel together (evita solaparse en móvil) */}
+      <div className="sticky top-0 z-40">
+        {/* Header */}
+        <Header
+          activeZone={selectedZone}
+          onOpenLogin={() => setIsLoginOpen(true)}
+          onQuickExport={handleQuickExport}
+        />
 
-      {isDemo && (
-        <div className="bg-amber-50 dark:bg-amber-950 border-b border-amber-200 dark:border-amber-800 px-4 lg:px-8 py-2.5 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between">
-          <span>{t('app.demoBanner')}</span>
-          <button onClick={() => { localStorage.removeItem('trujillo_is_demo'); location.reload(); }} className="font-bold underline">{t('app.exitDemo')}</button>
-        </div>
-      )}
+        {isDemo && (
+          <div className="bg-amber-50 dark:bg-amber-950 border-b border-amber-200 dark:border-amber-800 px-4 lg:px-8 py-2.5 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between gap-3">
+            <span>{t('app.demoBanner')}</span>
+            <button onClick={() => { localStorage.removeItem('trujillo_is_demo'); location.reload(); }} className="font-bold underline whitespace-nowrap">{t('app.exitDemo')}</button>
+          </div>
+        )}
 
-      {/* Main Navigation Bar */}
-      <nav className="bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 sticky top-[61px] z-30 px-4 lg:px-8 shadow-xs">
-        <div className="max-w-7xl mx-auto flex items-center gap-1.5 overflow-x-auto py-2.5 scrollbar-none">
+        {/* Main Navigation Bar */}
+        <nav className="bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 px-4 lg:px-8 shadow-xs">
+          <div className="max-w-7xl mx-auto flex items-center gap-1.5 overflow-x-auto py-2.5 scrollbar-none">
           <button
             onClick={() => setActiveModule('digital_twin')}
             className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition-all ${
@@ -246,8 +248,9 @@ function MainAppContent() {
             <span>{t('nav.assistant')}</span>
             <span className="w-2 h-2 rounded-full bg-emerald-300"></span>
           </button>
-        </div>
-      </nav>
+          </div>
+        </nav>
+      </div>
 
       {/* Main App Workspace */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8 space-y-6">
@@ -426,9 +429,9 @@ function MainAppContent() {
               {t('footer.sub')}
             </p>
           </div>
-          <div className="flex items-center gap-4 text-slate-600 dark:text-slate-400">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-slate-600 dark:text-slate-400">
             <span>{t('footer.leadLabel')} <strong className="text-slate-800 dark:text-slate-100">Ing. Joel Anderson Florian Arévalo</strong> & <strong className="text-slate-800 dark:text-slate-100">Ing. Jason Anderson Galvéz Luna</strong></span>
-            <span>|</span>
+            <span className="hidden sm:inline">|</span>
             <button
               onClick={() => handleQuickExport('pdf')}
               className="hover:text-emerald-700 dark:hover:text-emerald-400 underline transition-colors cursor-pointer"
