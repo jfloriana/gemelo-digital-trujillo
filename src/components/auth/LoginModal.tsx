@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { UserRole } from '../../types';
-import { 
+import { useI18n } from '../../context/I18nContext';
+import {
   X, 
   Lock, 
   User as UserIcon, 
@@ -36,10 +36,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     permissions, 
     login, 
     register, 
-    loginWithDemo, 
-    logout, 
-    switchRole 
+    loginWithDemo,
+    logout
   } = useAuth();
+  const { t } = useI18n();
 
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'demo' | 'profile'>('login');
   
@@ -55,7 +55,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [regEmail, setRegEmail] = useState<string>('');
   const [regPassword, setRegPassword] = useState<string>('');
   const [regConfirmPassword, setRegConfirmPassword] = useState<string>('');
-  const [regRole, setRegRole] = useState<UserRole>('investigador');
   const [regInstitution, setRegInstitution] = useState<string>('Universidad Nacional de Trujillo');
   const [showRegPassword, setShowRegPassword] = useState<boolean>(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
@@ -72,10 +71,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       if (res.success) {
         onClose();
       } else {
-        setLoginError(res.error || 'Error al iniciar sesión.');
+        setLoginError(res.error || t('login.error.loginFailed'));
       }
     } catch (err) {
-      setLoginError('Error de red o procesamiento criptográfico.');
+      setLoginError(t('login.error.network'));
     } finally {
       setIsSubmitting(false);
     }
@@ -85,7 +84,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     setRegisterError(null);
     if (regPassword !== regConfirmPassword) {
-      setRegisterError('Las contraseñas no coinciden.');
+      setRegisterError(t('login.error.passwordMismatch'));
       return;
     }
     setIsSubmitting(true);
@@ -94,7 +93,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         name: regName,
         email: regEmail,
         password: regPassword,
-        role: regRole,
         institution: regInstitution
       });
       if (res.success) {
@@ -104,10 +102,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           onClose();
         }, 1200);
       } else {
-        setRegisterError(res.error || 'Error al registrar la cuenta.');
+        setRegisterError(res.error || t('login.error.registerFailed'));
       }
     } catch (err) {
-      setRegisterError('Error al crear la cuenta con cifrado.');
+      setRegisterError(t('login.error.registerCrypto'));
     } finally {
       setIsSubmitting(false);
     }
@@ -129,9 +127,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mb-1">
             <Lock className="w-5 h-5" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white">Control de Acceso y Gestión de Usuarios</h3>
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t('login.header.title')}</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Seguridad criptográfica (SHA-256 + Salt) y Control de Acceso Basado en Roles (RBAC).
+            {t('login.header.subtitle')}
           </p>
         </div>
 
@@ -155,10 +153,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             <button
               onClick={logout}
               className="text-xs text-rose-700 hover:text-rose-800 font-semibold px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 rounded-xl transition-all border border-rose-200 flex items-center gap-1"
-              title="Cerrar sesión activa"
+              title={t('login.activeUser.logoutTitle')}
             >
               <LogOut className="w-3.5 h-3.5" />
-              Salir
+              {t('login.activeUser.logout')}
             </button>
           </div>
         )}
@@ -171,7 +169,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               activeTab === 'login' ? 'bg-white dark:bg-slate-800 dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            Iniciar Sesión
+            {t('login.tabs.login')}
           </button>
           <button
             onClick={() => setActiveTab('register')}
@@ -179,7 +177,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               activeTab === 'register' ? 'bg-white dark:bg-slate-800 dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            Registrarse
+            {t('login.tabs.register')}
           </button>
           <button
             onClick={() => setActiveTab('demo')}
@@ -187,7 +185,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               activeTab === 'demo' ? 'bg-white dark:bg-slate-800 dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            Perfiles Rápidos
+            {t('login.tabs.demo')}
           </button>
           {user && (
             <button
@@ -196,7 +194,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 activeTab === 'profile' ? 'bg-white dark:bg-slate-800 dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              Permisos
+              {t('login.tabs.profile')}
             </button>
           )}
         </div>
@@ -212,7 +210,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             )}
 
             <div className="space-y-1">
-              <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Correo Electrónico Institucional</label>
+              <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('login.field.emailInst')}</label>
               <input
                 type="email"
                 required
@@ -225,7 +223,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Contraseña</label>
+              <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('login.field.password')}</label>
               <div className="relative">
                 <input
                   type={showLoginPassword ? 'text' : 'password'}
@@ -252,12 +250,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm shadow-emerald-900/10 mt-3 cursor-pointer"
             >
               <LogIn className="w-4 h-4" />
-              {isSubmitting ? 'Verificando Hash...' : 'Ingresar al Gemelo Digital'}
+              {isSubmitting ? t('login.btn.verifying') : t('login.btn.submit')}
             </button>
 
             <div className="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Contraseñas protegidas mediante digestión SHA-256 con salt dinámico de 128 bits.</span>
+              <span>{t('login.hint.hash')}</span>
             </div>
           </form>
         )}
@@ -275,17 +273,17 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             {registerSuccess && (
               <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>¡Cuenta registrada y autenticada con éxito! Redirigiendo...</span>
+                <span>{t('login.success.registered')}</span>
               </div>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Nombre y Apellidos</label>
+                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('login.field.name')}</label>
                 <input
                   type="text"
                   required
-                  placeholder="Ej. Ing. Joel Arevalo"
+                  placeholder={t('login.placeholder.name')}
                   value={regName}
                   onChange={(e) => setRegName(e.target.value)}
                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-xs"
@@ -293,7 +291,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Correo Electrónico</label>
+                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('login.field.email')}</label>
                 <input
                   type="email"
                   required
@@ -307,26 +305,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Rol en el Sistema</label>
-                <select
-                  value={regRole}
-                  onChange={(e) => setRegRole(e.target.value as UserRole)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-xs cursor-pointer"
-                >
-                  <option value="investigador">Investigador / Tesista Líder</option>
-                  <option value="planificador">Planificador Urbano (MPT)</option>
-                  <option value="analista">Analista Ambiental (OEFA/SENAMHI)</option>
-                  <option value="admin_iot">Administrador de Red IoT</option>
-                  <option value="ciudadano">Ciudadano / Observador</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Institución / Organización</label>
+              <div className="space-y-1 sm:col-span-2">
+                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('login.field.institution')}</label>
                 <input
                   type="text"
-                  placeholder="Ej. Municipalidad Provincial de Trujillo"
+                  placeholder={t('login.placeholder.institution')}
                   value={regInstitution}
                   onChange={(e) => setRegInstitution(e.target.value)}
                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-xs"
@@ -336,7 +319,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Contraseña (Mín. 6 car.)</label>
+                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('login.field.password6')}</label>
                 <div className="relative">
                   <input
                     type={showRegPassword ? 'text' : 'password'}
@@ -358,7 +341,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Confirmar Contraseña</label>
+                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('login.field.confirmPassword')}</label>
                 <input
                   type={showRegPassword ? 'text' : 'password'}
                   required
@@ -377,7 +360,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm shadow-emerald-900/10 mt-2 cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
-              {isSubmitting ? 'Registrando Criptográficamente...' : 'Crear Cuenta y Guardar en Gemelo Digital'}
+              {isSubmitting ? t('login.btn.registering') : t('login.btn.register')}
             </button>
           </form>
         )}
@@ -386,7 +369,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         {activeTab === 'demo' && (
           <div className="space-y-2.5">
             <span className="text-xs text-slate-600 dark:text-slate-400 block font-semibold">
-              Cambia instantáneamente entre roles para evaluar funcionalidades y permisos:
+              {t('login.demo.intro')}
             </span>
             <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
               {registeredUsers.filter(u => u.email.toLowerCase() !== 'joelandersonarevalo@gmail.com').map(u => {
@@ -418,7 +401,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                       <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                     ) : (
                       <span className="text-[11px] text-emerald-600 font-semibold px-2 py-1 bg-emerald-50 rounded-lg">
-                        Activar
+                        {t('login.demo.activate')}
                       </span>
                     )}
                   </button>
@@ -435,7 +418,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-700 pb-2">
                 <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   <Shield className="w-4 h-4 text-emerald-600" />
-                  Matriz de Permisos Activos
+                  {t('login.perms.title')}
                 </span>
                 <span className="text-xs font-mono text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded-md">
                   {user.role}
@@ -446,50 +429,30 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 <div className={`p-2.5 rounded-xl border flex items-center justify-between ${
                   permissions.canSimulateMl ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-100 border-slate-200 text-slate-400'
                 }`}>
-                  <span>Simulación ML & NbS</span>
+                  <span>{t('login.perms.ml')}</span>
                   {permissions.canSimulateMl ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <X className="w-4 h-4" />}
                 </div>
 
                 <div className={`p-2.5 rounded-xl border flex items-center justify-between ${
                   permissions.canInjectIoT ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-100 border-slate-200 text-slate-400'
                 }`}>
-                  <span>Inyección Telemetría IoT</span>
+                  <span>{t('login.perms.iot')}</span>
                   {permissions.canInjectIoT ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <X className="w-4 h-4" />}
                 </div>
 
                 <div className={`p-2.5 rounded-xl border flex items-center justify-between ${
                   permissions.canExportReports ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-100 border-slate-200 text-slate-400'
                 }`}>
-                  <span>Exportación Multiformato</span>
+                  <span>{t('login.perms.export')}</span>
                   {permissions.canExportReports ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <X className="w-4 h-4" />}
                 </div>
 
                 <div className={`p-2.5 rounded-xl border flex items-center justify-between ${
                   permissions.canManageUsers ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-100 border-slate-200 text-slate-400'
                 }`}>
-                  <span>Administración de Roles</span>
+                  <span>{t('login.perms.roles')}</span>
                   {permissions.canManageUsers ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <X className="w-4 h-4" />}
                 </div>
-              </div>
-            </div>
-
-            {/* Quick Switch Role */}
-            <div className="space-y-1.5">
-              <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">Cambiar Rol en Tiempo Real:</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                {(['investigador', 'planificador', 'analista', 'admin_iot', 'ciudadano'] as UserRole[]).map(r => (
-                  <button
-                    key={r}
-                    onClick={() => switchRole(r)}
-                    className={`py-1.5 px-2.5 rounded-xl border text-[11px] font-semibold capitalize transition-all ${
-                      user.role === r 
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' 
-                        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 hover:border-emerald-300'
-                    }`}
-                  >
-                    {r.replace('_', ' ')}
-                  </button>
-                ))}
               </div>
             </div>
           </div>

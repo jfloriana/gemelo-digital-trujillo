@@ -84,6 +84,8 @@ create index if not exists idx_profiles_email on public.profiles(email);
 create index if not exists idx_profiles_role on public.profiles(role);
 
 -- Trigger: auto-crear profile al registrarse en auth.users
+-- see migrations/0001_lock_down_roles_and_profiles.sql — el rol se fuerza a 'ciudadano';
+-- NUNCA se confía en raw_user_meta_data->>'role'.
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
@@ -92,7 +94,7 @@ begin
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data->>'name', split_part(new.email,'@',1)),
-    coalesce((new.raw_user_meta_data->>'role')::user_role, 'ciudadano'),
+    'ciudadano'::user_role,  -- SIEMPRE el rol menos privilegiado; el metadata del cliente NO decide el rol
     coalesce(new.raw_user_meta_data->>'institution', 'Comunidad Digital Trujillo')
   )
   on conflict (id) do nothing;
@@ -377,24 +379,54 @@ alter table public.thesis_objective_metrics enable row level security;
 alter table public.ingestion_logs enable row level security;
 
 -- Helper: es investigador/admin?
-create or replace function public.is_privileged() returns boolean language sql stable as $$
+-- SECURITY DEFINER: el SELECT interno sobre profiles no dispara RLS -> evita
+-- recursión con la política profiles_select_privileged. Ver migrations/0001_...
+create or replace function public.is_privileged() returns boolean
+  language sql stable security definer set search_path = public as $$
   select exists (
     select 1 from public.profiles
     where id = auth.uid() and role in ('investigador','admin_iot')
   );
 $$;
-create or replace function public.can_simulate() returns boolean language sql stable as $$
+create or replace function public.can_simulate() returns boolean
+  language sql stable security definer set search_path = public as $$
   select exists (
     select 1 from public.profiles
     where id = auth.uid() and role in ('investigador','planificador','analista')
   );
 $$;
 
+-- see migrations/0001_lock_down_roles_and_profiles.sql — bloquea la auto-promoción:
+-- un cambio de 'role' sólo se permite si la sesión es privilegiada.
+create or replace function public.enforce_role_immutable()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.role is distinct from old.role and not public.is_privileged() then
+    raise exception 'No autorizado: no puedes cambiar tu rol. Contacta a un administrador.'
+      using errcode = '42501';
+  end if;
+  return new;
+end; $$;
+drop trigger if exists enforce_role_immutable on public.profiles;
+create trigger enforce_role_immutable
+  before update on public.profiles
+  for each row execute procedure public.enforce_role_immutable();
+
 -- profiles
+-- see migrations/0001_lock_down_roles_and_profiles.sql — profiles ya no expone
+-- todos los emails: cada quien lee su fila, los privilegiados leen todas, anon nada.
+-- fetchAllProfiles() en AuthContext sólo funcionará para usuarios privilegiados.
 drop policy if exists "profiles_select_all" on public.profiles;
-create policy "profiles_select_all" on public.profiles for select using (true);
+drop policy if exists "profiles_select_own" on public.profiles;
+create policy "profiles_select_own" on public.profiles for select using (auth.uid() = id);
+drop policy if exists "profiles_select_privileged" on public.profiles;
+create policy "profiles_select_privileged" on public.profiles for select using (public.is_privileged());
+-- see migrations/0001_lock_down_roles_and_profiles.sql — UPDATE con WITH CHECK;
+-- el bloqueo por columna 'role' lo aplica el trigger enforce_role_immutable.
 drop policy if exists "profiles_update_own" on public.profiles;
-create policy "profiles_update_own" on public.profiles for update using (auth.uid() = id);
+create policy "profiles_update_own" on public.profiles for update
+  using (auth.uid() = id or public.is_privileged())
+  with check (auth.uid() = id or public.is_privileged());
 drop policy if exists "profiles_insert_own" on public.profiles;
 create policy "profiles_insert_own" on public.profiles for insert with check (auth.uid() = id);
 

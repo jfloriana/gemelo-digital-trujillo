@@ -16,16 +16,14 @@ export default defineConfig(() => {
       'import.meta.env.GEMINI_API_KEY': JSON.stringify(geminiKey),
     },
     build: {
-      chunkSizeWarningLimit: 600,
+      chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: ['react', 'react-dom'],
             charts: ['recharts'],
-            pdf: ['jspdf', 'jspdf-autotable', 'html2canvas'],
+            pdf: ['jspdf', 'jspdf-autotable'],
             docx: ['docx'],
             supabase: ['@supabase/supabase-js'],
-            motion: ['motion'],
           },
         },
       },

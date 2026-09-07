@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { UserRole } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { useI18n, LANG_LABELS, Lang } from '../../context/I18nContext';
 import { 
@@ -53,7 +52,6 @@ export const AuthScreen: React.FC = () => {
   const [regEmail, setRegEmail] = useState<string>('');
   const [regPassword, setRegPassword] = useState<string>('');
   const [regConfirmPassword, setRegConfirmPassword] = useState<string>('');
-  const [regRole, setRegRole] = useState<UserRole>('investigador');
   const [regInstitution, setRegInstitution] = useState<string>('Universidad Nacional de Trujillo');
   const [showRegPassword, setShowRegPassword] = useState<boolean>(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
@@ -67,10 +65,10 @@ export const AuthScreen: React.FC = () => {
     try {
       const res = await login(loginEmail, loginPassword);
       if (!res.success) {
-        setLoginError(res.error || 'Credenciales no válidas. Verifica correo y contraseña.');
+        setLoginError(res.error || t('auth.err.invalidCreds'));
       }
     } catch (err) {
-      setLoginError('Error de autenticación o procesamiento criptográfico.');
+      setLoginError(t('auth.err.authCrypto'));
     } finally {
       setIsSubmitting(false);
     }
@@ -80,15 +78,15 @@ export const AuthScreen: React.FC = () => {
     e.preventDefault();
     setRegisterError(null);
     if (!regName.trim()) {
-      setRegisterError('Por favor ingresa tu nombre completo.');
+      setRegisterError(t('auth.err.nameRequired'));
       return;
     }
     if (regPassword !== regConfirmPassword) {
-      setRegisterError('Las contraseñas no coinciden.');
+      setRegisterError(t('auth.err.passwordMismatch'));
       return;
     }
     if (regPassword.length < 6) {
-      setRegisterError('La contraseña debe tener al menos 6 caracteres.');
+      setRegisterError(t('auth.err.passwordShort'));
       return;
     }
     setIsSubmitting(true);
@@ -97,16 +95,15 @@ export const AuthScreen: React.FC = () => {
         name: regName,
         email: regEmail,
         password: regPassword,
-        role: regRole,
         institution: regInstitution
       });
       if (res.success) {
         setRegisterSuccess(true);
       } else {
-        setRegisterError(res.error || 'Error al registrar la cuenta.');
+        setRegisterError(res.error || t('auth.err.registerFailed'));
       }
     } catch (err) {
-      setRegisterError('Error al crear la cuenta de usuario.');
+      setRegisterError(t('auth.err.createFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -348,7 +345,7 @@ export const AuthScreen: React.FC = () => {
                     <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl space-y-2">
                       <div className="flex items-center gap-2"><AlertCircle className="w-4 h-4 text-rose-600 shrink-0" /><span>{loginError}</span></div>
                       {loginError.toLowerCase().includes('verificar') && (
-                        <button type="button" onClick={async()=>{ const r=await resendVerification(loginEmail); setLoginError(r.success ? 'Correo de verificación reenviado ✓ Revisa tu bandeja.' : r.error || 'Error al reenviar'); }} className="text-xs font-bold text-emerald-700 underline">Reenviar verificación</button>
+                        <button type="button" onClick={async()=>{ const r=await resendVerification(loginEmail); setLoginError(r.success ? t('auth.resend.loginSuccess') : r.error || t('auth.resend.error')); }} className="text-xs font-bold text-emerald-700 underline">{t('auth.resend.button')}</button>
                       )}
                     </div>
                   )}
@@ -443,7 +440,7 @@ export const AuthScreen: React.FC = () => {
                     <div className="p-4 bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 rounded-xl space-y-2">
                       <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200 text-xs font-bold"><CheckCircle2 className="w-4 h-4" /> {t('auth.register.checkEmail')}</div>
                       <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">{t('auth.register.checkEmailDesc')}</p>
-                      <button onClick={async()=>{ const r=await resendVerification(regEmail); setResendStatus(r.success ? 'Correo reenviado ✓' : r.error || 'Error al reenviar'); }} className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 underline hover:text-emerald-800">Reenviar verificación</button>
+                      <button onClick={async()=>{ const r=await resendVerification(regEmail); setResendStatus(r.success ? t('auth.resend.registerSuccess') : r.error || t('auth.resend.error')); }} className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 underline hover:text-emerald-800">{t('auth.resend.button')}</button>
                       {resendStatus && <p className="text-xs text-slate-600 dark:text-slate-400">{resendStatus}</p>}
                     </div>
                   )}
@@ -473,33 +470,16 @@ export const AuthScreen: React.FC = () => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('auth.register.role')}</label>
-                      <select
-                        value={regRole}
-                        onChange={(e) => setRegRole(e.target.value as UserRole)}
-                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs text-slate-800 dark:text-slate-100 font-medium"
-                      >
-                        <option value="investigador">Investigador</option>
-                        <option value="planificador">Planificador MPT</option>
-                        <option value="analista">Analista OEFA</option>
-                        <option value="admin_iot">Administrador IoT</option>
-                        <option value="ciudadano">Ciudadano</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('auth.register.institution')}</label>
-                      <input
-                        type="text"
-                        required
-                        value={regInstitution}
-                        onChange={(e) => setRegInstitution(e.target.value)}
-                        placeholder="UNT / MPT / OEFA"
-                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs text-slate-800 dark:text-slate-100"
-                      />
-                    </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">{t('auth.register.institution')}</label>
+                    <input
+                      type="text"
+                      required
+                      value={regInstitution}
+                      onChange={(e) => setRegInstitution(e.target.value)}
+                      placeholder="UNT / MPT / OEFA"
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs text-slate-800 dark:text-slate-100"
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">

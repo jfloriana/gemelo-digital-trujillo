@@ -104,6 +104,15 @@ function MainAppContent() {
     setIsSimActive(true);
   };
 
+  // Guarda: si no hay zonas disponibles, evita el crash por selectedZone indefinido.
+  if (!TRUJILLO_ZONES.length) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 text-sm text-slate-500 dark:text-slate-400 p-8 text-center">
+        No hay zonas disponibles
+      </div>
+    );
+  }
+
   // FIX: Chatbot debe ser visible incluso sin autenticación (ayuda al login).
   // Antes: if (!user) return <AuthScreen /> ocultaba el chatbot en la pantalla de login.
   if (!user) {

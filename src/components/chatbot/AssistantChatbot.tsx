@@ -271,15 +271,15 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
         newMsg = {
           id: `msg-${Date.now()}`,
           sender: 'bot',
-          text: `🎯 **Tour Guiado por la Arquitectura de la Tesis**\n\nEl Gemelo Digital de Trujillo se estructura en **5 Objetivos Específicos (OE)** conforme al marco científico de la investigación:\n\n1. **OE1: Diagnóstico Microescala:** Identifica islas de calor (UHI) y puntos críticos de $PM_{2.5}$ en 6 zonas clave.\n2. **OE2: Red IoT & Calibración:** Sensores de bajo costo con calibración de 2 etapas (Zhivkov et al., 2025).\n3. **OE3: Modelos IA & Deep Learning:** Redes 1D-CNN ($R^2=0.9925$) y GNN para predicción callejera.\n4. **OE4: Simulador NbS:** Modelado de arbolado nativo (*Molle, Huarango*) y techos verdes bajo GREENPASS®.\n5. **OE5: Validación & Políticas:** Matriz de cumplimiento de tesis y ordenanzas para la MPT y OEFA.\n\n¿A qué módulo deseas que te transporte ahora?`,
+          text: t('assistant.flow.tour'),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           category: 'guided_tour',
           quickActions: [
-            { label: '📍 Ver Diagnóstico (OE1)', actionType: 'navigate', target: 'diagnosis' },
-            { label: '📡 Ver Arquitectura IoT (OE2)', actionType: 'navigate', target: 'architecture' },
-            { label: '🧠 Ver Modelos IA (OE3)', actionType: 'navigate', target: 'ai_engine' },
-            { label: '🌳 Ir al Simulador NbS (OE4)', actionType: 'navigate', target: 'nbs_simulator' },
-            { label: '📊 Ver Validación & Tesis (OE5)', actionType: 'navigate', target: 'validation' }
+            { label: t('assistant.flow.tour.qa1'), actionType: 'navigate', target: 'diagnosis' },
+            { label: t('assistant.flow.tour.qa2'), actionType: 'navigate', target: 'architecture' },
+            { label: t('assistant.flow.tour.qa3'), actionType: 'navigate', target: 'ai_engine' },
+            { label: t('assistant.flow.tour.qa4'), actionType: 'navigate', target: 'nbs_simulator' },
+            { label: t('assistant.flow.tour.qa5'), actionType: 'navigate', target: 'validation' }
           ]
         };
       } else if (flowKey === 'nbs_guide') {
@@ -323,7 +323,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
         newMsg = {
           id: `msg-${Date.now()}`,
           sender: 'bot',
-          text: `📍 Selecciona una de las 6 zonas críticas del caso de estudio Trujillo:`,
+          text: t('assistant.flow.chooseZone'),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           quickActions: zones.map(z => ({
             label: `${z.name.split(':')[0]} (${z.baselineTemp}°C | ${z.baselinePM25}µg)`,
@@ -335,24 +335,24 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
         newMsg = {
           id: `msg-${Date.now()}`,
           sender: 'bot',
-          text: `📡 **Protocolo IoT y Algoritmo de Calibración en 2 Etapas (OE2)**\n\nLos sensores de bajo costo (PMS5003, Sensirion SPS30) sufren graves distorsiones por la neblina marina costera de Trujillo. Implementamos el método de **Zhivkov et al. (2025) y Cowell et al. (2023)**:\n\n1. **Etapa 1 - Corrección Higroscópica No Lineal:**\n   $$CF_{HR} = 1 + \\kappa \\cdot \\frac{HR^2}{100 - HR}$$\n   Elimina la sobrestimación por hinchamiento de partículas húmedas.\n\n2. **Etapa 2 - Compensación Térmica y Autocalentamiento:**\n   $$T_{corregida} = T_{sensor} - \\Delta T_{auto} (\\approx -0.6^\\circ C)$$\n\n📈 **Resultado Científico:** El coeficiente de correlación $R^2$ frente a la estación patrón SENAMHI se eleva de **0.29 (crudo)** a **0.94 (calibrado)**.`,
+          text: t('assistant.flow.iot'),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           category: 'iot_calibration',
           quickActions: [
-            { label: '🔍 Ver Arquitectura de 3 Capas', actionType: 'navigate', target: 'architecture' },
-            { label: '📊 Descargar Dataset de Telemetría CSV', actionType: 'export', target: 'csv' }
+            { label: t('assistant.flow.iot.qa1'), actionType: 'navigate', target: 'architecture' },
+            { label: t('assistant.flow.iot.qa2'), actionType: 'export', target: 'csv' }
           ]
         };
       } else if (flowKey === 'regulations') {
         newMsg = {
           id: `msg-${Date.now()}`,
           sender: 'bot',
-          text: `⚖️ **Normativa Ambiental y Estándares de Calidad Ambiental (ECA-Aire Perú)**\n\nBajo el **D.S. N° 003-2017-MINAM** y las directrices globales de la OMS (2021):\n\n- **PM2.5 (24 Horas):** Límite Perú: **50 µg/m³** | Guía OMS: **15 µg/m³**\n  *Puntos Críticos en Trujillo:* Mercado Hermelinda (44.5 µg) y Av. España (38.2 µg) operan en umbrales de alerta.\n- **PM10 (24 Horas):** Límite Perú: **100 µg/m³** | Guía OMS: **45 µg/m³**\n- **NO2 (1 Hora):** Límite Perú: **200 µg/m³**\n- **O3 (8 Horas):** Límite Perú: **100 µg/m³**\n\nEl Gemelo Digital genera la matriz de cumplimiento normativo exigida por OEFA.`,
+          text: t('assistant.flow.regulations'),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           category: 'regulations',
           quickActions: [
-            { label: '📑 Ver Políticas y Ordenanzas (OE5)', actionType: 'navigate', target: 'validation' },
-            { label: '📄 Descargar Informe Técnico PDF', actionType: 'export', target: 'pdf' }
+            { label: t('assistant.flow.reg.qa1'), actionType: 'navigate', target: 'validation' },
+            { label: t('assistant.flow.reg.qa2'), actionType: 'export', target: 'pdf' }
           ]
         };
       }
@@ -549,7 +549,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
         {
           id: `bot-nav-${Date.now()}`,
           sender: 'bot',
-          text: `✅ Te he transportado al módulo **${action.label}**. Puedes seguir haciéndome preguntas aquí en cualquier momento.`,
+          text: t('assistant.navConfirm').replace('{label}', `**${action.label}**`),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -560,7 +560,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
         {
           id: `bot-exp-${Date.now()}`,
           sender: 'bot',
-          text: `📥 ¡Documento **${action.target.toUpperCase()}** generado y descargado exitosamente!`,
+          text: t('assistant.exportConfirm').replace('{format}', `**${action.target.toUpperCase()}**`),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -571,7 +571,11 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
         {
           id: `bot-zone-${Date.now()}`,
           sender: 'bot',
-          text: `📍 Zona activa cambiada a: **${action.param.name}** (${action.param.district}).\n- Temp: ${action.param.baselineTemp}°C\n- PM2.5: ${action.param.baselinePM25} µg/m³`,
+          text: t('assistant.zoneChanged')
+            .replace('{name}', `**${action.param.name}**`)
+            .replace('{district}', action.param.district)
+            .replace('{temp}', String(action.param.baselineTemp))
+            .replace('{pm}', String(action.param.baselinePM25)),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           quickActions: [
             { label: '🌳 Simular Intervención en esta Zona', actionType: 'navigate', target: 'nbs_simulator' },
@@ -589,7 +593,7 @@ export const AssistantChatbot: React.FC<AssistantChatbotProps> = ({
       {
         id: `msg-reset-${Date.now()}`,
         sender: 'bot',
-        text: `🧹 Conversación reiniciada. ¿En qué puedo asistirte hoy con el Gemelo Digital de Trujillo?`,
+        text: t('assistant.reset'),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         quickActions: [
           { label: '🚀 Tour Guiado', actionType: 'trigger_guided', target: 'tour' },

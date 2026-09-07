@@ -122,7 +122,12 @@ export function useSupabaseData() {
         // enrich sensors hourlyHistory desde environmental_readings (últimas 12)
         let mappedSensors = sRes.data?.length ? sRes.data.map(mapSensor) : FALLBACK_SENSORS;
         if (mappedSensors !== FALLBACK_SENSORS) {
-          const { data: readings } = await supabase.from('environmental_readings').select('*').order('measured_at', { ascending: true }).limit(200);
+          // Give every sensor a fair slice of history: with a flat .limit(200) and
+          // many sensors, the global cap starved most sensors of rows once grouped.
+          // Scale the cap with sensor count (~48 readings each), bounded for safety.
+          // Ordering/grouping unchanged: still ascending, still .slice(-12) per sensor.
+          const historyLimit = Math.min(5000, Math.max(200, mappedSensors.length * 48));
+          const { data: readings } = await supabase.from('environmental_readings').select('*').order('measured_at', { ascending: true }).limit(historyLimit);
           if (readings?.length) {
             const bySensor: Record<string, any[]> = {};
             readings.forEach((r:any)=>{

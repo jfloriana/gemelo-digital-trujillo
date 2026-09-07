@@ -6,7 +6,7 @@ export interface RegisterData {
   name: string;
   email: string;
   password: string;
-  role: UserRole;
+  role?: UserRole; // ignorado: el rol lo fuerza la base de datos a 'ciudadano' en el signup
   institution: string;
 }
 
@@ -181,22 +181,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const normalized = email.trim().toLowerCase();
       const found = registeredUsers.find(u => u.email.toLowerCase() === normalized);
       if (!found) return { success: false, error: 'No se encontró usuario con este correo.' };
-      if (password === 'trujillo2026' || password === 'admin123') {
-        setUser(found);
-        localStorage.setItem('trujillo_digital_twin_active_user', JSON.stringify(found));
-        localStorage.removeItem('trujillo_is_demo');
-        setIsDemo(false);
-        return { success: true };
-      }
-      return { success: false, error: 'Modo sin Supabase: usa trujillo2026' };
+      // Modo sin Supabase: no hay backend que verifique la contraseña de forma segura.
+      return { success: false, error: 'Modo sin Supabase: inicio de sesión con contraseña no disponible. Usa el acceso Demo.' };
     }
-    // Verifica Brevo primero (email_verified en profiles) — usa maybeSingle para no 406 si no existe
     const normalized = email.trim().toLowerCase();
-    const { data: prof } = await supabase.from('profiles').select('email_verified').eq('email', normalized).maybeSingle();
-    if (prof && (prof as any).email_verified === false) {
-      return { success: false, error: 'Debes verificar tu correo. Revisa tu bandeja y haz clic en “Verificar mi correo”. ¿No lo ves? usa Reenviar verificación.' };
-    }
-    const { data, error } = await supabase.auth.signInWithPassword({ email: normalized, password });
+    const { error } = await supabase.auth.signInWithPassword({ email: normalized, password });
     if (error) {
       const msg = error.message.toLowerCase();
       if (msg.includes('email not confirmed')) {
@@ -210,13 +199,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return { success: false, error: error.message };
     }
-    if (data.user) {
-      const { data: prof2 } = await supabase.from('profiles').select('email_verified').eq('id', data.user.id).maybeSingle();
-      if (prof2 && (prof2 as any).email_verified === false) {
-        await supabase.auth.signOut();
-        return { success: false, error: 'Debes verificar tu correo antes de ingresar. Revisa tu bandeja y haz clic en “Verificar mi correo”.' };
-      }
-    }
+    // El gate de verificación de correo es email_confirmed_at (se comprueba en init / onAuthStateChange).
     localStorage.removeItem('trujillo_is_demo');
     setIsDemo(false);
     return { success: true };
@@ -243,7 +226,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (registeredUsers.some(u => u.email.toLowerCase() === normalized)) {
         return { success: false, error: 'Ya existe cuenta con este correo.' };
       }
-      const newUser: User = { id: `user-${Date.now()}`, name: data.name.trim(), email: normalized, role: data.role, institution: data.institution.trim() || 'Comunidad Digital Trujillo' };
+      const newUser: User = { id: `user-${Date.now()}`, name: data.name.trim(), email: normalized, role: 'ciudadano', institution: data.institution.trim() || 'Comunidad Digital Trujillo' };
       const updated = [...registeredUsers, newUser];
       setRegisteredUsers(updated);
       setUser(newUser);
@@ -251,19 +234,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('trujillo_digital_twin_active_user', JSON.stringify(newUser));
       return { success: true };
     }
-    const { data: signUpData, error } = await supabase.auth.signUp({
-      email: data.email.trim(),
-      password: data.password,
-      options: {
-        data: { name: data.name.trim(), role: data.role, institution: data.institution.trim() || 'Comunidad Digital Trujillo' },
-        emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/verify` : undefined,
-      }
+    // Se crea el usuario vía API server-side (admin.createUser, email_confirm:false) para que
+    // Supabase NO envíe su propio correo (evita el 429 de su SMTP y el enlace roto).
+    // No se envía 'role': el rol lo asigna la base de datos ('ciudadano') en handle_new_user().
+    const regRes = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: data.email.trim(),
+        password: data.password,
+        name: data.name.trim(),
+        institution: data.institution.trim() || 'Comunidad Digital Trujillo',
+      }),
     });
-    if (error) {
-      if (error.message.includes('already registered')) return { success: false, error: 'Ya existe cuenta con este correo.' };
-      return { success: false, error: error.message };
+    if (!regRes.ok) {
+      const j = await regRes.json().catch(() => ({} as { error?: string }));
+      return { success: false, error: j.error || 'No se pudo crear la cuenta.' };
     }
-    // Brevo 100% — envía verificación con diseño profesional (no depende de Supabase SMTP)
+    // Brevo 100% — único correo de verificación (Supabase no envía nada)
     await sendVerificationViaBrevo(data.email.trim(), data.name.trim());
     return { success: true };
   };
@@ -280,6 +268,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const loginWithDemo = async (userId: string) => {
+    // NOTA: el modo demo es un punto de entrada explícito de exploración, NO una frontera de seguridad.
+    // No otorga roles privilegiados por sí mismo; el rol proviene del perfil real en la BD.
     const email = DEMO_EMAIL_BY_ID[userId] || userId;
     localStorage.setItem('trujillo_is_demo', 'true');
     setIsDemo(true);
@@ -315,18 +305,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const switchRole = async (newRole: UserRole) => {
     if (!user) return;
     if (!hasSupabase) {
+      // Modo sin Supabase: NO es una frontera de seguridad (solo demo local).
       const updated: User = { ...user, role: newRole };
       setUser(updated);
       setRegisteredUsers(prev => prev.map(u => u.id === user.id ? updated : u));
       localStorage.setItem('trujillo_digital_twin_active_user', JSON.stringify(updated));
       return;
     }
+    // La RLS + el trigger enforce_role_immutable rechazan esto salvo para usuarios privilegiados.
     const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', user.id);
-    if (!error) {
-      const updated = { ...user, role: newRole };
-      setUser(updated);
-      await fetchAllProfiles();
+    if (error) {
+      console.warn('switchRole: no autorizado para cambiar de rol —', error.message);
+      return; // no cambiar el estado local de forma optimista
     }
+    const updated = { ...user, role: newRole };
+    setUser(updated);
+    await fetchAllProfiles();
   };
 
   const updateProfile = async (data: Partial<User>) => {
