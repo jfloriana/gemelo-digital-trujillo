@@ -16,7 +16,7 @@ export default defineConfig(() => {
       'import.meta.env.GEMINI_API_KEY': JSON.stringify(geminiKey),
     },
     build: {
-      chunkSizeWarningLimit: 1000,
+      chunkSizeWarningLimit: 1200,
       rollupOptions: {
         output: {
           manualChunks: {
