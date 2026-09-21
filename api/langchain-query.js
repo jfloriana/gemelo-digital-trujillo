@@ -73,7 +73,7 @@ export default async function handler(req, res) {
     const { context, found } = await retrieveZoneContext(supabase, String(zoneName).slice(0, 120));
 
     const prompt = PromptTemplate.fromTemplate(PROMPT_TEMPLATE);
-    const model = new ChatGoogleGenerativeAI({ apiKey: GEMINI_API_KEY, model: 'gemini-2.0-flash', temperature: 0.2 });
+    const model = new ChatGoogleGenerativeAI({ apiKey: GEMINI_API_KEY, model: 'gemini-3.6-flash', temperature: 0.2 });
     const outputParser = new StringOutputParser();
 
     // Chain LangChain pura: prompt -> modelo -> parser de salida. Sin herramientas, sin ciclos.
