@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "src/App.tsx"
+        ],
+        "createdAt": "2026-09-21T19:34:44.507Z",
+        "reason": "pre-existing amber-on-amber demo banner text (text-amber-800/amber-200 on bg-amber-50/amber-950), not gray, unrelated to current LangGraph edit; false positive"
+      }
+    ]
+  }
+}
