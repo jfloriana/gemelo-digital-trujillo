@@ -1,0 +1,26 @@
+feat: separa LangChain y LangGraph en modulos independientes
+
+Antes los dos vivian juntos en api/agent.js. Ahora son dos piezas separadas,
+cada una con su propio endpoint, su propio panel de UI y su propia arquitectura:
+
+- api/langchain-query.js (NUEVO): chain lineal clasica de LangChain.
+  Retrieval (Supabase, una zona) -> PromptTemplate -> LLM -> OutputParser,
+  via RunnableSequence.from([...]). Sin herramientas, sin ciclos.
+- api/agent.js (existente, sin cambios): agente LangGraph con
+  createReactAgent, herramientas (get_zone_data, estimate_nbs_impact) y
+  ciclo de decision tool-calling.
+
+Frontend:
+- LangChainQueryPanel.tsx (NUEVO): boton flotante independiente (azul,
+  bottom-left apilado), formulario zona+pregunta, muestra el contexto
+  recuperado y la respuesta. No comparte estado con LangGraphAgentPanel.
+- LangGraphAgentPanel.tsx: sin cambios de logica.
+- App.tsx: monta ambos paneles por separado.
+
+i18n: +12 claves x 6 idiomas (lc.*) para el panel LangChain.
+
+Probado con smoke test local: la chain LangChain llega hasta la llamada
+real a Gemini (falla solo por key de prueba invalida, confirma el wiring).
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01TK9grquPH3hb7yR9pWVUm6

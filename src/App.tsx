@@ -32,6 +32,7 @@ const ModuleFallback: React.FC = () => {
 };
 import { AssistantChatbot } from './components/chatbot/AssistantChatbot';
 import { LangGraphAgentPanel } from './components/agent/LangGraphAgentPanel';
+import { LangChainQueryPanel } from './components/agent/LangChainQueryPanel';
 import { useSupabaseData } from './hooks/useSupabaseData';
 import { UrbanZone, SimulationScenario } from './types';
 import { exportToExcel, exportToPDF, exportToWord, exportToCSV } from './utils/exportUtils';
@@ -135,6 +136,7 @@ function MainAppContent() {
           onToggleControlled={setIsChatbotOpen}
         />
         <LangGraphAgentPanel />
+        <LangChainQueryPanel />
       </>
     );
   }
@@ -499,6 +501,7 @@ function MainAppContent() {
         onToggleControlled={setIsChatbotOpen}
       />
       <LangGraphAgentPanel />
+      <LangChainQueryPanel />
     </div>
   );
 }
