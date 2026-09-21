@@ -20,18 +20,21 @@ on conflict (id) do update set
   baseline_pm25 = excluded.baseline_pm25, tree_cover = excluded.tree_cover, built_density = excluded.built_density,
   primary_pollution_source = excluded.primary_pollution_source, geometry_coords = excluded.geometry_coords, sensors_count = excluded.sensors_count;
 
--- 1b) ZONAS REGIONALES (7) — ver migrations/0002_add_regional_zones.sql para el detalle
--- de por qué se agregaron. Datos ESTIMADOS (no verificados), no duplica si ya existen.
+-- 1b) ZONAS REGIONALES (7) — ver migrations/0002_add_regional_zones.sql para el detalle.
+-- Temperatura y PM2.5: datos reales (climate-data.org / WeatherSpark / IQAir).
+-- Población y cobertura vegetal: estimaciones razonadas, no censales.
 insert into public.urban_zones (id, name, district, department, description, vulnerability_level, target_population, vulnerable_population, baseline_temp, baseline_pm25, tree_cover, built_density, primary_pollution_source, geometry_coords, sensors_count)
 values
-  ('zona-chepen','Chepén (Centro Urbano)','Chepén','La Libertad','[ESTIMADO - no verificado] Centro urbano de la provincia de Chepén, valle agrícola costero de La Libertad.','Media',32000,9600,25.8,24.5,12.0,55.0,'Tráfico vehicular local y quema agrícola estacional en el valle Jequetepeque.','[]',0),
-  ('zona-guadalupe','Guadalupe (Centro Urbano)','Guadalupe','La Libertad','[ESTIMADO - no verificado] Distrito de Guadalupe, provincia de Chepén, La Libertad.','Media',22000,6600,25.5,22.0,14.0,50.0,'Tráfico vehicular local y actividad agroindustrial cercana.','[]',0),
-  ('zona-chocope','Chocope (Centro Urbano)','Chocope','La Libertad','[ESTIMADO - no verificado] Distrito de Chocope, provincia de Ascope, La Libertad.','Media',16000,4800,24.6,20.5,16.0,45.0,'Actividad agroindustrial azucarera y quema periódica de residuos de caña.','[]',0),
-  ('zona-viru','Virú (Centro Urbano)','Virú','La Libertad','[ESTIMADO - no verificado] Provincia de Virú, polo agroexportador de La Libertad.','Media',38000,11400,23.9,23.8,10.0,52.0,'Tráfico de carga agroexportadora y polvo de vías sin asfaltar.','[]',0),
-  ('zona-pacasmayo','Pacasmayo (Centro Urbano)','Pacasmayo','La Libertad','[ESTIMADO - no verificado] Ciudad portuaria de Pacasmayo, La Libertad.','Media',15000,4500,20.8,17.5,8.0,48.0,'Emisiones portuarias e industria cementera cercana.','[]',0),
-  ('zona-cajamarca','Cajamarca (Centro Histórico)','Cajamarca','Cajamarca','[ESTIMADO - no verificado] Centro histórico de la ciudad de Cajamarca (~2,750 msnm).','Alta',220000,66000,15.9,19.0,18.0,62.0,'Tráfico vehicular urbano en altitud y actividad minera regional cercana.','[]',0),
-  ('zona-chiclayo','Chiclayo (Centro Urbano)','Chiclayo','Lambayeque','[ESTIMADO - no verificado] Centro urbano de la ciudad de Chiclayo, capital de la región Lambayeque.','Alta',310000,93000,26.4,34.0,9.0,68.0,'Alta densidad de tráfico vehicular y comercio informal en el centro urbano.','[]',0)
-on conflict (id) do nothing;
+  ('zona-chepen','Chepén (Centro Urbano)','Chepén','La Libertad','[Clima real: climate-data.org / IQAir] Centro urbano de la provincia de Chepén, valle agrícola costero de La Libertad. Población y cobertura vegetal: estimadas.','Media',32000,9600,21.1,12.4,12.0,55.0,'Tráfico vehicular local y quema agrícola estacional en el valle Jequetepeque.','[]',0),
+  ('zona-guadalupe','Guadalupe (Centro Urbano)','Guadalupe','La Libertad','[Clima real: SENAMHI/Wikipedia 1991-2020, IQAir] Distrito de Guadalupe, provincia de Chepén, La Libertad. Población y cobertura vegetal: estimadas.','Media',22000,6600,22.3,13.1,14.0,50.0,'Tráfico vehicular local y actividad agroindustrial cercana.','[]',0),
+  ('zona-chocope','Chocope (Centro Urbano)','Chocope','La Libertad','[Clima real: WeatherSpark / IQAir] Distrito de Chocope, provincia de Ascope, La Libertad. Población y cobertura vegetal: estimadas.','Media',16000,4800,20.5,12.6,16.0,45.0,'Actividad agroindustrial azucarera y quema periódica de residuos de caña.','[]',0),
+  ('zona-viru','Virú (Centro Urbano)','Virú','La Libertad','[Clima real: WeatherSpark / IQAir] Provincia de Virú, polo agroexportador de La Libertad. Población y cobertura vegetal: estimadas.','Media',38000,11400,20.6,14.2,10.0,52.0,'Tráfico de carga agroexportadora y polvo de vías sin asfaltar.','[]',0),
+  ('zona-pacasmayo','Pacasmayo (Centro Urbano)','Pacasmayo','La Libertad','[Clima real: climate-data.org / IQAir] Ciudad portuaria de Pacasmayo, La Libertad. Población y cobertura vegetal: estimadas.','Media',15000,4500,20.2,12.0,8.0,48.0,'Emisiones portuarias e industria cementera cercana.','[]',0),
+  ('zona-cajamarca','Cajamarca (Centro Histórico)','Cajamarca','Cajamarca','[Clima real: climate-data.org / IQAir] Centro histórico de la ciudad de Cajamarca (~2,750 msnm). Población y cobertura vegetal: estimadas.','Alta',220000,66000,12.8,12.5,18.0,62.0,'Tráfico vehicular urbano en altitud y actividad minera regional cercana.','[]',0),
+  ('zona-chiclayo','Chiclayo (Centro Urbano)','Chiclayo','Lambayeque','[Clima real: climate-data.org / IQAir] Centro urbano de la ciudad de Chiclayo, capital de la región Lambayeque. Población y cobertura vegetal: estimadas.','Alta',310000,93000,21.3,9.2,9.0,68.0,'Alta densidad de tráfico vehicular y comercio informal en el centro urbano.','[]',0)
+on conflict (id) do update set
+  baseline_temp = excluded.baseline_temp, baseline_pm25 = excluded.baseline_pm25,
+  description = excluded.description;
 
 -- 2) SENSORES (6 nodos - coordenadas y calibración reales)
 insert into public.sensor_nodes (id, code, name, zone_id, zone_name, lat, lng, elevation, street_canyon_hw_ratio, canopy_cover_percent, sealed_surface_percent, traffic_density, sensor_type, calibration_status, r2_score_raw, r2_score_calibrated, status, last_reading, last_reading_at)
