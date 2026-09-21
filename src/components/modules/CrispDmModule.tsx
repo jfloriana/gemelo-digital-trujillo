@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useI18n } from '../../context/I18nContext';
+import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation } from '../../types';
 import {
   Target,
   Database,
@@ -10,10 +11,21 @@ import {
   Download,
   RefreshCw,
   ArrowRight,
+  Sparkles,
+  Loader2,
+  Wifi,
+  WifiOff,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface CrispDmModuleProps {
   onExportReports: (format: 'xlsx' | 'pdf' | 'docx' | 'csv') => void;
+  zones: UrbanZone[];
+  sensors: SensorNode[];
+  models: AiModelMetric[];
+  nbs: NbsIntervention[];
+  objectives: ThesisObjectiveEvaluation[];
+  hasSupabase: boolean;
 }
 
 const PHASES = [
@@ -34,13 +46,206 @@ const COLOR: Record<string, { chip: string; ring: string; icon: string; bar: str
   teal: { chip: 'text-teal-700 dark:text-teal-300', ring: 'border-teal-500 ring-teal-500/20 bg-teal-50/80 dark:bg-teal-950/40', icon: 'bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300', bar: 'bg-teal-500' },
 };
 
-export const CrispDmModule: React.FC<CrispDmModuleProps> = ({ onExportReports }) => {
+// Correlacion de Pearson simple — EDA real sobre las lecturas de sensores cargadas.
+function pearson(xs: number[], ys: number[]): number | null {
+  const n = Math.min(xs.length, ys.length);
+  if (n < 3) return null;
+  const mx = xs.reduce((a, b) => a + b, 0) / n;
+  const my = ys.reduce((a, b) => a + b, 0) / n;
+  let num = 0, dx2 = 0, dy2 = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = xs[i] - mx, dy = ys[i] - my;
+    num += dx * dy; dx2 += dx * dx; dy2 += dy * dy;
+  }
+  const den = Math.sqrt(dx2 * dy2);
+  return den === 0 ? null : num / den;
+}
+
+const R2_TARGET = 0.95;
+
+export const CrispDmModule: React.FC<CrispDmModuleProps> = ({ onExportReports, zones, sensors, models, nbs, objectives, hasSupabase }) => {
   const { t } = useI18n();
   const [active, setActive] = useState<number>(1);
+  const [agentReply, setAgentReply] = useState<string | null>(null);
+  const [agentLoading, setAgentLoading] = useState(false);
+  const [agentError, setAgentError] = useState<string | null>(null);
 
   const phase = PHASES.find(p => p.id === active)!;
   const c = COLOR[phase.color];
   const progress = Math.max(0, Math.min(100, parseInt(t(`crispdm.p${active}.progress`), 10) || 0));
+
+  // ---- Estadísticas reales, calculadas a partir de los datos que ya carga el gemelo digital ----
+  const live = useMemo(() => {
+    const totalPop = zones.reduce((s, z) => s + (z.targetPopulation || 0), 0);
+    const avgTemp = zones.length ? zones.reduce((s, z) => s + z.baselineTemp, 0) / zones.length : 0;
+    const avgPm = zones.length ? zones.reduce((s, z) => s + z.baselinePM25, 0) / zones.length : 0;
+    const objDone = objectives.filter(o => o.status === 'Completado' || o.status === 'Validado').length;
+
+    const online = sensors.filter(s => s.status === 'online').length;
+    const warning = sensors.filter(s => s.status === 'warning').length;
+    const offline = sensors.filter(s => s.status === 'offline').length;
+    const dataPoints = sensors.reduce((s, sn) => s + (sn.hourlyHistory?.length || 0), 0);
+    const humidity: number[] = [];
+    const pm25: number[] = [];
+    sensors.forEach(sn => (sn.hourlyHistory || []).forEach(r => { humidity.push(r.humidity); pm25.push(r.pm25); }));
+    const corr = pearson(humidity, pm25);
+
+    const avgR2Raw = sensors.length ? sensors.reduce((s, sn) => s + (sn.r2ScoreRaw || 0), 0) / sensors.length : 0;
+    const avgR2Cal = sensors.length ? sensors.reduce((s, sn) => s + (sn.r2ScoreCalibrated || 0), 0) / sensors.length : 0;
+    const calibratedCount = sensors.filter(s => s.calibrationStatus === 'Calibrado (2-Etapas Zhivkov)').length;
+
+    const bestModel = models.length ? [...models].sort((a, b) => b.r2 - a.r2)[0] : null;
+    const passesTarget = !!bestModel && bestModel.r2 >= R2_TARGET;
+
+    return { totalPop, avgTemp, avgPm, objDone, objTotal: objectives.length, online, warning, offline, dataPoints, corr, avgR2Raw, avgR2Cal, calibratedCount, bestModel, passesTarget };
+  }, [zones, sensors, models, objectives]);
+
+  const askAgent = async () => {
+    if (!live.bestModel) return;
+    setAgentLoading(true);
+    setAgentError(null);
+    setAgentReply(null);
+    const prompt = `Evalua, con los numeros reales de este proyecto, si el modelo predictivo cumple el umbral de la fase de Comprension del Negocio (R^2 >= ${R2_TARGET}). ` +
+      `Mejor modelo: ${live.bestModel.name} (${live.bestModel.architecture}), R^2=${live.bestModel.r2}, RMSE=${live.bestModel.rmse}, MAPE=${live.bestModel.mape}%, inferencia=${live.bestModel.inferenceTimeMs}ms. ` +
+      `Sensores: ${sensors.length} totales, ${live.online} en linea, R^2 promedio calibrado=${live.avgR2Cal.toFixed(3)}. ` +
+      `Zonas cubiertas: ${zones.length}, poblacion total=${live.totalPop}. Da un veredicto breve (2-3 frases) en fase de Evaluacion CRISP-DM.`;
+    try {
+      const r = await fetch('/api/agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: prompt }),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+      setAgentReply(j.reply);
+    } catch (e) {
+      setAgentError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setAgentLoading(false);
+    }
+  };
+
+  const StatCard: React.FC<{ label: string; value: string; icon?: React.ReactNode }> = ({ label, value, icon }) => (
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-xl p-3">
+      <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1">
+        <span>{label}</span>
+        {icon}
+      </div>
+      <div className="text-base font-bold text-slate-900 dark:text-white font-mono">{value}</div>
+    </div>
+  );
+
+  const renderLiveStats = () => {
+    if (active === 1) {
+      return (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+          <StatCard label={t('crispdm.live.zones')} value={String(zones.length)} />
+          <StatCard label={t('crispdm.live.population')} value={live.totalPop.toLocaleString()} />
+          <StatCard label={t('crispdm.live.avgTemp')} value={`${live.avgTemp.toFixed(1)} °C`} />
+          <StatCard label={t('crispdm.live.avgPm')} value={`${live.avgPm.toFixed(1)} µg/m³`} />
+          <StatCard label={t('crispdm.live.objectivesDone')} value={`${live.objDone}/${live.objTotal}`} />
+        </div>
+      );
+    }
+    if (active === 2) {
+      return (
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <StatCard label={t('crispdm.live.sensorsTotal')} value={String(sensors.length)} icon={<Wifi className="w-3.5 h-3.5 text-emerald-500" />} />
+            <StatCard label={t('crispdm.live.sensorsWarning')} value={String(live.warning)} icon={<AlertTriangle className="w-3.5 h-3.5 text-amber-500" />} />
+            <StatCard label={t('crispdm.live.sensorsOffline')} value={String(live.offline)} icon={<WifiOff className="w-3.5 h-3.5 text-rose-500" />} />
+            <StatCard label={t('crispdm.live.dataPoints')} value={live.dataPoints.toLocaleString()} />
+          </div>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-xl p-3">
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1">{t('crispdm.live.correlation')}</div>
+            <div className="text-base font-bold text-slate-900 dark:text-white font-mono">
+              {live.corr === null ? '—' : live.corr.toFixed(3)}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if (active === 3) {
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <StatCard label={t('crispdm.live.r2Raw')} value={live.avgR2Raw.toFixed(3)} />
+          <StatCard label={t('crispdm.live.r2Cal')} value={live.avgR2Cal.toFixed(3)} />
+          <StatCard label={t('crispdm.live.calibrated')} value={`${live.calibratedCount}/${sensors.length}`} />
+        </div>
+      );
+    }
+    if (active === 4) {
+      const sorted = [...models].sort((a, b) => b.r2 - a.r2);
+      return (
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-xl overflow-x-auto">
+          <table className="w-full text-left text-[11px]">
+            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase text-[9px]">
+              <tr>
+                <th className="py-2 px-3">{t('crispdm.live.colModel')}</th>
+                <th className="py-2 px-3">{t('crispdm.live.colR2')}</th>
+                <th className="py-2 px-3">RMSE</th>
+                <th className="py-2 px-3">{t('crispdm.live.colInference')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map(m => (
+                <tr key={m.id} className="border-t border-slate-100 dark:border-slate-800">
+                  <td className="py-2 px-3 font-semibold text-slate-800 dark:text-slate-100">{m.name}</td>
+                  <td className="py-2 px-3 font-mono">{m.r2.toFixed(4)}</td>
+                  <td className="py-2 px-3 font-mono">{m.rmse}</td>
+                  <td className="py-2 px-3 font-mono">{m.inferenceTimeMs} ms</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+    if (active === 5) {
+      return (
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <StatCard label={t('crispdm.live.bestModel')} value={live.bestModel?.name || '—'} />
+            <StatCard label={`${t('crispdm.live.threshold')} (R² ≥ ${R2_TARGET})`} value={live.bestModel ? live.bestModel.r2.toFixed(4) : '—'} />
+            <div className={`rounded-xl p-3 border flex items-center gap-2 text-xs font-semibold ${live.passesTarget ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300' : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300'}`}>
+              {live.passesTarget ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertTriangle className="w-4 h-4 shrink-0" />}
+              {live.passesTarget ? t('crispdm.live.verdictPass') : t('crispdm.live.verdictFail')}
+            </div>
+          </div>
+          <button
+            onClick={askAgent}
+            disabled={agentLoading || !live.bestModel}
+            className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all"
+          >
+            {agentLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+            {t('crispdm.live.evaluateBtn')}
+          </button>
+          {agentLoading && <p className="text-[11px] text-slate-400">{t('crispdm.live.evaluating')}</p>}
+          {agentError && <p className="text-[11px] text-rose-600 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl p-2.5">{agentError}</p>}
+          {agentReply && (
+            <div className="text-xs text-slate-700 dark:text-slate-300 bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-900 rounded-xl p-3 leading-relaxed whitespace-pre-wrap">
+              {agentReply}
+            </div>
+          )}
+        </div>
+      );
+    }
+    // active === 6
+    return (
+      <div className="space-y-2">
+        <div className={`rounded-xl p-3 border flex items-center gap-2 text-xs font-semibold ${hasSupabase ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300' : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300'}`}>
+          {hasSupabase ? <Wifi className="w-4 h-4 shrink-0" /> : <WifiOff className="w-4 h-4 shrink-0" />}
+          {t('crispdm.live.dbStatus')}: {hasSupabase ? t('crispdm.live.dbConnected') : t('crispdm.live.dbFallback')}
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <StatCard label={t('crispdm.live.zones')} value={String(zones.length)} />
+          <StatCard label={t('crispdm.live.sensorsTotal')} value={String(sensors.length)} />
+          <StatCard label={t('crispdm.live.modelsCount')} value={String(models.length)} />
+          <StatCard label={t('crispdm.live.nbsCatalog')} value={String(nbs.length)} />
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -128,6 +333,14 @@ export const CrispDmModule: React.FC<CrispDmModuleProps> = ({ onExportReports })
         </div>
 
         <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{t(`crispdm.p${active}.objective`)}</p>
+
+        {/* Datos en vivo del gemelo digital, calculados a partir de zones/sensors/models reales */}
+        <div className="space-y-2">
+          <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" /> {t('crispdm.live.liveDataTitle')}
+          </h4>
+          {renderLiveStats()}
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200/80 dark:border-slate-700 md:col-span-1">

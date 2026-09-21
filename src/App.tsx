@@ -63,7 +63,7 @@ type ActiveModule =
 function MainAppContent() {
   const { user, isDemo } = useAuth();
   const { t, lang } = useI18n();
-  const { zones: TRUJILLO_ZONES, sensors: SENSOR_NODES, models: AI_MODELS_BENCHMARK, nbs: NBS_CATALOG, objectives: THESIS_OBJECTIVES_DATA } = useSupabaseData();
+  const { zones: TRUJILLO_ZONES, sensors: SENSOR_NODES, models: AI_MODELS_BENCHMARK, nbs: NBS_CATALOG, objectives: THESIS_OBJECTIVES_DATA, hasSupabase: hasSupabaseData } = useSupabaseData();
   const [activeModule, setActiveModule] = useState<ActiveModule>('digital_twin');
   const [selectedZone, setSelectedZone] = useState<UrbanZone>(() => TRUJILLO_ZONES[0]);
   const [isLoginOpen, setIsLoginOpen] = useState<boolean>(false);
@@ -423,7 +423,15 @@ function MainAppContent() {
         {/* VIEW: CRISP-DM Methodology (simulación de proceso de minería de datos) */}
         {activeModule === 'crisp_dm' && (
           <React.Suspense fallback={<ModuleFallback />}>
-            <CrispDmModule onExportReports={handleQuickExport} />
+            <CrispDmModule
+              onExportReports={handleQuickExport}
+              zones={TRUJILLO_ZONES}
+              sensors={SENSOR_NODES}
+              models={AI_MODELS_BENCHMARK}
+              nbs={NBS_CATALOG}
+              objectives={THESIS_OBJECTIVES_DATA}
+              hasSupabase={hasSupabaseData}
+            />
           </React.Suspense>
         )}
 
