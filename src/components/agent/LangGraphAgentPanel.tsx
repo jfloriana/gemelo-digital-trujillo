@@ -56,7 +56,7 @@ export const LangGraphAgentPanel: React.FC = () => {
       {/* Floating toggle — esquina inferior izquierda, no colisiona con AssistantChatbot (derecha) */}
       <button
         onClick={() => setIsOpen(v => !v)}
-        className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-[60] w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-900/20 flex items-center justify-center hover:scale-105 transition-transform cursor-pointer"
+        className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-[60] w-12 h-12 rounded-2xl bg-teal-800 hover:bg-teal-900 text-white shadow-lg shadow-teal-950/20 flex items-center justify-center hover:scale-105 transition-transform cursor-pointer"
         title={t('agent.openBtn')}
       >
         <Network className="w-5 h-5" />
@@ -64,9 +64,9 @@ export const LangGraphAgentPanel: React.FC = () => {
 
       {isOpen && (
         <div className="fixed z-[65] bottom-4 left-4 sm:bottom-6 sm:left-6 w-[calc(100vw-2rem)] sm:w-[420px] h-[560px] max-h-[calc(100vh-2rem)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-          <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 flex items-center justify-between">
+          <div className="bg-teal-800 px-4 py-3 flex items-center justify-between">
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-wider text-indigo-100">{t('agent.badge')}</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-teal-200">{t('agent.badge')}</div>
               <h3 className="text-sm font-bold text-white leading-tight">{t('agent.title')}</h3>
             </div>
             <button onClick={() => setIsOpen(false)} className="text-white/80 hover:text-white cursor-pointer" title={t('agent.close')}>
@@ -82,12 +82,12 @@ export const LangGraphAgentPanel: React.FC = () => {
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed whitespace-pre-wrap ${
                   m.role === 'user'
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-teal-700 text-white'
                     : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700'
                 }`}>
                   {m.content}
                   {m.role === 'assistant' && typeof m.toolStepsUsed === 'number' && m.toolStepsUsed > 0 && (
-                    <div className="mt-1.5 flex items-center gap-1 text-[10px] text-indigo-500 dark:text-indigo-400 font-medium">
+                    <div className="mt-1.5 flex items-center gap-1 text-[10px] text-teal-600 dark:text-teal-400 font-medium">
                       <Wrench className="w-3 h-3" /> {t('agent.toolsUsed').replace('{n}', String(m.toolStepsUsed))}
                     </div>
                   )}
@@ -111,12 +111,12 @@ export const LangGraphAgentPanel: React.FC = () => {
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') send(); }}
               placeholder={t('agent.placeholder')}
-              className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
             />
             <button
               onClick={send}
               disabled={loading || !input.trim()}
-              className="w-9 h-9 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              className="w-9 h-9 rounded-xl bg-teal-700 hover:bg-teal-800 disabled:opacity-40 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
               title={t('agent.send')}
             >
               <Send className="w-4 h-4" />
