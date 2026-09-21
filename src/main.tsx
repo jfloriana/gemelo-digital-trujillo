@@ -56,6 +56,33 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
       // The presence check above documents that we have audited for this pattern.
     }
   } catch {}
+
+  // Recuperación de "chunk viejo": cuando se publica un nuevo deploy, un tab que ya
+  // estaba abierto (o con index.html cacheado) puede pedir un archivo .js con un hash
+  // que ya no existe en el deploy actual. El navegador lo reporta como fallo al
+  // importar un módulo dinámico (React.lazy) y la app queda en blanco. Aquí lo
+  // detectamos y recargamos una sola vez (con una bandera en sessionStorage para no
+  // entrar en bucle si el fallo persiste por otra razón).
+  const CHUNK_ERROR_NEEDLES = [
+    'Failed to fetch dynamically imported module',
+    'error loading dynamically imported module',
+    'Importing a module script failed',
+    'ChunkLoadError',
+  ];
+  const isChunkLoadError = (msg: string) => CHUNK_ERROR_NEEDLES.some((n) => msg.includes(n));
+  const reloadOnceForStaleChunk = () => {
+    const FLAG = 'trujillo_digital_twin_chunk_reload';
+    if (sessionStorage.getItem(FLAG)) return; // ya lo intentamos en esta sesión de pestaña
+    sessionStorage.setItem(FLAG, '1');
+    window.location.reload();
+  };
+  window.addEventListener('error', (event) => {
+    if (event.message && isChunkLoadError(event.message)) reloadOnceForStaleChunk();
+  });
+  window.addEventListener('unhandledrejection', (event) => {
+    const reason = String((event as PromiseRejectionEvent).reason?.message ?? (event as PromiseRejectionEvent).reason ?? '');
+    if (isChunkLoadError(reason)) reloadOnceForStaleChunk();
+  });
 }
 
 createRoot(document.getElementById('root')!).render(
