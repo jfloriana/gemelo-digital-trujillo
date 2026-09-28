@@ -444,6 +444,7 @@ function MainAppContent() {
             <ValidationPolicyModule
               objectives={THESIS_OBJECTIVES_DATA}
               zones={TRUJILLO_ZONES}
+              sensors={SENSOR_NODES}
               onExportReports={handleQuickExport}
             />
           </React.Suspense>

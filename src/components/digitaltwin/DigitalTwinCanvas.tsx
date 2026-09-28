@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useI18n } from '../../context/I18nContext';
 import { SensorNode, UrbanZone, NbsIntervention } from '../../types';
+import { useLiveBaseline } from '../../hooks/useLiveBaseline';
 import { 
   Layers, 
   Wind, 
@@ -58,8 +59,13 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
   const currentTempMitigation = isSimulationActive ? Math.min(4.8, (totalTreesCount * 0.08) + (greenRoofsArea * 0.002) + (greenWallsArea * 0.003) + (permeableArea * 0.001)) : 0;
   const currentPmMitigationPercent = isSimulationActive ? Math.min(36, (totalTreesCount * 0.6) + (greenRoofsArea * 0.015) + (greenWallsArea * 0.02)) : 0;
 
-  const effectiveTemp = Number((zone.baselineTemp - currentTempMitigation).toFixed(1));
-  const effectivePM25 = Number((zone.baselinePM25 * (1 - currentPmMitigationPercent / 100)).toFixed(1));
+  // HUD vivo (Fase B): parte de la última telemetría real cuando existe;
+  // si no, baseline estático de tesis. La mitigación NbS se aplica encima igual.
+  const { data: liveBase } = useLiveBaseline(zone.id, true);
+  const baseTemp = liveBase?.temp ?? zone.baselineTemp;
+  const basePm = liveBase?.pm25 ?? zone.baselinePM25;
+  const effectiveTemp = Number((baseTemp - currentTempMitigation).toFixed(1));
+  const effectivePM25 = Number((basePm * (1 - currentPmMitigationPercent / 100)).toFixed(1));
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -259,7 +265,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
 
       // PM2.5 / PM10 Particle Plumes from Traffic
       if (showParticles) {
-        const particleCount = isSimulationActive ? Math.max(12, Math.round(effectivePM25 * 0.6)) : Math.round(zone.baselinePM25 * 1.4);
+        const particleCount = isSimulationActive ? Math.max(12, Math.round(effectivePM25 * 0.6)) : Math.round(basePm * 1.4);
         for (let p = 0; p < particleCount; p++) {
           const px = ((p * 43) + (tick * 1.2)) % width;
           const py = groundY + 20 + Math.sin(p + tick * 0.04) * 45 - (p % 4) * 15;
@@ -486,6 +492,14 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
           <div className="flex items-center justify-between text-slate-700 dark:text-slate-300 font-semibold pb-1 border-b border-slate-100 dark:border-slate-800">
             <span>{t('canvas.hudTitle')}</span>
             <span className="text-emerald-600 font-mono text-[11px]">{t('canvas.hudSynced')}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] font-semibold">
+            <span className={`w-1.5 h-1.5 rounded-full ${liveBase ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+            <span className="text-slate-500 dark:text-slate-400">
+              {liveBase
+                ? `${t('canvas.liveOn')} · ${t(liveBase.source === 'calibrated' ? 'live.sourceCalibrated' : liveBase.source === 'public_ref' ? 'live.sourcePublic' : 'live.sourceBaseline')}${liveBase.sensor_code ? ` ${liveBase.sensor_code}` : ''}`
+                : t('canvas.liveOff')}
+            </span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 pt-1">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useI18n } from '../../context/I18nContext';
-import { ThesisObjectiveEvaluation, UrbanZone } from '../../types';
+import { ThesisObjectiveEvaluation, UrbanZone, SensorNode, isVirtualSensor } from '../../types';
 import { 
   CheckCircle2, 
   Award, 
@@ -12,18 +12,21 @@ import {
   Scale, 
   Download, 
   Check, 
-  AlertCircle 
+  AlertCircle,
+  Activity
 } from 'lucide-react';
 
 interface ValidationPolicyModuleProps {
   objectives: ThesisObjectiveEvaluation[];
   zones: UrbanZone[];
+  sensors?: SensorNode[];
   onExportReports: (format: 'xlsx' | 'pdf' | 'docx' | 'csv') => void;
 }
 
 export const ValidationPolicyModule: React.FC<ValidationPolicyModuleProps> = ({
   objectives,
   zones,
+  sensors = [],
   onExportReports
 }) => {
   const { t } = useI18n();
@@ -89,6 +92,39 @@ export const ValidationPolicyModule: React.FC<ValidationPolicyModuleProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Cobertura de monitoreo vivo (hardware + referencia pública) */}
+      {(() => {
+        const live = sensors.filter(s => s.lastReading?.timestamp);
+        const hwLive = live.filter(s => !isVirtualSensor(s));
+        const pubLive = live.filter(isVirtualSensor);
+        const zonesHw = new Set(hwLive.map(s => s.zoneId)).size;
+        const zonesPub = new Set(pubLive.map(s => s.zoneId)).size;
+        if (!sensors.length) return null;
+        return (
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-3">
+              <Activity className="w-5 h-5 text-sky-600" />
+              {t('validation.liveTitle')}
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 rounded-xl px-3 py-2.5">
+                <div className="text-slate-500 dark:text-slate-400 font-medium">{t('validation.liveHw')}</div>
+                <div className="text-base font-bold font-mono text-slate-900 dark:text-white">{hwLive.length} {t('validation.liveNodes')} · {zonesHw}/{zones.length} {t('validation.liveZones')}</div>
+              </div>
+              <div className="bg-sky-50/60 dark:bg-sky-950/20 border border-sky-200/70 dark:border-sky-900 rounded-xl px-3 py-2.5">
+                <div className="text-slate-500 dark:text-slate-400 font-medium">{t('validation.livePub')}</div>
+                <div className="text-base font-bold font-mono text-sky-700 dark:text-sky-300">{pubLive.length} {t('validation.liveNodes')} · {zonesPub}/{zones.length} {t('validation.liveZones')}</div>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 rounded-xl px-3 py-2.5">
+                <div className="text-slate-500 dark:text-slate-400 font-medium">{t('validation.liveTotal')}</div>
+                <div className="text-base font-bold font-mono text-slate-900 dark:text-white">{live.length}/{sensors.length} {t('validation.liveNodes')}</div>
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2">{t('validation.liveNote')}</p>
+          </div>
+        );
+      })()}
 
       {/* General Hypothesis Verification Card */}
       <div className="bg-gradient-to-r from-amber-50/70 via-orange-50/50 to-amber-50/70 border border-amber-200/80 rounded-2xl p-6 shadow-sm space-y-4">
