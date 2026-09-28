@@ -17,9 +17,69 @@ import {
   PageNumber
 } from 'docx';
 import saveAs from 'file-saver';
-import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, SimulationScenario } from '../types';
+import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, SimulationScenario, VIRTUAL_SENSOR_TYPE } from '../types';
 
 type ExportLang = 'es' | 'en' | 'zh' | 'de' | 'fr' | 'pt';
+
+// Contraste referencia pública vs nodo calibrado (misma zona, lecturas pareadas).
+// Comparte la lógica del panel IoT para que app y reportes digan lo mismo.
+export interface ContrastRow {
+  refCode: string;
+  hwCode: string;
+  zone: string;
+  n: number;
+  biasTemp: number;
+  rmseTemp: number;
+  rTemp: number | null;
+  biasPm: number;
+  rmsePm: number;
+  source: string;
+}
+
+export function buildContrastRows(sensors: SensorNode[]): ContrastRow[] {
+  const refs = sensors.filter(s => s.sensorType === VIRTUAL_SENSOR_TYPE && (s.hourlyHistory?.length ?? 0) >= 1);
+  const rows: ContrastRow[] = [];
+  for (const ref of refs) {
+    const hwCandidates = sensors.filter(s => s.sensorType !== VIRTUAL_SENSOR_TYPE && s.zoneId === ref.zoneId && (s.hourlyHistory?.length ?? 0) >= 1);
+    if (!hwCandidates.length) continue;
+    const hw = hwCandidates[0];
+    const refMap = new Map((ref.hourlyHistory || []).map(r => [r.timestamp, r]));
+    let pairs = (hw.hourlyHistory || []).flatMap(h => {
+      const r = refMap.get(h.timestamp);
+      return r ? [{ hwT: h.temperature, refT: r.temperature, hwP: h.pm25, refP: r.pm25 }] : [];
+    });
+    if (pairs.length < 3) {
+      const a = (hw.hourlyHistory || []).slice(-12);
+      const b = (ref.hourlyHistory || []).slice(-12);
+      const n = Math.min(a.length, b.length);
+      pairs = n >= 3 ? Array.from({ length: n }, (_, i) => ({
+        hwT: a[a.length - n + i].temperature, refT: b[b.length - n + i].temperature,
+        hwP: a[a.length - n + i].pm25, refP: b[b.length - n + i].pm25,
+      })) : [];
+    }
+    if (pairs.length < 3) continue;
+    const stat = (get: (p: typeof pairs[number]) => { hw: number; ref: number }) => {
+      const d = pairs.map(p => { const v = get(p); return v.ref - v.hw; });
+      const bias = d.reduce((x, y) => x + y, 0) / d.length;
+      const rmse = Math.sqrt(d.reduce((x, y) => x + y * y, 0) / d.length);
+      return { bias, rmse };
+    };
+    const t = stat(p => ({ hw: p.hwT, ref: p.refT }));
+    const pm = stat(p => ({ hw: p.hwP, ref: p.refP }));
+    const n = pairs.length;
+    const mx = pairs.reduce((s, p) => s + p.hwT, 0) / n;
+    const my = pairs.reduce((s, p) => s + p.refT, 0) / n;
+    let num = 0, dx = 0, dy = 0;
+    for (const p of pairs) { num += (p.hwT - mx) * (p.refT - my); dx += (p.hwT - mx) ** 2; dy += (p.refT - my) ** 2; }
+    rows.push({
+      refCode: ref.code, hwCode: hw.code, zone: ref.zoneName, n,
+      biasTemp: t.bias, rmseTemp: t.rmse, rTemp: dx && dy ? num / Math.sqrt(dx * dy) : null,
+      biasPm: pm.bias, rmsePm: pm.rmse,
+      source: ref.code.includes('OPENAQ') ? 'OpenAQ v3 (CC-BY 4.0)' : 'Open-Meteo (CC-BY 4.0)',
+    });
+  }
+  return rows;
+}
 const exT = (lang: ExportLang) => {
   const d: Record<ExportLang, any> = {
     es: {
@@ -35,7 +95,8 @@ const exT = (lang: ExportLang) => {
       mh: ['Modelo IA / Arquitectura', 'Autor de Referencia', 'Año', 'R² Score', 'RMSE', 'MAE', 'MAPE (%)', 'Tiempo Entrenamiento (s)', 'Inferencia (ms)', 'Resolución Espacial', 'Estado', 'Variables de Entrada (Features)'],
       nh: ['Nombre de la Intervención NbS', 'Tipo', 'Especies de Flora Recomendadas', 'Costo Unitario (S/.)', 'Mantenimiento Anual (S/.)', 'Enfriamiento Térmico (°C)', 'Reducción PM2.5 (%)', 'Retención Hídrica (L/m²)', 'Captura CO2 (kg/año)', 'Atenuación Acústica (dB)'],
       oh: ['Objetivo', 'Título del Objetivo', 'Progreso (%)', 'Estado', 'Métrica Evaluada', 'Meta', 'Logrado', 'Cumplimiento'],
-      w1: 'Resumen_Zonas', w2: 'Telemetria_Sensores', w3: 'Modelos_ML', w4: 'Catalogo_NbS', w5: 'Validacion_Objetivos', w6: 'Escenario_Simulado',
+      ch: ['Ref. pública', 'Nodo calibrado', 'Zona', 'Pares (n)', 'Sesgo Temp (°C)', 'RMSE Temp (°C)', 'r Temp', 'Sesgo PM2.5 (µg/m³)', 'RMSE PM2.5 (µg/m³)', 'Fuente'],
+      w1: 'Resumen_Zonas', w2: 'Telemetria_Sensores', w3: 'Modelos_ML', w4: 'Catalogo_NbS', w5: 'Validacion_Objetivos', w6: 'Escenario_Simulado', w7: 'Contraste_OE1',
       file: 'Reporte_Gemelo_Digital_Trujillo',
       pdfTitle: 'GEMELO DIGITAL DE CALIDAD DEL AIRE A MICROESCALA Y NbS',
       pdfSub: 'CASO DE ESTUDIO: TRUJILLO, PERÚ | REPORTE DE PREDICCIÓN ML Y SIMULACIÓN NbS',
@@ -53,7 +114,8 @@ const exT = (lang: ExportLang) => {
       mh: ['AI Model / Architecture', 'Reference Author', 'Year', 'R² Score', 'RMSE', 'MAE', 'MAPE (%)', 'Training Time (s)', 'Inference (ms)', 'Spatial Resolution', 'Status', 'Input Features'],
       nh: ['NbS Intervention Name', 'Type', 'Recommended Flora Species', 'Unit Cost (PEN)', 'Annual Maintenance (PEN)', 'Thermal Cooling (°C)', 'PM2.5 Reduction (%)', 'Water Retention (L/m²)', 'CO2 Capture (kg/year)', 'Acoustic Attenuation (dB)'],
       oh: ['Objective', 'Objective Title', 'Progress (%)', 'Status', 'Evaluated Metric', 'Target', 'Achieved', 'Compliance'],
-      w1: 'Zones_Summary', w2: 'Sensors_Telemetry', w3: 'ML_Models', w4: 'NbS_Catalog', w5: 'Objectives_Validation', w6: 'Simulated_Scenario',
+      ch: ['Public ref.', 'Calibrated node', 'Zone', 'Pairs (n)', 'Temp bias (°C)', 'Temp RMSE (°C)', 'r Temp', 'PM2.5 bias (µg/m³)', 'PM2.5 RMSE (µg/m³)', 'Source'],
+      w1: 'Zones_Summary', w2: 'Sensors_Telemetry', w3: 'ML_Models', w4: 'NbS_Catalog', w5: 'Objectives_Validation', w6: 'Simulated_Scenario', w7: 'Contrast_OE1',
       file: 'Trujillo_Digital_Twin_Report',
       pdfTitle: 'MICRO-SCALE AIR QUALITY DIGITAL TWIN AND NbS',
       pdfSub: 'CASE STUDY: TRUJILLO, PERU | ML PREDICTION AND NbS SIMULATION REPORT',
@@ -71,7 +133,8 @@ const exT = (lang: ExportLang) => {
       mh: ['AI 模型 / 架构', '参考文献作者', '年份', 'R² 分数', 'RMSE', 'MAE', 'MAPE (%)', '训练时间 (s)', '推理 (ms)', '空间分辨率', '状态', '输入特征'],
       nh: ['NbS 干预名称', '类型', '推荐植物种类', '单位成本 (PEN)', '年度维护 (PEN)', '热冷却 (°C)', 'PM2.5 减少 (%)', '保水 (L/m²)', 'CO2 捕获 (kg/年)', '声学衰减 (dB)'],
       oh: ['目标', '目标标题', '进度 (%)', '状态', '评估指标', '目标', '已达成', '合规性'],
-      w1: '区域摘要', w2: '传感器遥测', w3: 'ML模型', w4: 'NbS目录', w5: '目标验证', w6: '模拟场景',
+      ch: ['公共参考', '校准节点', '区域', '配对数', '温度偏差 (°C)', '温度RMSE (°C)', '温度r', 'PM2.5偏差', 'PM2.5 RMSE', '来源'],
+      w1: '区域摘要', w2: '传感器遥测', w3: 'ML模型', w4: 'NbS目录', w5: '目标验证', w6: '模拟场景', w7: '对比_OE1',
       file: '特鲁希略_数字孪生_报告',
       pdfTitle: '微尺度空气质量数字孪生与基于自然的解决方案',
       pdfSub: '案例研究：秘鲁特鲁希略 | ML 预测与 NbS 模拟报告',
@@ -89,7 +152,8 @@ const exT = (lang: ExportLang) => {
       mh: ['KI-Modell / Architektur', 'Referenzautor', 'Jahr', 'R² Wert', 'RMSE', 'MAE', 'MAPE (%)', 'Trainingszeit (s)', 'Inferenz (ms)', 'Räumliche Auflösung', 'Status', 'Eingabemerkmale'],
       nh: ['NbS-Interventionsname', 'Typ', 'Empfohlene Flora', 'Stückkosten (PEN)', 'Jährliche Wartung (PEN)', 'Kühlung (°C)', 'PM2.5 Reduktion (%)', 'Wasserrückhalt (L/m²)', 'CO2-Bindung (kg/Jahr)', 'Schalldämpfung (dB)'],
       oh: ['Ziel', 'Zieltitel', 'Fortschritt (%)', 'Status', 'Bewertete Metrik', 'Ziel', 'Erreicht', 'Konformität'],
-      w1: 'Zonen_Zusammenfassung', w2: 'Sensoren_Telemetrie', w3: 'ML_Modelle', w4: 'NbS_Katalog', w5: 'Ziele_Validierung', w6: 'Simuliertes_Szenario',
+      ch: ['Öff. Referenz', 'Kalibr. Knoten', 'Zone', 'Paare (n)', 'Temp-Bias (°C)', 'Temp-RMSE (°C)', 'r Temp', 'PM2.5-Bias', 'PM2.5-RMSE', 'Quelle'],
+      w1: 'Zonen_Zusammenfassung', w2: 'Sensoren_Telemetrie', w3: 'ML_Modelle', w4: 'NbS_Katalog', w5: 'Ziele_Validierung', w6: 'Simuliertes_Szenario', w7: 'Abgleich_OE1',
       file: 'Trujillo_Digitaler_Zwilling_Bericht',
       pdfTitle: 'MIKROSKALIGER DIGITALER ZWILLING DER LUFTQUALITÄT UND NBS',
       pdfSub: 'FALLSTUDIE: TRUJILLO, PERU | ML-VORHERSAGE UND NBS-SIMULATIONSBERICHT',
@@ -107,7 +171,8 @@ const exT = (lang: ExportLang) => {
       mh: ['Modèle IA / Architecture', 'Auteur Référence', 'Année', 'Score R²', 'RMSE', 'MAE', 'MAPE (%)', 'Temps Entraînement (s)', 'Inférence (ms)', 'Résolution Spatiale', 'Statut', 'Variables Entrée'],
       nh: ['Nom Intervention NbS', 'Type', 'Flore Recommandée', 'Coût Unitaire (PEN)', 'Maintenance Annuelle (PEN)', 'Refroidissement (°C)', 'Réduction PM2.5 (%)', 'Rétention Eau (L/m²)', 'Capture CO2 (kg/an)', 'Atténuation Acoustique (dB)'],
       oh: ['Objectif', 'Titre Objectif', 'Progrès (%)', 'Statut', 'Métrique Évaluée', 'Cible', 'Atteint', 'Conformité'],
-      w1: 'Résumé_Zones', w2: 'Télémétrie_Capteurs', w3: 'Modèles_ML', w4: 'Catalogue_NbS', w5: 'Validation_Objectifs', w6: 'Scénario_Simulé',
+      ch: ['Réf. publique', 'Nœud étalonné', 'Zone', 'Paires (n)', 'Biais Temp (°C)', 'RMSE Temp (°C)', 'r Temp', 'Biais PM2.5', 'RMSE PM2.5', 'Source'],
+      w1: 'Résumé_Zones', w2: 'Télémétrie_Capteurs', w3: 'Modèles_ML', w4: 'Catalogue_NbS', w5: 'Validation_Objectifs', w6: 'Scénario_Simulé', w7: 'Contraste_OE1',
       file: 'Rapport_Jumeau_Numérique_Trujillo',
       pdfTitle: 'JUMEAU NUMÉRIQUE DE LA QUALITÉ DE L’AIR À MICRO-ÉCHELLE ET NBS',
       pdfSub: 'ÉTUDE DE CAS : TRUJILLO, PÉROU | RAPPORT DE PRÉDICTION ML ET SIMULATION NBS',
@@ -125,7 +190,8 @@ const exT = (lang: ExportLang) => {
       mh: ['Modelo IA / Arquitetura', 'Autor Referência', 'Ano', 'Score R²', 'RMSE', 'MAE', 'MAPE (%)', 'Tempo Treino (s)', 'Inferência (ms)', 'Resolução Espacial', 'Status', 'Variáveis Entrada'],
       nh: ['Nome Intervenção NbS', 'Tipo', 'Flora Recomendada', 'Custo Unitário (PEN)', 'Manutenção Anual (PEN)', 'Resfriamento (°C)', 'Redução PM2.5 (%)', 'Retenção Hídrica (L/m²)', 'Captura CO2 (kg/ano)', 'Atenuação Acústica (dB)'],
       oh: ['Objetivo', 'Título Objetivo', 'Progresso (%)', 'Status', 'Métrica Avaliada', 'Meta', 'Atingido', 'Conformidade'],
-      w1: 'Resumo_Zonas', w2: 'Telemetria_Sensores', w3: 'Modelos_ML', w4: 'Catálogo_NbS', w5: 'Validação_Objetivos', w6: 'Cenário_Simulado',
+      ch: ['Ref. pública', 'Nó calibrado', 'Zona', 'Pares (n)', 'Viés Temp (°C)', 'RMSE Temp (°C)', 'r Temp', 'Viés PM2.5', 'RMSE PM2.5', 'Fonte'],
+      w1: 'Resumo_Zonas', w2: 'Telemetria_Sensores', w3: 'Modelos_ML', w4: 'Catálogo_NbS', w5: 'Validação_Objetivos', w6: 'Cenário_Simulado', w7: 'Contraste_OE1',
       file: 'Relatório_Gêmeo_Digital_Trujillo',
       pdfTitle: 'GÊMEO DIGITAL DE QUALIDADE DO AR EM MICROESCALA E NBS',
       pdfSub: 'ESTUDO DE CASO: TRUJILLO, PERU | RELATÓRIO DE PREDIÇÃO ML E SIMULAÇÃO NBS',
@@ -210,6 +276,26 @@ export const exportToExcel = (
 
   const wsSensors = XLSX.utils.aoa_to_sheet(sensorsData);
   XLSX.utils.book_append_sheet(wb, wsSensors, tr.w2);
+
+  // Sheet 2b: Contraste referencia pública vs nodo calibrado (validación OE1)
+  const contrastRows = buildContrastRows(sensors);
+  const contrastData = [tr.ch];
+  contrastRows.forEach(r => {
+    contrastData.push([
+      r.refCode,
+      r.hwCode,
+      r.zone,
+      String(r.n),
+      r.biasTemp.toFixed(2),
+      r.rmseTemp.toFixed(2),
+      r.rTemp == null ? '—' : r.rTemp.toFixed(3),
+      r.biasPm.toFixed(2),
+      r.rmsePm.toFixed(2),
+      r.source,
+    ]);
+  });
+  const wsContrast = XLSX.utils.aoa_to_sheet(contrastData);
+  XLSX.utils.book_append_sheet(wb, wsContrast, tr.w7);
 
   // Sheet 3: Comparativa de Modelos Machine Learning y Deep Learning
   const modelsData = [tr.mh];
@@ -390,6 +476,7 @@ export const exportToPDF = (
       mFramework: 'Marco Teórico:',
       s1: '1. Diagnóstico de Microescala en Trujillo (OE1)',
       s2: '2. Telemetría de Sensores IoT y Calibración 2-Etapas Zhivkov et al. (OE2)',
+      s2b: '2b. Contraste con Referencia Pública Abierta — Open-Meteo / OpenAQ (OE1)',
       s3: '3. Desempeño Comparativo de Modelos Machine Learning & Deep Learning (OE3)',
       p2banner: 'SIMULACIÓN DE ESCENARIOS NbS Y CONFORT TÉRMICO GREENPASS®',
       s4: '4. Catálogo de Soluciones Basadas en la Naturaleza Adaptadas a Trujillo (OE4)',
@@ -397,6 +484,7 @@ export const exportToPDF = (
       s6: '6. Validación de Hipótesis y Cumplimiento de Tesis (OE5)',
       thZones: ['Zona Urbana', 'Distrito', 'Vulnerab.', 'Temp Base', 'PM2.5 Base', 'Arbolado', 'Pob. Vulnerable'],
       thSensors: ['Código', 'Zona', 'Sensor', 'Calib.', 'Temp', 'PM2.5', 'Δ UHI', 'PET', 'Categoría AQI'],
+      thContrast: ['Ref.', 'Nodo HW', 'n', 'Sesgo T (°C)', 'RMSE T', 'r', 'Sesgo PM', 'RMSE PM'],
       thModels: ['Modelo', 'Autor Ref.', 'R² Score', 'RMSE', 'MAPE', 'Inferencia', 'Resolución', 'Estado'],
       thNbs: ['Intervención NbS', 'Enfriamiento', 'Reducción PM2.5', 'Costo Unit.', 'Captura CO2', 'Flora Local Trujillo'],
       thSim: ['Parámetro / Métrica', 'Resultado del Modelo de Gemelo Digital'],
@@ -412,6 +500,7 @@ export const exportToPDF = (
       mFramework: 'Theoretical Framework:',
       s1: '1. Micro-scale Diagnosis in Trujillo (OE1)',
       s2: '2. IoT Sensor Telemetry and 2-Stage Zhivkov et al. Calibration (OE2)',
+      s2b: '2b. Contrast with Open Public Reference — Open-Meteo / OpenAQ (OE1)',
       s3: '3. Comparative Performance of Machine Learning & Deep Learning Models (OE3)',
       p2banner: 'NbS SCENARIO SIMULATION AND GREENPASS® THERMAL COMFORT',
       s4: '4. Catalog of Nature-Based Solutions Adapted to Trujillo (OE4)',
@@ -419,6 +508,7 @@ export const exportToPDF = (
       s6: '6. Hypothesis Validation and Thesis Compliance (OE5)',
       thZones: ['Urban Zone', 'District', 'Vulnerab.', 'Base Temp', 'Base PM2.5', 'Tree Cover', 'Vulnerable Pop.'],
       thSensors: ['Code', 'Zone', 'Sensor', 'Calib.', 'Temp', 'PM2.5', 'Δ UHI', 'PET', 'AQI Category'],
+      thContrast: ['Ref.', 'HW node', 'n', 'T bias (°C)', 'T RMSE', 'r', 'PM bias', 'PM RMSE'],
       thModels: ['Model', 'Ref. Author', 'R² Score', 'RMSE', 'MAPE', 'Inference', 'Resolution', 'Status'],
       thNbs: ['NbS Intervention', 'Cooling', 'PM2.5 Reduction', 'Unit Cost', 'CO2 Capture', 'Local Trujillo Flora'],
       thSim: ['Parameter / Metric', 'Digital Twin Model Result'],
@@ -434,6 +524,7 @@ export const exportToPDF = (
       mFramework: '理论框架：',
       s1: '1. 特鲁希略微尺度诊断 (OE1)',
       s2: '2. 物联网传感器遥测与 Zhivkov 等两阶段校准 (OE2)',
+      s2b: '2b. 与开放公共参考的对比 — Open-Meteo / OpenAQ (OE1)',
       s3: '3. 机器学习与深度学习模型的性能比较 (OE3)',
       p2banner: 'NbS 情景模拟与 GREENPASS® 热舒适度',
       s4: '4. 适用于特鲁希略的基于自然的解决方案目录 (OE4)',
@@ -441,6 +532,7 @@ export const exportToPDF = (
       s6: '6. 假设验证与论文达成情况 (OE5)',
       thZones: ['城市区域', '区', '脆弱性', '基准温度', '基准 PM2.5', '绿化', '脆弱人口'],
       thSensors: ['代码', '区域', '传感器', '校准', '温度', 'PM2.5', 'Δ UHI', 'PET', 'AQI 类别'],
+      thContrast: ['参考', '硬件节点', 'n', '温度偏差', '温度RMSE', 'r', 'PM偏差', 'PM RMSE'],
       thModels: ['模型', '参考作者', 'R² 分数', 'RMSE', 'MAPE', '推理', '分辨率', '状态'],
       thNbs: ['NbS 干预', '降温', 'PM2.5 减少', '单位成本', 'CO2 捕获', '特鲁希略本地植物'],
       thSim: ['参数 / 指标', '数字孪生模型结果'],
@@ -456,6 +548,7 @@ export const exportToPDF = (
       mFramework: 'Theoretischer Rahmen:',
       s1: '1. Mikroskalige Diagnose in Trujillo (OE1)',
       s2: '2. IoT-Sensortelemetrie und zweistufige Kalibrierung nach Zhivkov et al. (OE2)',
+      s2b: '2b. Abgleich mit offener öffentlicher Referenz — Open-Meteo / OpenAQ (OE1)',
       s3: '3. Vergleichende Leistung von Machine-Learning- & Deep-Learning-Modellen (OE3)',
       p2banner: 'NBS-SZENARIOSIMULATION UND THERMISCHER KOMFORT GREENPASS®',
       s4: '4. Katalog naturbasierter Lösungen angepasst an Trujillo (OE4)',
@@ -463,6 +556,7 @@ export const exportToPDF = (
       s6: '6. Hypothesenvalidierung und Erfüllung der Thesis (OE5)',
       thZones: ['Stadtzone', 'Bezirk', 'Vulnerab.', 'Basis-Temp', 'Basis-PM2.5', 'Baumbestand', 'Vulnerable Bev.'],
       thSensors: ['Code', 'Zone', 'Sensor', 'Kalib.', 'Temp', 'PM2.5', 'Δ UHI', 'PET', 'AQI-Kategorie'],
+      thContrast: ['Ref.', 'HW-Knoten', 'n', 'T-Bias (°C)', 'T-RMSE', 'r', 'PM-Bias', 'PM-RMSE'],
       thModels: ['Modell', 'Ref.-Autor', 'R² Wert', 'RMSE', 'MAPE', 'Inferenz', 'Auflösung', 'Status'],
       thNbs: ['NbS-Intervention', 'Kühlung', 'PM2.5-Reduktion', 'Stückkosten', 'CO2-Bindung', 'Lokale Flora Trujillo'],
       thSim: ['Parameter / Metrik', 'Ergebnis des digitalen Zwillingsmodells'],
@@ -478,6 +572,7 @@ export const exportToPDF = (
       mFramework: 'Cadre théorique :',
       s1: '1. Diagnostic à micro-échelle à Trujillo (OE1)',
       s2: '2. Télémétrie des capteurs IoT et étalonnage en 2 étapes de Zhivkov et al. (OE2)',
+      s2b: '2b. Contraste avec la référence publique ouverte — Open-Meteo / OpenAQ (OE1)',
       s3: '3. Performance comparative des modèles Machine Learning & Deep Learning (OE3)',
       p2banner: 'SIMULATION DE SCÉNARIOS NBS ET CONFORT THERMIQUE GREENPASS®',
       s4: '4. Catalogue de solutions fondées sur la nature adaptées à Trujillo (OE4)',
@@ -485,6 +580,7 @@ export const exportToPDF = (
       s6: '6. Validation des hypothèses et conformité de la thèse (OE5)',
       thZones: ['Zone urbaine', 'District', 'Vulnérab.', 'Temp base', 'PM2.5 base', 'Arbres', 'Pop. vulnérable'],
       thSensors: ['Code', 'Zone', 'Capteur', 'Étal.', 'Temp', 'PM2.5', 'Δ UHI', 'PET', 'Catégorie AQI'],
+      thContrast: ['Réf.', 'Nœud HW', 'n', 'Biais T (°C)', 'RMSE T', 'r', 'Biais PM', 'RMSE PM'],
       thModels: ['Modèle', 'Auteur réf.', 'Score R²', 'RMSE', 'MAPE', 'Inférence', 'Résolution', 'Statut'],
       thNbs: ['Intervention NbS', 'Refroidissement', 'Réduction PM2.5', 'Coût unit.', 'Capture CO2', 'Flore locale Trujillo'],
       thSim: ['Paramètre / Métrique', 'Résultat du modèle de jumeau numérique'],
@@ -500,6 +596,7 @@ export const exportToPDF = (
       mFramework: 'Marco Teórico:',
       s1: '1. Diagnóstico de Microescala em Trujillo (OE1)',
       s2: '2. Telemetria de Sensores IoT e Calibração em 2 Etapas de Zhivkov et al. (OE2)',
+      s2b: '2b. Contraste com Referência Pública Aberta — Open-Meteo / OpenAQ (OE1)',
       s3: '3. Desempenho Comparativo de Modelos Machine Learning & Deep Learning (OE3)',
       p2banner: 'SIMULAÇÃO DE CENÁRIOS NbS E CONFORTO TÉRMICO GREENPASS®',
       s4: '4. Catálogo de Soluções Baseadas na Natureza Adaptadas a Trujillo (OE4)',
@@ -507,6 +604,7 @@ export const exportToPDF = (
       s6: '6. Validação de Hipóteses e Cumprimento da Tese (OE5)',
       thZones: ['Zona Urbana', 'Distrito', 'Vulnerab.', 'Temp Base', 'PM2.5 Base', 'Arborização', 'Pop. Vulnerável'],
       thSensors: ['Código', 'Zona', 'Sensor', 'Calib.', 'Temp', 'PM2.5', 'Δ UHI', 'PET', 'Categoria AQI'],
+      thContrast: ['Ref.', 'Nó HW', 'n', 'Viés T (°C)', 'RMSE T', 'r', 'Viés PM', 'RMSE PM'],
       thModels: ['Modelo', 'Autor Ref.', 'Score R²', 'RMSE', 'MAPE', 'Inferência', 'Resolução', 'Status'],
       thNbs: ['Intervenção NbS', 'Resfriamento', 'Redução PM2.5', 'Custo Unit.', 'Captura CO2', 'Flora Local Trujillo'],
       thSim: ['Parâmetro / Métrica', 'Resultado do Modelo de Gêmeo Digital'],
@@ -602,6 +700,39 @@ export const exportToPDF = (
     headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
     styles: { fontSize: 7, cellPadding: 1.8 }
   });
+
+  // Section 2b: Contraste con referencia pública abierta (validación OE1)
+  currentY = (doc as any).lastAutoTable.finalY + 6;
+  doc.setFontSize(10.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...primaryColor);
+  doc.text(PL.s2b, 14, currentY);
+
+  const contrastTableRows = buildContrastRows(sensors).map(r => [
+    r.refCode,
+    r.hwCode,
+    String(r.n),
+    `${r.biasTemp >= 0 ? '+' : ''}${r.biasTemp.toFixed(2)}`,
+    r.rmseTemp.toFixed(2),
+    r.rTemp == null ? '—' : r.rTemp.toFixed(3),
+    `${r.biasPm >= 0 ? '+' : ''}${r.biasPm.toFixed(2)}`,
+    r.rmsePm.toFixed(2),
+  ]);
+
+  autoTable(doc, {
+    startY: currentY + 3,
+    head: [PL.thContrast],
+    body: contrastTableRows.length ? contrastTableRows : [['—', '—', '0', '—', '—', '—', '—', '—']],
+    theme: 'grid',
+    headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+    styles: { fontSize: 7, cellPadding: 1.8 }
+  });
+
+  currentY = (doc as any).lastAutoTable.finalY + 3;
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'italic');
+  doc.setTextColor(...darkTextColor);
+  doc.text('Fuentes abiertas: Open-Meteo (CC-BY 4.0) y OpenAQ v3 (CC-BY 4.0). La referencia no pasa por la calibración 2-etapas; solo contraste, no validación de modelos.', 14, currentY, { maxWidth: 182 });
 
   // Section 3: Modelos IA
   currentY = (doc as any).lastAutoTable.finalY + 6;

@@ -25,7 +25,8 @@ import {
   Copy,
   Clock,
   Sparkles,
-  Globe
+  Globe,
+  Scale
 } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 
@@ -35,6 +36,171 @@ interface IoTIntegrationModuleProps {
   onSensorUpdate: (updatedSensors: SensorNode[]) => void;
   onExportReports: (format: 'xlsx' | 'pdf' | 'docx' | 'csv') => void;
 }
+
+function pearsonLocal(xs: number[], ys: number[]): number | null {
+  const n = Math.min(xs.length, ys.length);
+  if (n < 3) return null;
+  const mx = xs.slice(0, n).reduce((a, b) => a + b, 0) / n;
+  const my = ys.slice(0, n).reduce((a, b) => a + b, 0) / n;
+  let num = 0, dx = 0, dy = 0;
+  for (let i = 0; i < n; i++) {
+    num += (xs[i] - mx) * (ys[i] - my);
+    dx += (xs[i] - mx) ** 2;
+    dy += (ys[i] - my) ** 2;
+  }
+  if (!dx || !dy) return null;
+  return num / Math.sqrt(dx * dy);
+}
+
+// Compara un nodo virtual de referencia pública con un nodo calibrado de la
+// MISMA zona, en lecturas pareadas por hora. Evidencia viva para OE1/OE3.
+const ContrastPanel: React.FC<{ publicSensors: SensorNode[]; hardwareSensors: SensorNode[] }> = ({
+  publicSensors,
+  hardwareSensors,
+}) => {
+  const { t } = useI18n();
+  const [refId, setRefId] = useState<string>(publicSensors[0]?.id ?? '');
+  const [hwId, setHwId] = useState<string>('');
+  const [metric, setMetric] = useState<'temperature' | 'pm25'>('temperature');
+
+  const ref = publicSensors.find(s => s.id === refId) ?? publicSensors[0];
+  const hwOptions = ref ? hardwareSensors.filter(s => s.zoneId === ref.zoneId) : [];
+  const hw = hwOptions.find(s => s.id === hwId) ?? hwOptions[0];
+  if (!ref || !hw) return null;
+
+  const paired = (() => {
+    const refMap = new Map((ref.hourlyHistory || []).map(r => [r.timestamp, r[metric]]));
+    let pts = (hw.hourlyHistory || []).flatMap(h => {
+      const v = refMap.get(h.timestamp);
+      return v != null && Number.isFinite(h[metric])
+        ? [{ t: h.timestamp, hw: h[metric] as number, ref: v as number }]
+        : [];
+    });
+    let byIndex = false;
+    if (pts.length < 3) {
+      const a = (hw.hourlyHistory || []).slice(-12);
+      const b = (ref.hourlyHistory || []).slice(-12);
+      const n = Math.min(a.length, b.length);
+      if (n >= 3) {
+        pts = Array.from({ length: n }, (_, i) => ({
+          t: a[a.length - n + i].timestamp,
+          hw: a[a.length - n + i][metric] as number,
+          ref: b[b.length - n + i][metric] as number,
+        }));
+        byIndex = true;
+      } else {
+        pts = [];
+      }
+    }
+    return { points: pts, byIndex };
+  })();
+
+  const stats = (() => {
+    if (paired.points.length < 3) return null;
+    const diffs = paired.points.map(p => p.ref - p.hw);
+    const bias = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+    const rmse = Math.sqrt(diffs.reduce((a, b) => a + b * b, 0) / diffs.length);
+    return {
+      n: paired.points.length,
+      bias,
+      rmse,
+      r: pearsonLocal(paired.points.map(p => p.hw), paired.points.map(p => p.ref)),
+    };
+  })();
+
+  const unit = metric === 'temperature' ? '°C' : 'µg/m³';
+
+  return (
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 space-y-4 shadow-sm">
+      <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <Scale className="w-5 h-5 text-teal-600" />
+          {t('iot.contrastTitle')}
+        </h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          {t('iot.contrastDesc')}
+        </p>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <label className="space-y-1">
+          <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">{t('iot.contrastRef')}</span>
+          <select
+            value={ref.id}
+            onChange={e => { setRefId(e.target.value); setHwId(''); }}
+            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs"
+          >
+            {publicSensors.map(s => <option key={s.id} value={s.id}>{s.code}</option>)}
+          </select>
+        </label>
+        <label className="space-y-1">
+          <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">{t('iot.contrastHw')}</span>
+          <select
+            value={hw.id}
+            onChange={e => setHwId(e.target.value)}
+            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs"
+          >
+            {hwOptions.map(s => <option key={s.id} value={s.id}>{s.code} — {s.zoneName}</option>)}
+          </select>
+        </label>
+        <div className="space-y-1">
+          <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Métrica</span>
+          <div className="flex gap-1.5">
+            {(['temperature', 'pm25'] as const).map(mk => (
+              <button
+                key={mk}
+                onClick={() => setMetric(mk)}
+                className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  metric === mk
+                    ? 'bg-teal-700 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                {mk === 'temperature' ? t('agent.chartTemp') : t('agent.chartPm')}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {!stats ? (
+        <p className="text-[11px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-xl p-3">
+          {t('iot.contrastNoData')}
+        </p>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {[
+              { label: `${stats.n} ${t('iot.contrastPairs')}`, value: `${hw.code} ↔ ${ref.code}` },
+              { label: t('iot.contrastBias'), value: `${stats.bias >= 0 ? '+' : ''}${stats.bias.toFixed(2)} ${unit}` },
+              { label: t('iot.contrastRmse'), value: `${stats.rmse.toFixed(2)} ${unit}` },
+              { label: t('iot.contrastCorr'), value: stats.r == null ? '—' : `r = ${stats.r.toFixed(3)}` },
+            ].map((s, i) => (
+              <div key={i} className="bg-slate-50 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 rounded-xl px-3 py-2">
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{s.label}</div>
+                <div className="text-xs font-bold text-slate-900 dark:text-white font-mono">{s.value}</div>
+              </div>
+            ))}
+          </div>
+          {paired.byIndex && (
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">{t('iot.contrastAligned')}</p>
+          )}
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={paired.points} margin={{ top: 4, right: 8, left: -14, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="t" tick={{ fontSize: 9 }} minTickGap={24} />
+              <YAxis tick={{ fontSize: 9 }} domain={['auto', 'auto']} />
+              <Tooltip formatter={(v: unknown) => [`${v} ${unit}`, '']} />
+              <Legend wrapperStyle={{ fontSize: 10 }} />
+              <Line type="monotone" dataKey="hw" name={`${hw.code}`} stroke="#0d9488" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="ref" name={`${ref.code} (ref)`} stroke="#38bdf8" strokeWidth={2} strokeDasharray="5 4" dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </>
+      )}
+    </div>
+  );
+};
 
 export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
   sensors,
@@ -713,6 +879,9 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
           </div>
         </div>
       )}
+
+      {/* Contraste referencia pública vs nodo calibrado (validación OE1) */}
+      <ContrastPanel publicSensors={publicSensors} hardwareSensors={hardwareSensors} />
 
       {/* Fleet Sensor Live Status Matrix (solo hardware propio) */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 space-y-4 shadow-sm">
