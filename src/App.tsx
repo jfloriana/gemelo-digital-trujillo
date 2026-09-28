@@ -19,6 +19,7 @@ const NbsSimulatorModule = React.lazy(() => import('./components/modules/NbsSimu
 const ValidationPolicyModule = React.lazy(() => import('./components/modules/ValidationPolicyModule').then(m => ({ default: m.ValidationPolicyModule })));
 const CrispDmModule = React.lazy(() => import('./components/modules/CrispDmModule').then(m => ({ default: m.CrispDmModule })));
 const ReportsModule = React.lazy(() => import('./components/modules/ReportsModule').then(m => ({ default: m.ReportsModule })));
+const IoTIntegrationModule = React.lazy(() => import('./components/modules/IoTIntegrationModule').then(m => ({ default: m.IoTIntegrationModule })));
 
 // Fallback para lazy
 const ModuleFallback: React.FC = () => {
@@ -48,12 +49,14 @@ import {
   Flame,
   ShieldCheck,
   Bot,
-  Workflow
+  Workflow,
+  Radio
 } from 'lucide-react';
 
 type ActiveModule =
   | 'digital_twin'
   | 'diagnosis'
+  | 'iot_monitor'
   | 'architecture'
   | 'ai_engine'
   | 'nbs_simulator'
@@ -184,6 +187,18 @@ function MainAppContent() {
           >
             <Activity className="w-4 h-4" />
             {t('nav.diagnosis')}
+          </button>
+
+          <button
+            onClick={() => setActiveModule('iot_monitor')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition-all ${
+              activeModule === 'iot_monitor'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Radio className="w-4 h-4" />
+            {t('nav.iot_monitor')}
           </button>
 
           <button
@@ -376,6 +391,18 @@ function MainAppContent() {
               sensors={SENSOR_NODES}
               selectedZone={selectedZone}
               onSelectZone={setSelectedZone}
+              onExportReports={handleQuickExport}
+            />
+          </React.Suspense>
+        )}
+
+        {/* VIEW 2b: Monitoreo IoT + Fuentes públicas */}
+        {activeModule === 'iot_monitor' && (
+          <React.Suspense fallback={<ModuleFallback />}>
+            <IoTIntegrationModule
+              sensors={SENSOR_NODES}
+              zones={TRUJILLO_ZONES}
+              onSensorUpdate={() => {}}
               onExportReports={handleQuickExport}
             />
           </React.Suspense>
