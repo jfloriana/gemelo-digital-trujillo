@@ -67,7 +67,7 @@ async function fetchOpenAQ(apiKey) {
     if (!apiKey) return { data: null, note: 'sin OPENAQ_API_KEY' };
     const locUrl =
       `https://api.openaq.org/v3/locations?coordinates=${TRUJILLO.lat},${TRUJILLO.lng}` +
-      `&radius=25000&limit=5&order_by=distance`; // máx. permitido por OpenAQ v3
+      `&radius=25000&limit=5`; // máx. permitido por OpenAQ v3 (sin order_by: no lo acepta)
     const lr = await fetch(locUrl, { headers: { 'X-API-Key': apiKey } });
     if (!lr.ok) return { data: null, note: `locations HTTP ${lr.status}` };
     const lj = await lr.json();
