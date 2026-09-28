@@ -603,28 +603,37 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
             {t('mlt.robustTitle')}
           </h3>
           <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('mlt.robustDesc')}</p>
-          {gaps && (
-            <div className="overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-700">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 uppercase text-[10px]">
-                  <tr>
-                    <th className="py-2 px-3">{t('mlt.modelCol')}</th>
-                    <th className="py-2 px-3">{t('mlt.gapPubCal')}</th>
-                    <th className="py-2 px-3">{t('mlt.gapCalPub')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {MODELS.map(({ kind }) => (
+          <p className="text-[11px] font-mono text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 rounded-lg px-2.5 py-1.5">
+            {t('mlt.robustBase').replace('{pub}', String(nPub)).replace('{cal}', String(nCal)).replace('{hash}', datasetHash(rows))}
+          </p>
+          <div className="overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-700">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 uppercase text-[10px]">
+                <tr>
+                  <th className="py-2 px-3">{t('mlt.modelCol')}</th>
+                  <th className="py-2 px-3">{t('mlt.cvCol')}</th>
+                  <th className="py-2 px-3">{t('mlt.noiseCol')}</th>
+                  <th className="py-2 px-3">{t('mlt.gapPubCal')}</th>
+                  <th className="py-2 px-3">{t('mlt.gapCalPub')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {MODELS.map(({ kind }) => {
+                  const tr = latestByModel[kind];
+                  return (
                     <tr key={kind}>
                       <td className="py-2 px-3 font-semibold">{t(`mlt.model.${kind}`)}</td>
-                      <td className="py-2 px-3 font-mono">{gaps[kind].pubToCalRmse == null ? '—' : `${gaps[kind].pubToCalRmse?.toFixed(2)} µg/m³`}</td>
-                      <td className="py-2 px-3 font-mono">{gaps[kind].calToPubRmse == null ? '—' : `${gaps[kind].calToPubRmse?.toFixed(2)} µg/m³`}</td>
+                      <td className="py-2 px-3 font-mono">{tr?.cvMeanR2 == null ? '—' : `${tr.cvMeanR2.toFixed(3)} ± ${tr.cvStdR2?.toFixed(3)}`}</td>
+                      <td className="py-2 px-3 font-mono">{tr?.noiseDegradPct == null ? '—' : `+${tr.noiseDegradPct.toFixed(1)}%`}</td>
+                      <td className="py-2 px-3 font-mono">{!gaps || gaps[kind].pubToCalRmse == null ? '—' : `${gaps[kind].pubToCalRmse?.toFixed(2)} µg/m³`}</td>
+                      <td className="py-2 px-3 font-mono">{!gaps || gaps[kind].calToPubRmse == null ? '—' : `${gaps[kind].calToPubRmse?.toFixed(2)} µg/m³`}</td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">{t('mlt.robustNeed')}</p>
         </div>
       )}
 
