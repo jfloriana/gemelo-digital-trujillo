@@ -53,8 +53,11 @@ export default async function handler(req, res) {
       const sorted = Object.values(newest).sort(
         (a, b) => new Date(b.measured_at) - new Date(a.measured_at)
       );
+      // Calibrado manda solo si está fresco (<24h); si no, la referencia pública
+      // horaria es más representativa del "ahora" (se etiqueta en `source`).
+      const FRESH_MS = 24 * 60 * 60 * 1000;
       const cal = sorted.find((r) => !isVirtual(r.sensor_id));
-      if (cal) {
+      if (cal && Date.now() - new Date(cal.measured_at).getTime() < FRESH_MS) {
         return res.status(200).json({
           zone_id: zone.id,
           temp: Number(cal.temperature),
@@ -73,6 +76,16 @@ export default async function handler(req, res) {
           source: 'public_ref',
           sensor_code: zoneSensors.find((s) => s.id === pub.sensor_id)?.code ?? null,
           measured_at: pub.measured_at,
+        });
+      }
+      if (cal) {
+        return res.status(200).json({
+          zone_id: zone.id,
+          temp: Number(cal.temperature),
+          pm25: Number(cal.pm25),
+          source: 'calibrated',
+          sensor_code: zoneSensors.find((s) => s.id === cal.sensor_id)?.code ?? null,
+          measured_at: cal.measured_at,
         });
       }
     }
