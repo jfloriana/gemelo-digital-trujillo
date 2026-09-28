@@ -3,7 +3,7 @@ import { useI18n } from '../../context/I18nContext';
 import { SensorNode } from '../../types';
 import {
   buildDataset, datasetHash, runTrial, runTrialWithHyper, crossValidate, noiseTest, crossDomainGap,
-  gridSearch, predictWithArtifact,
+  gridSearch, predictWithArtifact, contrastPairs, pairedTTest,
   FEATURE_NAMES, ModelKind, TrialRecord, Metrics, HyperResult,
 } from '../../utils/mlTraining';
 import { exportTrainingToExcel, exportTrainingToPDF } from '../../utils/exportUtils';
@@ -360,6 +360,14 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
   const aqiOf = (pm: number) =>
     pm <= 12 ? 'Buena' : pm <= 35.4 ? 'Moderada' : pm <= 55.4 ? 'Dañina p/ sensibles' : pm <= 150.4 ? 'Dañina' : 'Muy dañina';
 
+  const downloadDataset = () => {
+    const csv = ['sensor,hora,temp_c,hr_pct,viento_ms,radiacion,pm25,fuente',
+      ...rows.map((r) => `"${r.sensorCode}","${r.timestamp}",${r.x[0]},${r.x[1]},${r.x[2]},${r.x[3]},${r.y},${r.source}`)].join('\n');
+    download(`dataset_entrenamiento_${rows.length}filas.csv`, csv, 'text/csv;charset=utf-8;');
+  };
+
+  const pairs = useMemo(() => contrastPairs(sensors), [sensors]);
+
   const downloadArtifact = (tr: TrialRecord) => {
     const { id, cvMeanR2, cvStdR2, noiseRmse, noiseDegradPct, preds, ...artifact } = tr;
     download(`artefacto_${tr.model}_${tr.id}.json`, JSON.stringify(artifact, null, 2), 'application/json');
@@ -408,6 +416,54 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
         <p className="text-[11px] text-slate-500 dark:text-slate-400">
           {t('mlt.features')}: {FEATURE_NAMES.join(' · ')} → PM2.5 · {t('mlt.split')}
         </p>
+        {rows.length > 0 && (
+          <>
+            <div className="overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-700">
+              <table className="w-full text-left text-[11px]">
+                <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 uppercase text-[10px]">
+                  <tr>
+                    <th className="py-2 px-3">#</th>
+                    <th className="py-2 px-3">{t('mlt.dsSensor')}</th>
+                    <th className="py-2 px-3">{t('mlt.dsTime')}</th>
+                    <th className="py-2 px-3">T°</th>
+                    <th className="py-2 px-3">HR</th>
+                    <th className="py-2 px-3">{t('mlt.dsWind')}</th>
+                    <th className="py-2 px-3">Rad</th>
+                    <th className="py-2 px-3">PM</th>
+                    <th className="py-2 px-3">{t('mlt.dsSource')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+                  {rows.slice(0, 10).map((r, i) => (
+                    <tr key={i}>
+                      <td className="py-1.5 px-3">{i + 1}</td>
+                      <td className="py-1.5 px-3">{r.sensorCode}</td>
+                      <td className="py-1.5 px-3">{r.timestamp}</td>
+                      <td className="py-1.5 px-3">{r.x[0]}</td>
+                      <td className="py-1.5 px-3">{r.x[1]}</td>
+                      <td className="py-1.5 px-3">{r.x[2]}</td>
+                      <td className="py-1.5 px-3">{r.x[3]}</td>
+                      <td className="py-1.5 px-3 font-bold">{r.y}</td>
+                      <td className="py-1.5 px-3">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${r.source === 'public' ? 'bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'}`}>
+                          {r.source === 'public' ? t('mlt.rowsPub') : t('mlt.rowsCal')}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11px] text-slate-400">
+                {rows.length > 10 ? t('mlt.moreRows').replace('{n}', String(rows.length - 10)) : t('mlt.allRows').replace('{n}', String(rows.length))}
+              </span>
+              <button onClick={downloadDataset} className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-800 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer">
+                <Download className="w-3.5 h-3.5" /> {t('mlt.dataDownload')} (CSV)
+              </button>
+            </div>
+          </>
+        )}
         {error && (
           <div className="text-[11px] text-rose-600 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl p-2.5">{error}</div>
         )}
@@ -634,6 +690,89 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
             </table>
           </div>
           <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">{t('mlt.robustNeed')}</p>
+          {/* T-Student pareada: referencia vs calibrado (H0: media dif = 0) */}
+          {pairs.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-xs font-bold text-slate-700 dark:text-slate-200">{t('mlt.tTitle')}</div>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">{t('mlt.tDesc')}</p>
+              <div className="overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-700">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 uppercase text-[10px]">
+                    <tr>
+                      <th className="py-2 px-3">{t('mlt.tPair')}</th>
+                      <th className="py-2 px-3">n</th>
+                      <th className="py-2 px-3">{t('mlt.tVar')}</th>
+                      <th className="py-2 px-3">{t('mlt.tMean')}</th>
+                      <th className="py-2 px-3">t</th>
+                      <th className="py-2 px-3">p</th>
+                      <th className="py-2 px-3">{t('mlt.tVerdict')}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+                    {pairs.flatMap((p, pi) => ([
+                      { key: `${pi}-t`, pair: `${p.refCode}↔${p.hwCode}`, v: 'T°', r: pairedTTest(p.diffsT) },
+                      { key: `${pi}-p`, pair: `${p.refCode}↔${p.hwCode}`, v: 'PM', r: pairedTTest(p.diffsP) },
+                    ]).map((row) => (
+                      <tr key={row.key}>
+                        <td className="py-1.5 px-3">{row.pair}</td>
+                        <td className="py-1.5 px-3">{row.r.n}</td>
+                        <td className="py-1.5 px-3">{row.v}</td>
+                        <td className="py-1.5 px-3">{Number.isFinite(row.r.mean) ? `${row.r.mean >= 0 ? '+' : ''}${row.r.mean.toFixed(2)}` : '—'}</td>
+                        <td className="py-1.5 px-3">{row.r.t == null ? '—' : row.r.t.toFixed(2)}</td>
+                        <td className="py-1.5 px-3 font-bold">{row.r.p == null ? '—' : row.r.p < 0.001 ? '<0.001' : row.r.p.toFixed(3)}</td>
+                        <td className="py-1.5 px-3">
+                          {row.r.significant == null ? '—' : row.r.significant
+                            ? <span className="text-rose-600 font-bold">{t('mlt.sigYes')}</span>
+                            : <span className="text-emerald-600 font-bold">{t('mlt.sigNo')}</span>}
+                        </td>
+                      </tr>
+                    )))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          {/* T-Student sobre residuales de cada modelo (H0: error medio = 0) */}
+          {MODELS.some(({ kind }) => latestByModel[kind]?.preds.length) && (
+            <div className="space-y-2">
+              <div className="text-xs font-bold text-slate-700 dark:text-slate-200">{t('mlt.tResid')}</div>
+              <div className="overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-700">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 uppercase text-[10px]">
+                    <tr>
+                      <th className="py-2 px-3">{t('mlt.modelCol')}</th>
+                      <th className="py-2 px-3">n</th>
+                      <th className="py-2 px-3">{t('mlt.tMean')}</th>
+                      <th className="py-2 px-3">t</th>
+                      <th className="py-2 px-3">p</th>
+                      <th className="py-2 px-3">{t('mlt.tVerdict')}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+                    {MODELS.map(({ kind }) => {
+                      const tr = latestByModel[kind];
+                      if (!tr?.preds.length) return null;
+                      const r = pairedTTest(tr.preds.map((p) => p.pred - p.actual));
+                      return (
+                        <tr key={kind}>
+                          <td className="py-1.5 px-3 font-sans font-semibold">{t(`mlt.model.${kind}`)}</td>
+                          <td className="py-1.5 px-3">{r.n}</td>
+                          <td className="py-1.5 px-3">{Number.isFinite(r.mean) ? `${r.mean >= 0 ? '+' : ''}${r.mean.toFixed(2)}` : '—'}</td>
+                          <td className="py-1.5 px-3">{r.t == null ? '—' : r.t.toFixed(2)}</td>
+                          <td className="py-1.5 px-3 font-bold">{r.p == null ? '—' : r.p < 0.001 ? '<0.001' : r.p.toFixed(3)}</td>
+                          <td className="py-1.5 px-3">
+                            {r.significant == null ? '—' : r.significant
+                              ? <span className="text-rose-600 font-bold">{t('mlt.sigYes')}</span>
+                              : <span className="text-emerald-600 font-bold">{t('mlt.sigNo')}</span>}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -353,3 +353,132 @@ export function crossDomainGap(rows: TrainRow[], model: ModelKind, seed: number)
   };
   return { pubToCalRmse: one(pub, cal), calToPubRmse: one(cal, pub) };
 }
+
+// ---- Pares de contraste (misma lógica para panel IoT, reportes y T-Student) ----
+export interface ContrastPair {
+  refCode: string;
+  hwCode: string;
+  zone: string;
+  diffsT: number[]; // ref - hw en temperatura
+  diffsP: number[]; // ref - hw en PM2.5
+  byIndex: boolean;
+}
+
+// Series pareadas por timestamp; si hay <3 coincidencias, alinea por orden.
+export function contrastPairs(sensors: SensorNode[]): ContrastPair[] {
+  const refs = sensors.filter(
+    (s) => s.sensorType === VIRTUAL_SENSOR_TYPE && (s.hourlyHistory?.length ?? 0) >= 1,
+  );
+  const out: ContrastPair[] = [];
+  for (const ref of refs) {
+    const hws = sensors.filter(
+      (s) => s.sensorType !== VIRTUAL_SENSOR_TYPE && s.zoneId === ref.zoneId && (s.hourlyHistory?.length ?? 0) >= 1,
+    );
+    for (const hw of hws) {
+      const refMap = new Map((ref.hourlyHistory || []).map((r) => [r.timestamp, r]));
+      let pairs = (hw.hourlyHistory || []).flatMap((h) => {
+        const r = refMap.get(h.timestamp);
+        return r ? [{ dT: r.temperature - h.temperature, dP: r.pm25 - h.pm25 }] : [];
+      });
+      let byIndex = false;
+      if (pairs.length < 3) {
+        const a = (hw.hourlyHistory || []).slice(-12);
+        const b = (ref.hourlyHistory || []).slice(-12);
+        const n = Math.min(a.length, b.length);
+        if (n >= 3) {
+          pairs = Array.from({ length: n }, (_, i) => ({
+            dT: b[b.length - n + i].temperature - a[a.length - n + i].temperature,
+            dP: b[b.length - n + i].pm25 - a[a.length - n + i].pm25,
+          }));
+          byIndex = true;
+        } else {
+          continue;
+        }
+      }
+      out.push({
+        refCode: ref.code, hwCode: hw.code, zone: ref.zoneName,
+        diffsT: pairs.map((p) => p.dT), diffsP: pairs.map((p) => p.dP), byIndex,
+      });
+    }
+  }
+  return out;
+}
+
+// ---- T-Student pareada (two-tailed) vía beta incompleta regularizada ----
+function betacf(a: number, b: number, x: number): number {
+  const MAXIT = 200, EPS = 3e-12, FPMIN = 1e-300;
+  const qab = a + b, qap = a + 1, qam = a - 1;
+  let c = 1, d = 1 - (qab * x) / qap;
+  if (Math.abs(d) < FPMIN) d = FPMIN;
+  d = 1 / d;
+  let h = d;
+  for (let m = 1; m <= MAXIT; m++) {
+    const m2 = 2 * m;
+    let aa = (m * (b - m) * x) / ((qam + m2) * (a + m2));
+    d = 1 + aa * d;
+    if (Math.abs(d) < FPMIN) d = FPMIN;
+    c = 1 + aa / c;
+    if (Math.abs(c) < FPMIN) c = FPMIN;
+    d = 1 / d;
+    h *= d * c;
+    aa = (-(a + m) * (qab + m) * x) / ((a + m2) * (qap + m2));
+    d = 1 + aa * d;
+    if (Math.abs(d) < FPMIN) d = FPMIN;
+    c = 1 + aa / c;
+    if (Math.abs(c) < FPMIN) c = FPMIN;
+    d = 1 / d;
+    const del = d * c;
+    h *= del;
+    if (Math.abs(del - 1) < EPS) break;
+  }
+  return h;
+}
+
+function gammaln(z: number): number {
+  const c = [76.18009172947146, -86.50532032961677, 24.01409824083091, -1.231739572450155, 0.001208650973866179, -0.000005395239384953];
+  let y = z, tmp = z + 5.5;
+  tmp -= (z + 0.5) * Math.log(tmp);
+  let ser = 1.000000000190015;
+  for (let j = 0; j < 6; j++) {
+    y += 1;
+    ser += c[j] / y;
+  }
+  return -tmp + Math.log(2.5066282746310005 * ser / z);
+}
+
+function betai(a: number, b: number, x: number): number {
+  if (x <= 0) return 0;
+  if (x >= 1) return 1;
+  const lbeta = gammaln(a) + gammaln(b) - gammaln(a + b);
+  const bt = Math.exp(a * Math.log(x) + b * Math.log(1 - x) - lbeta);
+  if (x < (a + 1) / (a + b + 2)) return (bt * betacf(a, b, x)) / a;
+  return 1 - (bt * betacf(b, a, 1 - x)) / b;
+}
+
+function studentP2(t: number, df: number): number {
+  if (!(df > 0) || !Number.isFinite(t)) return NaN;
+  if (t === 0) return 1;
+  return betai(df / 2, 0.5, df / (df + t * t));
+}
+
+export interface TTestResult {
+  n: number;
+  mean: number;
+  sd: number;
+  t: number | null;
+  p: number | null;
+  significant: boolean | null; // p < 0.05
+}
+
+// T pareada (o de una muestra si se pasa una sola serie de diferencias).
+// H0: media de las diferencias = 0.
+export function pairedTTest(diffs: number[]): TTestResult {
+  const n = diffs.length;
+  if (n < 3) return { n, mean: NaN, sd: NaN, t: null, p: null, significant: null };
+  const mean = diffs.reduce((s, v) => s + v, 0) / n;
+  const sd = Math.sqrt(diffs.reduce((s, v) => s + (v - mean) ** 2, 0) / (n - 1));
+  if (!(sd > 0)) return { n, mean, sd, t: null, p: null, significant: null };
+  const t = mean / (sd / Math.sqrt(n));
+  const p = studentP2(Math.abs(t), n - 1);
+  return { n, mean, sd, t, p, significant: p < 0.05 };
+}

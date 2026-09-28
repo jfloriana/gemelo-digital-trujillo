@@ -17,8 +17,8 @@ import {
   PageNumber
 } from 'docx';
 import saveAs from 'file-saver';
-import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, SimulationScenario, VIRTUAL_SENSOR_TYPE } from '../types';
-import { TrialRecord, ModelKind } from './mlTraining';
+import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, SimulationScenario } from '../types';
+import { TrialRecord, ModelKind, contrastPairs } from './mlTraining';
 
 type ExportLang = 'es' | 'en' | 'zh' | 'de' | 'fr' | 'pt';
 
@@ -38,48 +38,40 @@ export interface ContrastRow {
 }
 
 export function buildContrastRows(sensors: SensorNode[]): ContrastRow[] {
-  const refs = sensors.filter(s => s.sensorType === VIRTUAL_SENSOR_TYPE && (s.hourlyHistory?.length ?? 0) >= 1);
-  const rows: ContrastRow[] = [];
-  for (const ref of refs) {
-    const hwCandidates = sensors.filter(s => s.sensorType !== VIRTUAL_SENSOR_TYPE && s.zoneId === ref.zoneId && (s.hourlyHistory?.length ?? 0) >= 1);
-    if (!hwCandidates.length) continue;
-    const hw = hwCandidates[0];
-    const refMap = new Map((ref.hourlyHistory || []).map(r => [r.timestamp, r]));
-    let pairs = (hw.hourlyHistory || []).flatMap(h => {
-      const r = refMap.get(h.timestamp);
-      return r ? [{ hwT: h.temperature, refT: r.temperature, hwP: h.pm25, refP: r.pm25 }] : [];
-    });
-    if (pairs.length < 3) {
-      const a = (hw.hourlyHistory || []).slice(-12);
-      const b = (ref.hourlyHistory || []).slice(-12);
-      const n = Math.min(a.length, b.length);
-      pairs = n >= 3 ? Array.from({ length: n }, (_, i) => ({
-        hwT: a[a.length - n + i].temperature, refT: b[b.length - n + i].temperature,
-        hwP: a[a.length - n + i].pm25, refP: b[b.length - n + i].pm25,
-      })) : [];
-    }
-    if (pairs.length < 3) continue;
-    const stat = (get: (p: typeof pairs[number]) => { hw: number; ref: number }) => {
-      const d = pairs.map(p => { const v = get(p); return v.ref - v.hw; });
+  // Usa TODOS los pares ref↔hw de la zona (antes solo el primer hw).
+  return contrastPairs(sensors).map((p) => {
+    const n = p.diffsT.length;
+    const stat = (d: number[]) => {
       const bias = d.reduce((x, y) => x + y, 0) / d.length;
       const rmse = Math.sqrt(d.reduce((x, y) => x + y * y, 0) / d.length);
       return { bias, rmse };
     };
-    const t = stat(p => ({ hw: p.hwT, ref: p.refT }));
-    const pm = stat(p => ({ hw: p.hwP, ref: p.refP }));
-    const n = pairs.length;
-    const mx = pairs.reduce((s, p) => s + p.hwT, 0) / n;
-    const my = pairs.reduce((s, p) => s + p.refT, 0) / n;
-    let num = 0, dx = 0, dy = 0;
-    for (const p of pairs) { num += (p.hwT - mx) * (p.refT - my); dx += (p.hwT - mx) ** 2; dy += (p.refT - my) ** 2; }
-    rows.push({
-      refCode: ref.code, hwCode: hw.code, zone: ref.zoneName, n,
-      biasTemp: t.bias, rmseTemp: t.rmse, rTemp: dx && dy ? num / Math.sqrt(dx * dy) : null,
+    const t = stat(p.diffsT);
+    const pm = stat(p.diffsP);
+    // r de Pearson en temperatura sobre las últimas n lecturas de cada serie
+    const hwHist = (sensors.find((s) => s.code === p.hwCode)?.hourlyHistory || []).slice(-n);
+    const refHist = (sensors.find((s) => s.code === p.refCode)?.hourlyHistory || []).slice(-n);
+    let rTemp: number | null = null;
+    if (hwHist.length >= 3 && refHist.length >= 3) {
+      const xs = hwHist.map((h) => h.temperature);
+      const ys = refHist.map((h) => h.temperature);
+      const mx = xs.reduce((s, v) => s + v, 0) / xs.length;
+      const my = ys.reduce((s, v) => s + v, 0) / ys.length;
+      let num = 0, dx = 0, dy = 0;
+      for (let i = 0; i < xs.length; i++) {
+        num += (xs[i] - mx) * (ys[i] - my);
+        dx += (xs[i] - mx) ** 2;
+        dy += (ys[i] - my) ** 2;
+      }
+      rTemp = dx && dy ? num / Math.sqrt(dx * dy) : null;
+    }
+    return {
+      refCode: p.refCode, hwCode: p.hwCode, zone: p.zone, n,
+      biasTemp: t.bias, rmseTemp: t.rmse, rTemp,
       biasPm: pm.bias, rmsePm: pm.rmse,
-      source: ref.code.includes('OPENAQ') ? 'OpenAQ v3 (CC-BY 4.0)' : 'Open-Meteo (CC-BY 4.0)',
-    });
-  }
-  return rows;
+      source: p.refCode.includes('OPENAQ') ? 'OpenAQ v3 (CC-BY 4.0)' : 'Open-Meteo (CC-BY 4.0)',
+    };
+  });
 }
 const exT = (lang: ExportLang) => {
   const d: Record<ExportLang, any> = {
