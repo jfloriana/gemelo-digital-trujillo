@@ -225,14 +225,17 @@ export function trainMlpModel(train: TrainRow[], seed: number, hidden = 8, epoch
   };
 }
 
-// Split cronológico 80/20 + evaluación completa de un modelo
-export function runTrial(rows: TrainRow[], model: ModelKind, seed: number): Omit<TrialRecord, 'id' | 'cvMeanR2' | 'cvStdR2' | 'noiseRmse' | 'noiseDegradPct'> {
+// Split cronológico 80/20 + evaluación completa de un modelo (con hiperparámetros)
+export function runTrialWithHyper(
+  rows: TrainRow[], model: ModelKind, seed: number,
+  hyper: Record<string, number> = {},
+): Omit<TrialRecord, 'id' | 'cvMeanR2' | 'cvStdR2' | 'noiseRmse' | 'noiseDegradPct'> {
   const cut = Math.max(4, Math.floor(rows.length * 0.8));
   const train = rows.slice(0, cut);
   const test = rows.slice(cut);
   const artifact = model === 'linear' ? trainLinearModel(train, seed)
-    : model === 'knn' ? trainKnnModel(train, seed)
-    : trainMlpModel(train, seed);
+    : model === 'knn' ? trainKnnModel(train, seed, hyper.k ?? 5)
+    : trainMlpModel(train, seed, hyper.hidden ?? 8, hyper.epochs ?? 300, hyper.lr ?? 0.05);
   const preds = test.map((r) => predictWithArtifact(artifact, r.x));
   const actual = test.map((r) => r.y);
   artifact.metrics = computeMetrics(actual, preds);
@@ -242,6 +245,39 @@ export function runTrial(rows: TrainRow[], model: ModelKind, seed: number): Omit
     ...artifact,
     preds: test.map((r, i) => ({ actual: r.y, pred: Number(preds[i].toFixed(2)), label: `${r.sensorCode} ${r.timestamp}` })),
   };
+}
+
+export function runTrial(rows: TrainRow[], model: ModelKind, seed: number) {
+  return runTrialWithHyper(rows, model, seed, {});
+}
+
+export interface HyperResult {
+  model: ModelKind;
+  hyper: Record<string, number>;
+  hyperLabel: string;
+  metrics: Metrics;
+  seed: number;
+}
+
+// Búsqueda en malla (grid search) sobre hiperparámetros con split 80/20.
+// Barata: 1 lineal + 4 kNN + 3 MLP con épocas reducidas. Ordenada por RMSE.
+export function gridSearch(rows: TrainRow[], seed: number): HyperResult[] {
+  const combos: { model: ModelKind; hyper: Record<string, number>; label: string }[] = [
+    { model: 'linear', hyper: {}, label: '—' },
+    { model: 'knn', hyper: { k: 3 }, label: 'k=3' },
+    { model: 'knn', hyper: { k: 5 }, label: 'k=5' },
+    { model: 'knn', hyper: { k: 7 }, label: 'k=7' },
+    { model: 'knn', hyper: { k: 9 }, label: 'k=9' },
+    { model: 'mlp', hyper: { hidden: 4, epochs: 200, lr: 0.05 }, label: 'h=4 e=200 lr=0.05' },
+    { model: 'mlp', hyper: { hidden: 8, epochs: 200, lr: 0.05 }, label: 'h=8 e=200 lr=0.05' },
+    { model: 'mlp', hyper: { hidden: 8, epochs: 400, lr: 0.02 }, label: 'h=8 e=400 lr=0.02' },
+  ];
+  return combos
+    .map((c, i) => {
+      const t = runTrialWithHyper(rows, c.model, seed + i * 37, c.hyper);
+      return { model: c.model, hyper: c.hyper, hyperLabel: c.label, metrics: t.metrics, seed: seed + i * 37 };
+    })
+    .sort((a, b) => a.metrics.rmse - b.metrics.rmse);
 }
 
 // K-fold CV (folds barajados con semilla) → media ± std de R²

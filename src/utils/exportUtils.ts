@@ -18,6 +18,7 @@ import {
 } from 'docx';
 import saveAs from 'file-saver';
 import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, SimulationScenario, VIRTUAL_SENSOR_TYPE } from '../types';
+import { TrialRecord, ModelKind } from './mlTraining';
 
 type ExportLang = 'es' | 'en' | 'zh' | 'de' | 'fr' | 'pt';
 
@@ -448,6 +449,99 @@ export const exportToCSV = (sensors: SensorNode[], _lang: ExportLang = 'es') => 
   const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
   saveAs(blob, `Dataset_Telemetria_IoT_Trujillo_${Date.now()}.csv`);
 };
+
+// ============ Laboratorio IA: reportes de entrenamiento ============
+
+export type TrainingGaps = Record<ModelKind, { pubToCalRmse: number | null; calToPubRmse: number | null }>;
+
+const trainingBest = (trials: TrialRecord[]) =>
+  [...trials].sort((a, b) => a.metrics.rmse - b.metrics.rmse)[0] ?? null;
+
+export function exportTrainingToExcel(trials: TrialRecord[], nRows: number, gaps: TrainingGaps | null) {
+  const wb = XLSX.utils.book_new();
+  const best = trainingBest(trials);
+  const head = ['Prueba', 'Modelo', 'Hiperparámetros', 'n train/test', 'R²', 'RMSE', 'MAE', 'MAPE%', 'CV R² ± std', 'Ruido +RMSE%'];
+  const summary: (string | number)[][] = [
+    ['LABORATORIO IA — REPORTE DE ENTRENAMIENTO', new Date().toLocaleString('es-PE')],
+    ['Filas del dataset (telemetría real)', nRows],
+    ['Pruebas totales', trials.length],
+    ['Mejor modelo', best ? `${best.model} — R²=${best.metrics.r2.toFixed(4)}, RMSE=${best.metrics.rmse.toFixed(2)}` : '—'],
+    ['Referencia tesis 1D-CNN (Naveed et al., 2025)', 'R²=0.9925'],
+    [],
+    head,
+  ];
+  trials.forEach((tr) => {
+    summary.push([
+      tr.id, tr.model, JSON.stringify(tr.hyper), `${tr.nTrain}/${tr.nTest}`,
+      Number(tr.metrics.r2.toFixed(4)), Number(tr.metrics.rmse.toFixed(2)),
+      Number(tr.metrics.mae.toFixed(2)), Number(tr.metrics.mape.toFixed(2)),
+      tr.cvMeanR2 == null ? '—' : `${tr.cvMeanR2.toFixed(3)} ± ${tr.cvStdR2?.toFixed(3)}`,
+      tr.noiseDegradPct == null ? '—' : `+${tr.noiseDegradPct.toFixed(1)}%`,
+    ]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summary), 'Resumen_Pruebas');
+  if (best) {
+    const preds: (string | number)[][] = [['#', 'Etiqueta', 'PM2.5 real', 'PM2.5 predicho', 'Error']];
+    best.preds.forEach((p, i) => {
+      preds.push([i + 1, p.label, p.actual, p.pred, Number((p.actual - p.pred).toFixed(2))]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(preds), 'Predicciones_Mejor');
+  }
+  if (gaps) {
+    const g: (string | number)[][] = [['Modelo', 'Entrena público → prueba calibrado (RMSE)', 'Entrena calibrado → prueba público (RMSE)']];
+    (Object.keys(gaps) as ModelKind[]).forEach((k) => {
+      g.push([k, gaps[k].pubToCalRmse?.toFixed(2) ?? '—', gaps[k].calToPubRmse?.toFixed(2) ?? '—']);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(g), 'Brecha_Dominios');
+  }
+  const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  saveAs(new Blob([out], { type: 'application/octet-stream' }), `Reporte_Laboratorio_IA_${Date.now()}.xlsx`);
+}
+
+export function exportTrainingToPDF(trials: TrialRecord[], nRows: number) {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const teal: [number, number, number] = [15, 118, 110];
+  const best = trainingBest(trials);
+  doc.setFillColor(...teal);
+  doc.rect(0, 0, 210, 22, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.text('LABORATORIO IA — REPORTE DE ENTRENAMIENTO', 105, 10, { align: 'center' });
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Telemetría real (calibrada + Open-Meteo/OpenAQ) · ${new Date().toLocaleString('es-PE')} · Filas: ${nRows}`, 105, 17, { align: 'center' });
+
+  doc.setTextColor(30, 41, 59);
+  doc.setFontSize(10.5);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Pruebas (orden cronológico inverso)', 14, 30);
+  autoTable(doc, {
+    startY: 33,
+    head: [['Prueba', 'Modelo', 'R²', 'RMSE', 'MAE', 'CV R²']],
+    body: trials.map((tr) => [
+      tr.id, tr.model,
+      tr.metrics.r2.toFixed(3), tr.metrics.rmse.toFixed(2), tr.metrics.mae.toFixed(2),
+      tr.cvMeanR2 == null ? '—' : `${tr.cvMeanR2.toFixed(3)} ± ${tr.cvStdR2?.toFixed(3)}`,
+    ]),
+    theme: 'grid',
+    headStyles: { fillColor: teal, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+    styles: { fontSize: 7, cellPadding: 1.8 },
+  });
+  let y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 6;
+  doc.setFontSize(10.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...teal);
+  doc.text('Selección del mejor modelo', 14, y);
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(30, 41, 59);
+  const bestLine = best
+    ? `${best.model} con hiperparámetros ${JSON.stringify(best.hyper)}: R²=${best.metrics.r2.toFixed(4)}, RMSE=${best.metrics.rmse.toFixed(2)}, MAE=${best.metrics.mae.toFixed(2)}, MAPE=${best.metrics.mape.toFixed(2)}%. Referencia tesis 1D-CNN: R²=0.9925.`
+    : 'Sin pruebas registradas.';
+  doc.text(bestLine, 14, y + 5, { maxWidth: 182 });
+  doc.save(`Reporte_Laboratorio_IA_${Date.now()}.pdf`);
+}
 
 export const exportToPDF = (
   zones: UrbanZone[],

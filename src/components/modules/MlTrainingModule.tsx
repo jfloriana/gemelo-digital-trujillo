@@ -2,13 +2,15 @@ import React, { useMemo, useState } from 'react';
 import { useI18n } from '../../context/I18nContext';
 import { SensorNode } from '../../types';
 import {
-  buildDataset, datasetHash, runTrial, crossValidate, noiseTest, crossDomainGap,
-  FEATURE_NAMES, ModelKind, TrialRecord, Metrics,
+  buildDataset, datasetHash, runTrial, runTrialWithHyper, crossValidate, noiseTest, crossDomainGap,
+  gridSearch, predictWithArtifact,
+  FEATURE_NAMES, ModelKind, TrialRecord, Metrics, HyperResult,
 } from '../../utils/mlTraining';
+import { exportTrainingToExcel, exportTrainingToPDF } from '../../utils/exportUtils';
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts';
-import { Brain, Play, Download, Trophy, FlaskConical, ShieldCheck, FileJson, Table2 } from 'lucide-react';
+import { Brain, Play, Download, Trophy, FlaskConical, ShieldCheck, FileJson, Table2, SlidersHorizontal, FileText, Crosshair } from 'lucide-react';
 
 interface MlTrainingModuleProps {
   sensors: SensorNode[];
@@ -66,6 +68,10 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
   const [training, setTraining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gaps, setGaps] = useState<Record<ModelKind, { pubToCalRmse: number | null; calToPubRmse: number | null }> | null>(null);
+  const [grid, setGrid] = useState<HyperResult[] | null>(null);
+  const [gridRunning, setGridRunning] = useState(false);
+  const [inferX, setInferX] = useState<number[]>([28, 70, 2.5, 400]);
+  const [inferSensor, setInferSensor] = useState<string>('');
 
   const rows = useMemo(() => buildDataset(sensors), [sensors]);
   const nPub = rows.filter((r) => r.source === 'public').length;
@@ -127,6 +133,55 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
       }
     }, 60);
   };
+
+  const runGridSearch = () => {
+    setError(null);
+    if (!canTrain) {
+      setError(t('mlt.needMore'));
+      return;
+    }
+    setGridRunning(true);
+    setTimeout(() => {
+      try {
+        setGrid(gridSearch(rows, 1000 + trials.length));
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+      } finally {
+        setGridRunning(false);
+      }
+    }, 60);
+  };
+
+  const adoptGridBest = () => {
+    if (!grid?.length) return;
+    const g = grid[0];
+    // Registra la combinación ganadora con sus hiperparámetros exactos + robustez
+    const full = runTrialWithHyper(rows, g.model, g.seed, g.hyper);
+    const cv = crossValidate(rows, g.model, g.seed);
+    const nz = noiseTest(rows, g.model, g.seed, full.metrics.rmse);
+    const rec: TrialRecord = {
+      ...full,
+      id: `trial-grid-${Date.now().toString(36)}-${g.model}`,
+      cvMeanR2: cv.meanR2, cvStdR2: cv.stdR2,
+      noiseRmse: nz.noiseRmse, noiseDegradPct: nz.degradPct,
+    };
+    const next = [rec, ...trials].slice(0, 30);
+    setTrials(next);
+    try {
+      localStorage.setItem(TRIALS_KEY, JSON.stringify(next));
+    } catch { /* ignore */ }
+  };
+
+  const fillFromSensor = (id: string) => {
+    setInferSensor(id);
+    const s = sensors.find((x) => x.id === id);
+    if (s?.lastReading) {
+      setInferX([s.lastReading.temperature, s.lastReading.humidity, s.lastReading.windSpeed, s.lastReading.solarRadiation]);
+    }
+  };
+
+  const aqiOf = (pm: number) =>
+    pm <= 12 ? 'Buena' : pm <= 35.4 ? 'Moderada' : pm <= 55.4 ? 'Dañina p/ sensibles' : pm <= 150.4 ? 'Dañina' : 'Muy dañina';
 
   const downloadArtifact = (tr: TrialRecord) => {
     const { id, cvMeanR2, cvStdR2, noiseRmse, noiseDegradPct, preds, ...artifact } = tr;
@@ -221,6 +276,58 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
         );
       })}
 
+      {/* Búsqueda de hiperparámetros + selección */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 space-y-3 shadow-sm">
+        <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <Crosshair className="w-5 h-5 text-violet-600" />
+          {t('mlt.gridTitle')}
+        </h3>
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('mlt.gridDesc')}</p>
+        <button
+          onClick={runGridSearch}
+          disabled={gridRunning || !canTrain}
+          className="w-full sm:w-auto px-5 py-2.5 bg-violet-700 hover:bg-violet-800 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
+        >
+          <Play className="w-4 h-4" />
+          {gridRunning ? t('mlt.training') : t('mlt.gridRun')}
+        </button>
+        {grid && (
+          <>
+            <div className="overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-700">
+              <table className="w-full text-left text-[11px]">
+                <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 uppercase text-[10px]">
+                  <tr>
+                    <th className="py-2 px-3">#</th>
+                    <th className="py-2 px-3">{t('mlt.modelCol')}</th>
+                    <th className="py-2 px-3">{t('mlt.hyperCol')}</th>
+                    <th className="py-2 px-3">R²</th>
+                    <th className="py-2 px-3">RMSE</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {grid.map((g, i) => (
+                    <tr key={i} className={i === 0 ? 'bg-emerald-50/70 dark:bg-emerald-950/20 font-semibold' : ''}>
+                      <td className="py-2 px-3 font-mono">{i === 0 ? <Trophy className="w-3.5 h-3.5 text-emerald-600 inline" /> : i + 1}</td>
+                      <td className="py-2 px-3">{t(`mlt.model.${g.model}`)}</td>
+                      <td className="py-2 px-3 font-mono">{g.hyperLabel}</td>
+                      <td className="py-2 px-3 font-mono">{g.metrics.r2.toFixed(3)}</td>
+                      <td className="py-2 px-3 font-mono">{g.metrics.rmse.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <button
+              onClick={adoptGridBest}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <Trophy className="w-3.5 h-3.5" />
+              {t('mlt.gridAdopt')}
+            </button>
+          </>
+        )}
+      </div>
+
       {/* Best: predicted vs actual */}
       {best && (
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 space-y-3 shadow-sm">
@@ -241,6 +348,66 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
               </LineChart>
             </ResponsiveContainer>
           </div>
+        </div>
+      )}
+
+      {/* Motor de inferencia con el modelo campeón */}
+      {best && (
+        <div className="bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-800 rounded-2xl p-6 space-y-4 shadow-sm">
+          <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <SlidersHorizontal className="w-5 h-5 text-emerald-600" />
+            {t('mlt.inferTitle')} · {t(`mlt.model.${best.model}`)}
+          </h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="space-y-1 sm:col-span-2">
+              <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">{t('mlt.inferSensor')}</span>
+              <select
+                value={inferSensor}
+                onChange={(e) => fillFromSensor(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs"
+              >
+                <option value="">{t('mlt.inferManual')}</option>
+                {sensors.filter((s) => s.lastReading?.timestamp).map((s) => (
+                  <option key={s.id} value={s.id}>{s.code} — {s.lastReading.temperature}°C / PM {s.lastReading.pm25}</option>
+                ))}
+              </select>
+            </label>
+            {FEATURE_NAMES.map((f, i) => {
+              const cfg = [
+                { min: 5, max: 45, step: 0.1, unit: '°C' },
+                { min: 20, max: 100, step: 1, unit: '%' },
+                { min: 0, max: 12, step: 0.1, unit: 'm/s' },
+                { min: 0, max: 1100, step: 10, unit: 'W/m²' },
+              ][i];
+              return (
+                <div key={f} className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-600 dark:text-slate-400 font-medium">{f}</span>
+                    <strong className="font-mono text-slate-900 dark:text-white">{inferX[i]} {cfg.unit}</strong>
+                  </div>
+                  <input
+                    type="range" min={cfg.min} max={cfg.max} step={cfg.step} value={inferX[i]}
+                    onChange={(e) => setInferX((prev) => prev.map((v, j) => (j === i ? Number(e.target.value) : v)))}
+                    className="w-full accent-emerald-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
+                  />
+                </div>
+              );
+            })}
+          </div>
+          {(() => {
+            const pm = Math.max(0, Number(predictWithArtifact(best, inferX).toFixed(1)));
+            return (
+              <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 rounded-xl px-4 py-3">
+                <div>
+                  <div className="text-[10px] text-slate-500 font-semibold uppercase">{t('mlt.inferResult')}</div>
+                  <div className="text-2xl font-bold font-mono text-emerald-700 dark:text-emerald-400">{pm} µg/m³</div>
+                </div>
+                <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                  AQI: {aqiOf(pm)}
+                </span>
+              </div>
+            );
+          })()}
         </div>
       )}
 
@@ -280,10 +447,20 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
       {/* Trials history + artifacts */}
       {trials.length > 0 && (
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 space-y-3 shadow-sm">
-          <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <FileJson className="w-5 h-5 text-slate-600" />
-            {t('mlt.trialsTitle')} ({trials.length})
-          </h3>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <FileJson className="w-5 h-5 text-slate-600" />
+              {t('mlt.trialsTitle')} ({trials.length})
+            </h3>
+            <div className="flex gap-1.5">
+              <button onClick={() => exportTrainingToExcel(trials, rows.length, gaps)} disabled={!trials.length} className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer">
+                <FileText className="w-3.5 h-3.5" /> {t('mlt.reportExcel')}
+              </button>
+              <button onClick={() => exportTrainingToPDF(trials, rows.length)} disabled={!trials.length} className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-800 disabled:opacity-40 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer">
+                <FileText className="w-3.5 h-3.5" /> {t('mlt.reportPdf')}
+              </button>
+            </div>
+          </div>
           <div className="overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-700">
             <table className="w-full text-left text-[11px]">
               <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 uppercase text-[10px]">
