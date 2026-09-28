@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useI18n } from '../../context/I18nContext';
 import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, isVirtualSensor } from '../../types';
+import { TrialRecord } from '../../utils/mlTraining';
 import {
   Target,
   Database,
@@ -70,6 +71,22 @@ export const CrispDmModule: React.FC<CrispDmModuleProps> = ({ onExportReports, z
   const [agentLoading, setAgentLoading] = useState(false);
   const [agentError, setAgentError] = useState<string | null>(null);
 
+  // Puente con el Laboratorio IA: lee sus pruebas reales (misma BD, familias
+  // livianas entrenadas en navegador) para mostrarlas junto a los modelos tesis.
+  const [labTrials] = useState<TrialRecord[]>(() => {
+    try {
+      const raw = localStorage.getItem('mlt_trials_v1');
+      return raw ? (JSON.parse(raw) as TrialRecord[]) : [];
+    } catch {
+      return [];
+    }
+  });
+  const labLatest: Record<string, TrialRecord> = {};
+  for (const tr of labTrials) {
+    if (!labLatest[tr.model]) labLatest[tr.model] = tr;
+  }
+  const labChampion = (Object.values(labLatest) as TrialRecord[]).sort((a, b) => a.metrics.rmse - b.metrics.rmse)[0] ?? null;
+
   const phase = PHASES.find(p => p.id === active)!;
   const c = COLOR[phase.color];
   const progress = Math.max(0, Math.min(100, parseInt(t(`crispdm.p${active}.progress`), 10) || 0));
@@ -108,7 +125,10 @@ export const CrispDmModule: React.FC<CrispDmModuleProps> = ({ onExportReports, z
     setAgentError(null);
     setAgentReply(null);
     const prompt = `Evalua, con los numeros reales de este proyecto, si el modelo predictivo cumple el umbral de la fase de Comprension del Negocio (R^2 >= ${R2_TARGET}). ` +
-      `Mejor modelo: ${live.bestModel.name} (${live.bestModel.architecture}), R^2=${live.bestModel.r2}, RMSE=${live.bestModel.rmse}, MAPE=${live.bestModel.mape}%, inferencia=${live.bestModel.inferenceTimeMs}ms. ` +
+      `Mejor modelo tesis: ${live.bestModel.name} (${live.bestModel.architecture}), R^2=${live.bestModel.r2}, RMSE=${live.bestModel.rmse}, MAPE=${live.bestModel.mape}%, inferencia=${live.bestModel.inferenceTimeMs}ms. ` +
+      (labChampion
+        ? `Campeon del Laboratorio IA (misma BD, regresores livianos en navegador): ${labChampion.model} R^2=${labChampion.metrics.r2.toFixed(3)}, RMSE=${labChampion.metrics.rmse.toFixed(2)}, n=${labChampion.nTrain}/${labChampion.nTest}. Compara ambas familias en tu veredicto. `
+        : `Aun sin pruebas del Laboratorio IA. `) +
       `Sensores: ${sensors.length} totales, ${live.online} en linea, R^2 promedio calibrado=${live.avgR2Cal.toFixed(3)}. ` +
       `Zonas cubiertas: ${zones.length}, poblacion total=${live.totalPop}. Da un veredicto breve (2-3 frases) en fase de Evaluacion CRISP-DM.`;
     try {
@@ -178,37 +198,58 @@ export const CrispDmModule: React.FC<CrispDmModuleProps> = ({ onExportReports, z
     }
     if (active === 4) {
       const sorted = [...models].sort((a, b) => b.r2 - a.r2);
+      const labRows = Object.values(labLatest) as TrialRecord[];
       return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-xl overflow-x-auto">
-          <table className="w-full text-left text-[11px]">
-            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase text-[9px]">
-              <tr>
-                <th className="py-2 px-3">{t('crispdm.live.colModel')}</th>
-                <th className="py-2 px-3">{t('crispdm.live.colR2')}</th>
-                <th className="py-2 px-3">RMSE</th>
-                <th className="py-2 px-3">{t('crispdm.live.colInference')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.map(m => (
-                <tr key={m.id} className="border-t border-slate-100 dark:border-slate-800">
-                  <td className="py-2 px-3 font-semibold text-slate-800 dark:text-slate-100">{m.name}</td>
-                  <td className="py-2 px-3 font-mono">{m.r2.toFixed(4)}</td>
-                  <td className="py-2 px-3 font-mono">{m.rmse}</td>
-                  <td className="py-2 px-3 font-mono">{m.inferenceTimeMs} ms</td>
+        <div className="space-y-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-xl overflow-x-auto">
+            <table className="w-full text-left text-[11px]">
+              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase text-[9px]">
+                <tr>
+                  <th className="py-2 px-3">{t('crispdm.live.colModel')}</th>
+                  <th className="py-2 px-3">{t('crispdm.live.colR2')}</th>
+                  <th className="py-2 px-3">RMSE</th>
+                  <th className="py-2 px-3">{t('crispdm.live.colInference')}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {sorted.map(m => (
+                  <tr key={m.id} className="border-t border-slate-100 dark:border-slate-800">
+                    <td className="py-2 px-3 font-semibold text-slate-800 dark:text-slate-100">{m.name}</td>
+                    <td className="py-2 px-3 font-mono">{m.r2.toFixed(4)}</td>
+                    <td className="py-2 px-3 font-mono">{m.rmse}</td>
+                    <td className="py-2 px-3 font-mono">{m.inferenceTimeMs} ms</td>
+                  </tr>
+                ))}
+                {labRows.map(tr => (
+                  <tr key={`lab-${tr.id}`} className="border-t border-violet-200 dark:border-violet-900 bg-violet-50/50 dark:bg-violet-950/20">
+                    <td className="py-2 px-3 font-semibold text-violet-800 dark:text-violet-300">
+                      {t('crispdm.live.labTag')} · {tr.model} <span className="font-normal text-[10px]">({tr.id}, n={tr.nTrain}/{tr.nTest})</span>
+                    </td>
+                    <td className="py-2 px-3 font-mono">{tr.metrics.r2.toFixed(4)}</td>
+                    <td className="py-2 px-3 font-mono">{tr.metrics.rmse.toFixed(2)}</td>
+                    <td className="py-2 px-3 font-mono">—</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">
+            {labRows.length ? t('crispdm.live.labNote') : t('crispdm.live.labNone')}
+          </p>
         </div>
       );
     }
     if (active === 5) {
       return (
         <div className="space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
             <StatCard label={t('crispdm.live.bestModel')} value={live.bestModel?.name || '—'} />
             <StatCard label={`${t('crispdm.live.threshold')} (R² ≥ ${R2_TARGET})`} value={live.bestModel ? live.bestModel.r2.toFixed(4) : '—'} />
+            <StatCard
+              label={t('crispdm.live.labChampion')}
+              value={labChampion ? `${labChampion.model} R²=${labChampion.metrics.r2.toFixed(3)}` : '—'}
+              icon={<Brain className="w-3.5 h-3.5 text-violet-500" />}
+            />
             <div className={`rounded-xl p-3 border flex items-center gap-2 text-xs font-semibold ${live.passesTarget ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300' : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300'}`}>
               {live.passesTarget ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertTriangle className="w-4 h-4 shrink-0" />}
               {live.passesTarget ? t('crispdm.live.verdictPass') : t('crispdm.live.verdictFail')}
