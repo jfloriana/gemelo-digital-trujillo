@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UrbanZone } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { useI18n } from '../../context/I18nContext';
-import { X, MapPin, Save } from 'lucide-react';
+import { X, MapPin, Save, CloudSun } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -23,6 +23,34 @@ export const ZoneFormModal: React.FC<Props> = ({ isOpen, onClose, editingZone, o
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [climateLoading, setClimateLoading] = useState(false);
+  const [climateNote, setClimateNote] = useState<string | null>(null);
+
+  // Clima real gratis (sin key): geocoding Open-Meteo → promedio de medias
+  // diarias de los últimos 30 días → baselineTemp. PM2.5 queda manual
+  // (no hay fuente abierta sin key con cobertura en todo el Perú).
+  const fetchRealClimate = async () => {
+    setError(null);
+    setClimateNote(null);
+    const q = `${form.district || ''}, ${form.department || ''}, Peru`.trim();
+    if (!form.district?.trim()) { setError(t('zoneForm.climateNeedDistrict')); return; }
+    setClimateLoading(true);
+    try {
+      const g = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=es&format=json`).then(r => r.json());
+      const place = (g.results || []).find((p: any) => p.country_code === 'PE') || (g.results || [])[0];
+      if (!place) { setError(t('zoneForm.climateError')); return; }
+      const w = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&daily=temperature_2m_mean&past_days=30&forecast_days=1&timezone=auto`).then(r => r.json());
+      const means: number[] = (w.daily?.temperature_2m_mean || []).filter((v: any) => Number.isFinite(v));
+      if (!means.length) { setError(t('zoneForm.climateError')); return; }
+      const avg = Number((means.reduce((a, b) => a + b, 0) / means.length).toFixed(1));
+      setForm(f => ({ ...f, baselineTemp: avg }));
+      setClimateNote(`${place.name} (${place.latitude.toFixed(2)}, ${place.longitude.toFixed(2)}) · ${t('zoneForm.climateSource')}`);
+    } catch {
+      setError(t('zoneForm.climateError'));
+    } finally {
+      setClimateLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (editingZone) setForm({ ...editingZone });
@@ -95,6 +123,17 @@ export const ZoneFormModal: React.FC<Props> = ({ isOpen, onClose, editingZone, o
             <div className="md:col-span-2">
               <label className="text-xs font-semibold">{t('zoneForm.description')}</label>
               <textarea value={form.description} onChange={e=>setForm({...form, description:e.target.value})} rows={2} placeholder={t('zoneForm.placeholderDesc')} className="w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs" />
+            </div>
+            <div className="md:col-span-2">
+              <button
+                onClick={fetchRealClimate}
+                disabled={climateLoading}
+                className="w-full py-2 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer border bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-900 hover:bg-sky-100 dark:hover:bg-sky-900/50 disabled:opacity-50"
+              >
+                <CloudSun className="w-4 h-4" />
+                {climateLoading ? t('zoneForm.climateLoading') : t('zoneForm.climateBtn')}
+              </button>
+              {climateNote && <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono mt-1">{climateNote}</p>}
             </div>
             <div><label className="text-xs font-semibold">{t('zoneForm.totalPop')}</label><input type="number" value={form.targetPopulation} onChange={e=>setForm({...form, targetPopulation: Number(e.target.value)})} className="w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs" /></div>
             <div><label className="text-xs font-semibold">{t('zoneForm.vulnPop')}</label><input type="number" value={form.vulnerablePopulation} onChange={e=>setForm({...form, vulnerablePopulation: Number(e.target.value)})} className="w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs" /></div>
