@@ -112,7 +112,7 @@ function MarkdownText({ text }: { text: string }) {
   return <div>{blocks}</div>;
 }
 
-function EstimateChart({ e }: { e: NbsEstimate }) {
+const EstimateChart: React.FC<{ e: NbsEstimate }> = ({ e }) => {
   const { t } = useI18n();
   const baseLabel = t('agent.base');
   const projLabel = t('agent.projection');
@@ -161,7 +161,7 @@ function EstimateChart({ e }: { e: NbsEstimate }) {
       </div>
     </div>
   );
-}
+};
 
 // Panel aislado del AssistantChatbot existente: llama a /api/agent, que corre un
 // agente real LangChain + LangGraph (createReactAgent) en el backend de Vercel.

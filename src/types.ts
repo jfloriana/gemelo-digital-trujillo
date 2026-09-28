@@ -48,6 +48,11 @@ export interface EnvironmentalReading {
   aqiCategory: 'Buena' | 'Moderada' | 'Dañina para grupos sensibles' | 'Dañina' | 'Muy dañina' | 'Peligrosa';
 }
 
+// Nodos virtuales sin hardware que replican datasets abiertos (migración 0004).
+// Se muestran en sección propia y se excluyen de promedios de calibración.
+export const VIRTUAL_SENSOR_TYPE = 'Referencia pública (OpenAQ/Open-Meteo)';
+export const isVirtualSensor = (s: Pick<SensorNode, 'sensorType'>) => s.sensorType === VIRTUAL_SENSOR_TYPE;
+
 export interface SensorNode {
   id: string;
   code: string;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SensorNode, UrbanZone, IoTTelemetryPayload, IngestionLog, QaQcValidation } from '../../types';
+import { SensorNode, UrbanZone, IoTTelemetryPayload, IngestionLog, QaQcValidation, isVirtualSensor } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { 
@@ -24,7 +24,8 @@ import {
   AlertCircle,
   Copy,
   Clock,
-  Sparkles
+  Sparkles,
+  Globe
 } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 
@@ -47,6 +48,11 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
   // Selected sensor for inspection/injection
   const [selectedSensorId, setSelectedSensorId] = useState<string>(sensors[0]?.id || 'sensor-trj-01');
   const activeSensor = sensors.find(s => s.id === selectedSensorId) || sensors[0];
+
+  // Separación tesis: hardware propio vs nodos virtuales de datasets abiertos (0004)
+  const hardwareSensors = sensors.filter(s => !isVirtualSensor(s));
+  const publicSensors = sensors.filter(isVirtualSensor);
+  const onlineCount = sensors.filter(s => s.status === 'online').length;
 
   // Protocol Simulation Settings
   const [activeProtocol, setActiveProtocol] = useState<'MQTT' | 'REST_API' | 'WEBSOCKET'>('MQTT');
@@ -669,7 +675,46 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
         </div>
       </div>
 
-      {/* Fleet Sensor Live Status Matrix */}
+      {/* Fuentes públicas de referencia (datasets abiertos, nodos virtuales sin hardware) */}
+      {publicSensors.length > 0 && (
+        <div className="bg-sky-50/60 dark:bg-sky-950/20 border border-sky-200/70 dark:border-sky-900 rounded-2xl p-6 space-y-4 shadow-sm">
+          <div className="border-b border-sky-200/60 dark:border-sky-900 pb-3">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Globe className="w-5 h-5 text-sky-600" />
+              {t('iot.pubTitle')}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              {t('iot.pubDesc')}
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {publicSensors.map(s => (
+              <div key={s.id} className="bg-white dark:bg-slate-900 border border-sky-200/70 dark:border-sky-900 rounded-xl p-4 space-y-2">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <strong className="font-mono text-xs text-slate-900 dark:text-white">{s.code}</strong>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-600 text-white">
+                    {t('iot.pubSource')}: {s.code.includes('OPENAQ') ? 'OpenAQ v3' : 'Open-Meteo'}
+                  </span>
+                </div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">{s.name}</div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-[11px] text-slate-700 dark:text-slate-300">
+                  <span>Temp {s.lastReading.temperature} °C</span>
+                  <span>PM2.5 {s.lastReading.pm25} µg/m³</span>
+                  <span>Hum {s.lastReading.humidity} %</span>
+                  <span>Viento {s.lastReading.windSpeed} m/s {s.lastReading.windDirection}</span>
+                  <span>AQI {s.lastReading.aqiIndex} ({s.lastReading.aqiCategory})</span>
+                  <span>{String(s.lastReading.timestamp || '').slice(0, 16).replace('T', ' ')}</span>
+                </div>
+                <div className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-lg px-2 py-1">
+                  {t('iot.pubNoCalib')}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Fleet Sensor Live Status Matrix (solo hardware propio) */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 space-y-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-3">
           <div>
@@ -683,7 +728,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl">
-              {t('iot.onlineBadge')}
+              {onlineCount}/{sensors.length} {t('iot.nodesOnline')}
             </span>
           </div>
         </div>
@@ -704,7 +749,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {sensors.map(s => {
+              {hardwareSensors.map(s => {
                 const isSelected = s.id === selectedSensorId;
                 return (
                   <tr 

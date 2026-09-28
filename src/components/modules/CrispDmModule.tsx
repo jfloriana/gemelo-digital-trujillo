@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useI18n } from '../../context/I18nContext';
-import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation } from '../../types';
+import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, isVirtualSensor } from '../../types';
 import {
   Target,
   Database,
@@ -90,8 +90,10 @@ export const CrispDmModule: React.FC<CrispDmModuleProps> = ({ onExportReports, z
     sensors.forEach(sn => (sn.hourlyHistory || []).forEach(r => { humidity.push(r.humidity); pm25.push(r.pm25); }));
     const corr = pearson(humidity, pm25);
 
-    const avgR2Raw = sensors.length ? sensors.reduce((s, sn) => s + (sn.r2ScoreRaw || 0), 0) / sensors.length : 0;
-    const avgR2Cal = sensors.length ? sensors.reduce((s, sn) => s + (sn.r2ScoreCalibrated || 0), 0) / sensors.length : 0;
+    // Los nodos virtuales de referencia pública (R²=0, sin calibración) no entran en promedios
+    const hwSensors = sensors.filter(s => !isVirtualSensor(s));
+    const avgR2Raw = hwSensors.length ? hwSensors.reduce((s, sn) => s + (sn.r2ScoreRaw || 0), 0) / hwSensors.length : 0;
+    const avgR2Cal = hwSensors.length ? hwSensors.reduce((s, sn) => s + (sn.r2ScoreCalibrated || 0), 0) / hwSensors.length : 0;
     const calibratedCount = sensors.filter(s => s.calibrationStatus === 'Calibrado (2-Etapas Zhivkov)').length;
 
     const bestModel = models.length ? [...models].sort((a, b) => b.r2 - a.r2)[0] : null;
