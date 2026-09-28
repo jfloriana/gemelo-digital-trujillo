@@ -20,6 +20,7 @@ const ValidationPolicyModule = React.lazy(() => import('./components/modules/Val
 const CrispDmModule = React.lazy(() => import('./components/modules/CrispDmModule').then(m => ({ default: m.CrispDmModule })));
 const ReportsModule = React.lazy(() => import('./components/modules/ReportsModule').then(m => ({ default: m.ReportsModule })));
 const IoTIntegrationModule = React.lazy(() => import('./components/modules/IoTIntegrationModule').then(m => ({ default: m.IoTIntegrationModule })));
+const MlTrainingModule = React.lazy(() => import('./components/modules/MlTrainingModule').then(m => ({ default: m.MlTrainingModule })));
 
 // Fallback para lazy
 const ModuleFallback: React.FC = () => {
@@ -50,13 +51,15 @@ import {
   ShieldCheck,
   Bot,
   Workflow,
-  Radio
+  Radio,
+  Brain
 } from 'lucide-react';
 
 type ActiveModule =
   | 'digital_twin'
   | 'diagnosis'
   | 'iot_monitor'
+  | 'ml_training'
   | 'architecture'
   | 'ai_engine'
   | 'nbs_simulator'
@@ -223,6 +226,18 @@ function MainAppContent() {
           >
             <Cpu className="w-4 h-4" />
             {t('nav.ai_engine')}
+          </button>
+
+          <button
+            onClick={() => setActiveModule('ml_training')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition-all ${
+              activeModule === 'ml_training'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Brain className="w-4 h-4" />
+            {t('nav.ml_training')}
           </button>
 
           <button
@@ -406,6 +421,13 @@ function MainAppContent() {
               onSensorUpdate={() => {}}
               onExportReports={handleQuickExport}
             />
+          </React.Suspense>
+        )}
+
+        {/* VIEW: Laboratorio de Entrenamiento IA con datos públicos */}
+        {activeModule === 'ml_training' && (
+          <React.Suspense fallback={<ModuleFallback />}>
+            <MlTrainingModule sensors={SENSOR_NODES} />
           </React.Suspense>
         )}
 
