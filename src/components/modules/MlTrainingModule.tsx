@@ -7,6 +7,7 @@ import {
   FEATURE_NAMES, ModelKind, TrialRecord, Metrics, HyperResult, DomainGap,
 } from '../../utils/mlTraining';
 import { exportTrainingToExcel, exportTrainingToPDF, exportModelReportToExcel, exportModelReportToPDF } from '../../utils/exportUtils';
+import { PublicRecordsViewer } from './PublicRecordsViewer';
 import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine,
 } from 'recharts';
@@ -581,6 +582,9 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
         </button>
         {!canTrain && <p className="text-[11px] text-amber-700 dark:text-amber-400">{t('mlt.needMore')}</p>}
       </div>
+
+      {/* Historial completo de datasets públicos */}
+      <PublicRecordsViewer />
 
       {/* EDA */}
       {rows.length > 0 && (
