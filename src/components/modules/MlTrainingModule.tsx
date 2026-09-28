@@ -44,6 +44,98 @@ function download(filename: string, content: string, mime: string) {
   URL.revokeObjectURL(url);
 }
 
+function ModelDetail({ tr }: { tr: TrialRecord }) {
+  const { t } = useI18n();
+  const a = tr;
+  const hyperRows = Object.entries(a.hyper);
+  return (
+    <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700 rounded-xl p-3 space-y-3 text-[11px]">
+      <div className="grid sm:grid-cols-3 gap-2 font-mono text-slate-600 dark:text-slate-300">
+        <span>seed={a.seed}</span>
+        <span>n={a.nTrain}/{a.nTest}</span>
+        <span className="truncate">{a.datasetHash}</span>
+      </div>
+      {hyperRows.length > 0 && (
+        <div>
+          <div className="font-bold text-slate-700 dark:text-slate-200 mb-1">{t('mlt.hyperTitle')}</div>
+          <div className="flex flex-wrap gap-1.5">
+            {hyperRows.map(([k, v]) => (
+              <span key={k} className="px-2 py-0.5 rounded-md bg-violet-100 dark:bg-violet-950 text-violet-800 dark:text-violet-300 font-mono">{k}={String(v)}</span>
+            ))}
+          </div>
+        </div>
+      )}
+      {a.model === 'linear' && (() => {
+        const w = (a.payload as { weights: number[] }).weights;
+        return (
+          <div className="space-y-2">
+            <div className="font-bold text-slate-700 dark:text-slate-200">{t('mlt.equation')}</div>
+            <div className="font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-2 overflow-x-auto whitespace-nowrap">
+              PM = {w[0].toFixed(2)}{w.slice(1).map((c, j) => ` ${c >= 0 ? '+' : '−'} ${Math.abs(c).toFixed(2)}·z(${FEATURE_NAMES[j]})`).join('')}
+            </div>
+            <table className="w-full text-left">
+              <thead className="text-slate-500 uppercase text-[10px]">
+                <tr><th className="py-1 pr-2">{t('mlt.featureCol')}</th><th className="py-1 pr-2">{t('mlt.coefCol')}</th><th className="py-1">{t('mlt.effectCol')}</th></tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200/60 dark:divide-slate-700/60 font-mono">
+                {FEATURE_NAMES.map((f, j) => (
+                  <tr key={f}>
+                    <td className="py-1 pr-2 font-sans">{f}</td>
+                    <td className="py-1 pr-2">{w[j + 1].toFixed(3)}</td>
+                    <td className="py-1">{w[j + 1] >= 0 ? t('mlt.effectUp') : t('mlt.effectDown')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      })()}
+      {a.model === 'knn' && (() => {
+        const p = a.payload as { k: number; XZ: number[][]; y: number[] };
+        return (
+          <div className="space-y-1 text-slate-600 dark:text-slate-300">
+            <div><strong>k</strong> = {p.k} · <strong>N</strong> = {p.y.length} · {t('mlt.knnMetric')}</div>
+            <div>{t('mlt.knnRule')}</div>
+          </div>
+        );
+      })()}
+      {a.model === 'mlp' && (() => {
+        const p = a.payload as { w1: number[][]; b1: number[]; w2: number[]; b2: number; lossHist?: number[] };
+        const hidden = p.b1.length;
+        const nParams = 4 * hidden + hidden + hidden + 1;
+        return (
+          <div className="space-y-2">
+            <div className="font-bold text-slate-700 dark:text-slate-200">{t('mlt.architecture')} · {nParams} {t('mlt.params')}</div>
+            <div className="flex items-center gap-1.5 font-mono text-[10px]">
+              {[`in(4)`, `h(${hidden}) tanh`, `out(1)`].map((s, i, arr) => (
+                <span key={s} className="flex items-center gap-1.5">
+                  <span className="px-2 py-1 rounded-lg bg-violet-600 text-white font-bold">{s}</span>
+                  {i < arr.length - 1 && <span className="text-slate-400">→</span>}
+                </span>
+              ))}
+            </div>
+            {p.lossHist?.length ? (
+              <div className="h-[140px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={p.lossHist.map((v, i) => ({ ep: i * 10, loss: v }))} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="ep" tick={{ fontSize: 9 }} />
+                    <YAxis tick={{ fontSize: 9 }} domain={['auto', 'auto']} />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="loss" name="MSE" stroke="#9333ea" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="italic text-slate-400">{t('mlt.noLoss')}</p>
+            )}
+          </div>
+        );
+      })()}
+    </div>
+  );
+}
+
 function MetricGrid({ m }: { m: Metrics }) {
   return (
     <div className="grid grid-cols-4 gap-1.5">
@@ -72,6 +164,7 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
   const [gridRunning, setGridRunning] = useState(false);
   const [inferX, setInferX] = useState<number[]>([28, 70, 2.5, 400]);
   const [inferSensor, setInferSensor] = useState<string>('');
+  const [expanded, setExpanded] = useState<ModelKind | null>(null);
 
   const rows = useMemo(() => buildDataset(sensors), [sensors]);
   const nPub = rows.filter((r) => r.source === 'public').length;
@@ -270,6 +363,13 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
                 <div className="text-[10px] text-slate-400 font-mono">
                   n={tr.nTrain}/{tr.nTest} · {t('mlt.cv')}: {tr.cvMeanR2 == null ? '—' : `${tr.cvMeanR2.toFixed(3)} ± ${tr.cvStdR2?.toFixed(3)}`} · {t('mlt.noise')}: {tr.noiseDegradPct == null ? '—' : `+${tr.noiseDegradPct.toFixed(1)}%`}
                 </div>
+                <button
+                  onClick={() => setExpanded((prev) => (prev === kind ? null : kind))}
+                  className="text-[11px] font-bold text-violet-700 dark:text-violet-300 hover:underline cursor-pointer"
+                >
+                  {expanded === kind ? t('mlt.hideModel') : t('mlt.showModel')}
+                </button>
+                {expanded === kind && <ModelDetail tr={tr} />}
               </>
             )}
           </div>

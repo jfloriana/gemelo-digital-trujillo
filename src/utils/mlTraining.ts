@@ -194,6 +194,11 @@ export function trainMlpModel(train: TrainRow[], seed: number, hidden = 8, epoch
   const b1 = new Array(hidden).fill(0);
   const w2 = Array.from({ length: hidden }, () => (rnd() - 0.5) * 0.6);
   let b2 = 0;
+  const forward = (zi: number[]) => {
+    const h = b1.map((b, j) => Math.tanh(b + zi.reduce((s, v, k) => s + v * w1[k][j], 0)));
+    return { h, out: b2 + h.reduce((s, v, j) => s + v * w2[j], 0) };
+  };
+  const lossHist: number[] = [];
   for (let ep = 0; ep < epochs; ep++) {
     const gw1 = w1.map((r) => r.map(() => 0));
     const gb1 = new Array(hidden).fill(0);
@@ -215,11 +220,19 @@ export function trainMlpModel(train: TrainRow[], seed: number, hidden = 8, epoch
     for (let k = 0; k < d; k++) for (let j = 0; j < hidden; j++) w1[k][j] -= (lr * gw1[k][j]) / n;
     for (let j = 0; j < hidden; j++) { b1[j] -= (lr * gb1[j]) / n; w2[j] -= (lr * gw2[j]) / n; }
     b2 -= (lr * gb2) / n;
+    if (ep % 10 === 0 || ep === epochs - 1) {
+      let se = 0;
+      for (let i = 0; i < Z.length; i++) {
+        const o = forward(Z[i]).out;
+        se += (o - yn[i]) ** 2;
+      }
+      lossHist.push(Number((se / Z.length).toFixed(5)));
+    }
   }
   return {
     model: 'mlp', seed, hyper: { hidden, epochs, lr },
     featureMeans: means, featureStds: stds,
-    payload: { w1, b1, w2, b2, yMean, yStd },
+    payload: { w1, b1, w2, b2, yMean, yStd, lossHist },
     metrics: { r2: 0, rmse: 0, mae: 0, mape: 0 },
     nTrain: train.length, nTest: 0, datasetHash: '', createdAt: new Date().toISOString(),
   };
