@@ -158,18 +158,47 @@ function contentToText(content) {
   }
 }
 
+// Cuota gratuita Gemini: 20 req/día por modelo. Cada paso del ciclo
+// agent<->tools consume 1 request, así que un turno gasta varias.
+// Estrategia: rotar keys (principal + respaldo) y caer a gemini-2.5-flash
+// (pool de cuota propio) antes de rendirse con 429 amable.
+const GEMINI_MODELS = ['gemini-3.6-flash', 'gemini-2.5-flash'];
+
+function geminiKeys() {
+  return [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY_2].filter((k) => k && k.length >= 10);
+}
+
+function isQuotaError(e) {
+  const msg = e instanceof Error ? e.message : String(e);
+  return /429|quota|rate.?limit|exceed/i.test(msg);
+}
+
+function quotaRetryAfter(e) {
+  const msg = e instanceof Error ? e.message : String(e);
+  const m = msg.match(/retry in ([\d.]+)s/i);
+  return m ? Math.max(5, Math.ceil(Number(m[1]))) : 60;
+}
+
+export function quotaResponse(res, e) {
+  return res.status(429).json({
+    code: 'QUOTA_EXHAUSTED',
+    retryAfter: quotaRetryAfter(e),
+    error: 'Cuota gratuita diaria de Gemini agotada (20 req/día por modelo). Se renueva cada 24 h. Tip: cada herramienta que usa el agente gasta 1 request; evita reintentar en bucle.',
+  });
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+  const KEYS = geminiKeys();
   const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
-  if (!GEMINI_API_KEY || GEMINI_API_KEY.length < 10) {
-    return res.status(500).json({ error: 'GEMINI_API_KEY no configurada. Agrega una key real de https://aistudio.google.com/apikey en las variables de entorno de Vercel (y en .env.local para desarrollo).' });
+  if (!KEYS.length) {
+    return res.status(500).json({ error: 'GEMINI_API_KEY no configurada. Agrega una key real de https://aistudio.google.com/apikey en las variables de entorno de Vercel (y en .env.local para desarrollo). Opcional: GEMINI_API_KEY_2 como respaldo.' });
   }
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return res.status(500).json({ error: 'Faltan VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY.' });
@@ -180,32 +209,43 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'message (string) requerido' });
   }
 
-  try {
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const tools = buildTools(supabase);
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const tools = buildTools(supabase);
+  const priorMessages = Array.isArray(history)
+    ? history.slice(-8).map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '').slice(0, 2000) }))
+    : [];
+  const input = {
+    messages: [
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...priorMessages,
+      { role: 'user', content: message.slice(0, 4000) },
+    ],
+  };
 
-    const model = new ChatGoogleGenerativeAI({
-      apiKey: GEMINI_API_KEY,
-      model: 'gemini-3.6-flash',
-      temperature: 0.3,
-    });
+  // Recorre keys × modelos hasta que uno responda; solo reintenta en 429.
+  // recursionLimit acota el peor caso de requests por turno.
+  let lastQuotaError = null;
+  for (const apiKey of KEYS) {
+    for (const modelName of GEMINI_MODELS) {
+      try {
+        const model = new ChatGoogleGenerativeAI({ apiKey, model: modelName, temperature: 0.3 });
+        // Agente LangGraph real (createReactAgent construye un StateGraph con nodos
+        // "agent" <-> "tools" y ciclo de tool-calling hasta que el modelo da respuesta final).
+        const agent = createReactAgent({ llm: model, tools });
+        const result = await agent.invoke(input, { recursionLimit: 12 });
+        return sendResult(res, result);
+      } catch (e) {
+        if (!isQuotaError(e)) {
+          const msg = e instanceof Error ? e.message : String(e);
+          return res.status(500).json({ error: msg });
+        }
+        lastQuotaError = e;
+      }
+    }
+  }
+  return quotaResponse(res, lastQuotaError);
 
-    // Agente LangGraph real (createReactAgent construye un StateGraph con nodos
-    // "agent" <-> "tools" y ciclo de tool-calling hasta que el modelo da respuesta final).
-    const agent = createReactAgent({ llm: model, tools });
-
-    const priorMessages = Array.isArray(history)
-      ? history.slice(-8).map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '').slice(0, 2000) }))
-      : [];
-
-    const result = await agent.invoke({
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        ...priorMessages,
-        { role: 'user', content: message.slice(0, 4000) },
-      ],
-    });
-
+  function sendResult(res, result) {
     const msgs = result.messages || [];
     // Último mensaje con texto real (el final del agente; a veces el último
     // mensaje es un ToolMessage sin texto útil para mostrar).
@@ -243,8 +283,5 @@ export default async function handler(req, res) {
       estimates,
       zone,
     });
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return res.status(500).json({ error: msg });
   }
 }

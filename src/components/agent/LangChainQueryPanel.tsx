@@ -28,7 +28,10 @@ export const LangChainQueryPanel: React.FC = () => {
         body: JSON.stringify({ zoneName: zoneName.trim(), question: question.trim() }),
       });
       const j = await r.json();
-      if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+      if (!r.ok) {
+        if (j.code === 'QUOTA_EXHAUSTED') throw new Error(t('lc.quota').replace('{s}', String(j.retryAfter ?? 60)));
+        throw new Error(j.error || `HTTP ${r.status}`);
+      }
       setAnswer(j.answer);
       setContext(j.retrievedContext);
     } catch (e) {

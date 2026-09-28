@@ -103,12 +103,12 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+  const KEYS = [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY_2].filter((k) => k && k.length >= 10);
   const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
-  if (!GEMINI_API_KEY || GEMINI_API_KEY.length < 10) {
-    return res.status(500).json({ error: 'GEMINI_API_KEY no configurada. Agrega una key real de https://aistudio.google.com/apikey en las variables de entorno de Vercel.' });
+  if (!KEYS.length) {
+    return res.status(500).json({ error: 'GEMINI_API_KEY no configurada. Agrega una key real de https://aistudio.google.com/apikey en las variables de entorno de Vercel. Opcional: GEMINI_API_KEY_2 como respaldo.' });
   }
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return res.status(500).json({ error: 'Faltan VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY.' });
@@ -119,26 +119,43 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'zoneName y question (strings) requeridos' });
   }
 
-  try {
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const { context, found } = await retrieveZoneContext(supabase, String(zoneName).slice(0, 120));
+  const isQuotaError = (e) => /429|quota|rate.?limit|exceed/i.test(e instanceof Error ? e.message : String(e));
 
-    const prompt = PromptTemplate.fromTemplate(PROMPT_TEMPLATE);
-    const model = new ChatGoogleGenerativeAI({ apiKey: GEMINI_API_KEY, model: 'gemini-3.6-flash', temperature: 0.2 });
-    const outputParser = new StringOutputParser();
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { context, found } = await retrieveZoneContext(supabase, String(zoneName).slice(0, 120));
 
-    // Chain LangChain pura: prompt -> modelo -> parser de salida. Sin herramientas, sin ciclos.
-    const chain = RunnableSequence.from([prompt, model, outputParser]);
+  const prompt = PromptTemplate.fromTemplate(PROMPT_TEMPLATE);
+  const outputParser = new StringOutputParser();
+  const input = {
+    zoneName: String(zoneName).slice(0, 120),
+    question: String(question).slice(0, 2000),
+    context,
+  };
 
-    const answer = await chain.invoke({
-      zoneName: String(zoneName).slice(0, 120),
-      question: String(question).slice(0, 2000),
-      context,
-    });
-
-    return res.status(200).json({ answer, retrievedContext: context, contextFound: found });
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return res.status(500).json({ error: msg });
+  // Rota keys × modelos (pools de cuota independientes) antes de rendirse.
+  let lastQuotaError = null;
+  for (const apiKey of KEYS) {
+    for (const modelName of ['gemini-3.6-flash', 'gemini-2.5-flash']) {
+      try {
+        const model = new ChatGoogleGenerativeAI({ apiKey, model: modelName, temperature: 0.2 });
+        // Chain LangChain pura: prompt -> modelo -> parser de salida. Sin herramientas, sin ciclos.
+        const chain = RunnableSequence.from([prompt, model, outputParser]);
+        const answer = await chain.invoke(input);
+        return res.status(200).json({ answer, retrievedContext: context, contextFound: found });
+      } catch (e) {
+        if (!isQuotaError(e)) {
+          const msg = e instanceof Error ? e.message : String(e);
+          return res.status(500).json({ error: msg });
+        }
+        lastQuotaError = e;
+      }
+    }
   }
+  const msg = lastQuotaError instanceof Error ? lastQuotaError.message : String(lastQuotaError);
+  const m = msg.match(/retry in ([\d.]+)s/i);
+  return res.status(429).json({
+    code: 'QUOTA_EXHAUSTED',
+    retryAfter: m ? Math.max(5, Math.ceil(Number(m[1]))) : 60,
+    error: 'Cuota gratuita diaria de Gemini agotada (20 req/día por modelo). Se renueva cada 24 h. Evita reintentar en bucle.',
+  });
 }

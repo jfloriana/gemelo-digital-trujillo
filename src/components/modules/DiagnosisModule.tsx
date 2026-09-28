@@ -46,6 +46,7 @@ interface DiagnosisModuleProps {
   selectedZone: UrbanZone;
   onSelectZone: (zone: UrbanZone) => void;
   onExportReports: (format: 'xlsx' | 'pdf' | 'docx' | 'csv') => void;
+  onZonesChanged?: () => void;
 }
 
 export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
@@ -53,7 +54,8 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
   sensors,
   selectedZone,
   onSelectZone,
-  onExportReports
+  onExportReports,
+  onZonesChanged
 }) => {
   const { permissions } = useAuth();
   const { t } = useI18n();
@@ -468,7 +470,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
           </div>
         </div>
       </div>
-      <ZoneFormModal isOpen={zoneModalOpen} onClose={()=>setZoneModalOpen(false)} editingZone={editingZone} onSaved={()=>{ /* Realtime actualiza */ }} />
+      <ZoneFormModal isOpen={zoneModalOpen} onClose={()=>setZoneModalOpen(false)} editingZone={editingZone} onSaved={()=>{ setDeptFilter('Todos'); onZonesChanged?.(); }} />
     </div>
   );
 };

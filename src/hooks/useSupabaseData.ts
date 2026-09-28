@@ -103,6 +103,10 @@ export function useSupabaseData() {
   const [nbs, setNbs] = useState<NbsIntervention[]>(FALLBACK_NBS);
   const [objectives, setObjectives] = useState<ThesisObjectiveEvaluation[]>(FALLBACK_OBJECTIVES);
   const [loading, setLoading] = useState(hasSupabase);
+  // Refetch manual (p. ej. tras registrar/editar zona: Realtime puede no estar
+  // habilitado en la BD y el onSaved anterior no hacía nada).
+  const [refreshTick, setRefreshTick] = useState(0);
+  const refresh = () => setRefreshTick((t) => t + 1);
 
   useEffect(() => {
     if (!hasSupabase) { setLoading(false); return; }
@@ -186,7 +190,7 @@ export function useSupabaseData() {
       .subscribe();
 
     return () => { mounted = false; supabase.removeChannel(ch); supabase.removeChannel(chZones); };
-  }, []);
+  }, [refreshTick]);
 
-  return { zones, sensors, models, nbs, objectives, loading, hasSupabase };
+  return { zones, sensors, models, nbs, objectives, loading, hasSupabase, refresh };
 }

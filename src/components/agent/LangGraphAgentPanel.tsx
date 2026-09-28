@@ -197,7 +197,10 @@ export const LangGraphAgentPanel: React.FC = () => {
         }),
       });
       const j = await r.json();
-      if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+      if (!r.ok) {
+        if (j.code === 'QUOTA_EXHAUSTED') throw new Error(t('agent.quota').replace('{s}', String(j.retryAfter ?? 60)));
+        throw new Error(j.error || `HTTP ${r.status}`);
+      }
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: typeof j.reply === 'string' ? j.reply : '',

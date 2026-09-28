@@ -67,7 +67,7 @@ type ActiveModule =
 function MainAppContent() {
   const { user, isDemo } = useAuth();
   const { t, lang } = useI18n();
-  const { zones: TRUJILLO_ZONES, sensors: SENSOR_NODES, models: AI_MODELS_BENCHMARK, nbs: NBS_CATALOG, objectives: THESIS_OBJECTIVES_DATA, hasSupabase: hasSupabaseData } = useSupabaseData();
+  const { zones: TRUJILLO_ZONES, sensors: SENSOR_NODES, models: AI_MODELS_BENCHMARK, nbs: NBS_CATALOG, objectives: THESIS_OBJECTIVES_DATA, hasSupabase: hasSupabaseData, refresh: refreshSupabaseData } = useSupabaseData();
   const [activeModule, setActiveModule] = useState<ActiveModule>('digital_twin');
   const [selectedZone, setSelectedZone] = useState<UrbanZone>(() => TRUJILLO_ZONES[0]);
   const [isLoginOpen, setIsLoginOpen] = useState<boolean>(false);
@@ -392,6 +392,7 @@ function MainAppContent() {
               selectedZone={selectedZone}
               onSelectZone={setSelectedZone}
               onExportReports={handleQuickExport}
+              onZonesChanged={refreshSupabaseData}
             />
           </React.Suspense>
         )}
