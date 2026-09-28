@@ -61,7 +61,7 @@ export interface SensorNode {
   canopyCoverPercent: number; // % cobertura vegetal
   sealedSurfacePercent: number; // % suelo sellado
   trafficDensity: 'Bajo' | 'Medio' | 'Alto' | 'Muy Crítico';
-  sensorType: 'PMS5003 + SHT31' | 'Sensirion SPS30 + BME680' | 'Alphasense OPC-N3';
+  sensorType: 'PMS5003 + SHT31' | 'Sensirion SPS30 + BME680' | 'Alphasense OPC-N3' | 'Referencia pública (OpenAQ/Open-Meteo)';
   calibrationStatus: 'Calibrado (2-Etapas Zhivkov)' | 'Sin Calibrar' | 'En Validación';
   r2ScoreRaw: number;
   r2ScoreCalibrated: number;

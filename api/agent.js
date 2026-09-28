@@ -35,14 +35,20 @@ const NBS_FACTORS = {
 function buildTools(supabase) {
   const getZoneData = tool(
     async ({ zoneName }) => {
+      const q = String(zoneName || '').trim().replace(/[%_]/g, '').slice(0, 120);
+      const like = `%${q}%`;
       const { data, error } = await supabase
         .from('urban_zones')
-        .select('id,name,district,department,baseline_temp,baseline_pm25,target_population,vulnerable_population,tree_cover,built_density,primary_pollution_source')
-        .ilike('name', `%${zoneName}%`)
+        .select('id,name,district,department,vulnerability_level,baseline_temp,baseline_pm25,target_population,vulnerable_population,tree_cover,built_density,primary_pollution_source,description')
+        .or(`name.ilike.${like},district.ilike.${like},department.ilike.${like},description.ilike.${like},primary_pollution_source.ilike.${like}`)
         .limit(1)
         .maybeSingle();
       if (error) return `Error consultando la zona: ${error.message}`;
-      if (!data) return `No se encontro ninguna zona que coincida con "${zoneName}".`;
+      if (!data) {
+        const { data: all } = await supabase.from('urban_zones').select('name').order('id').limit(20);
+        const names = (all || []).map((z) => z.name).join(' | ');
+        return `No se encontro ninguna zona que coincida con "${q}".${names ? ` Zonas disponibles: ${names}.` : ''}`;
+      }
       return JSON.stringify(data);
     },
     {
@@ -84,6 +90,31 @@ function buildTools(supabase) {
   );
 
   return [getZoneData, estimateNbsImpact];
+}
+
+// Los modelos de Gemini devuelven `content` como array de bloques
+// [{type:'text', text:'...'}, ...] y a veces parten la respuesta en varios
+// bloques. Antes se hacía JSON.stringify() de ese array y el frontend mostraba
+// `[{"type":"text","text":"..."}]` crudo. Esta función lo aplana a texto plano.
+function contentToText(content) {
+  if (typeof content === 'string') return content;
+  if (Array.isArray(content)) {
+    return content
+      .map((b) => {
+        if (typeof b === 'string') return b;
+        if (b && typeof b === 'object' && typeof b.text === 'string') return b.text;
+        return '';
+      })
+      .join('');
+  }
+  if (content && typeof content === 'object' && typeof content.text === 'string') {
+    return content.text;
+  }
+  try {
+    return JSON.stringify(content ?? '');
+  } catch {
+    return String(content ?? '');
+  }
 }
 
 export default async function handler(req, res) {
@@ -135,12 +166,41 @@ export default async function handler(req, res) {
     });
 
     const msgs = result.messages || [];
-    const last = msgs[msgs.length - 1];
-    const toolStepsUsed = msgs.filter((m) => m.tool_call_id || (m.tool_calls && m.tool_calls.length)).length;
+    // Último mensaje con texto real (el final del agente; a veces el último
+    // mensaje es un ToolMessage sin texto útil para mostrar).
+    const withText = msgs.filter((m) => contentToText(m?.content).trim().length > 0);
+    const last = withText[withText.length - 1] || msgs[msgs.length - 1];
+
+    // Solo los ToolMessage (tienen tool_call_id) cuentan como ejecuciones reales.
+    // Antes se contaban también los mensajes AI con tool_calls y el número salía inflado.
+    const toolMsgs = msgs.filter((m) => m && m.tool_call_id != null);
+    const toolStepsUsed = toolMsgs.length;
+    const toolsUsed = [...new Set(toolMsgs.map((m) => m.name).filter(Boolean))];
+
+    // Datos estructurados para que el frontend dibuje tabla/gráfico Base vs
+    // Proyección sin depender de cómo el LLM redacte la respuesta.
+    const estimates = [];
+    let zone = null;
+    for (const m of toolMsgs) {
+      const text = contentToText(m.content);
+      try {
+        const parsed = JSON.parse(text);
+        if (m.name === 'estimate_nbs_impact' && parsed && typeof parsed === 'object' && 'tempAfter' in parsed) {
+          estimates.push(parsed);
+        } else if (m.name === 'get_zone_data' && parsed && typeof parsed === 'object' && parsed.name) {
+          zone = parsed;
+        }
+      } catch {
+        // Contenido no-JSON (p. ej. mensaje de error de la herramienta): se ignora.
+      }
+    }
 
     return res.status(200).json({
-      reply: typeof last?.content === 'string' ? last.content : JSON.stringify(last?.content ?? ''),
+      reply: contentToText(last?.content),
       toolStepsUsed,
+      toolsUsed,
+      estimates,
+      zone,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

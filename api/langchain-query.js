@@ -23,19 +23,34 @@ Pregunta: {question}
 
 Respuesta:`;
 
-// Paso de "retrieval": una sola consulta de solo lectura a la tabla publica de zonas.
+// Paso de "retrieval": consulta de solo lectura a la tabla publica de zonas.
+// Busca en name + district + department + description porque los nombres reales
+// son del tipo "Zona 1: Centro Histórico (Av. España...)" y NUNCA contienen
+// la palabra "Trujillo" sola (Trujillo solo aparece en district/department).
 async function retrieveZoneContext(supabase, zoneName) {
+  const q = String(zoneName || '').trim().replace(/[%_]/g, '').slice(0, 120);
+  if (!q) return { context: 'Nombre de zona vacío.', found: false };
+  const like = `%${q}%`;
   const { data, error } = await supabase
     .from('urban_zones')
-    .select('name,district,department,baseline_temp,baseline_pm25,target_population,vulnerable_population,tree_cover,built_density,primary_pollution_source,description')
-    .ilike('name', `%${zoneName}%`)
+    .select('name,district,department,vulnerability_level,baseline_temp,baseline_pm25,target_population,vulnerable_population,tree_cover,built_density,primary_pollution_source,description')
+    .or(`name.ilike.${like},district.ilike.${like},department.ilike.${like},description.ilike.${like},primary_pollution_source.ilike.${like}`)
     .limit(1)
     .maybeSingle();
   if (error) return { context: `Error de consulta: ${error.message}`, found: false };
-  if (!data) return { context: `No se encontro ninguna zona que coincida con "${zoneName}" en la base de datos.`, found: false };
+  if (!data) {
+    // Fallback útil: listar zonas disponibles para que el usuario copie un nombre válido.
+    const { data: all } = await supabase.from('urban_zones').select('name').order('id').limit(20);
+    const names = (all || []).map((z) => z.name).join(' | ');
+    return {
+      context: `No se encontro ninguna zona que coincida con "${q}" en la base de datos.${names ? ` Zonas disponibles: ${names}. Prueba con "Centro", "España", "Hermelinda", "Porvenir", "Larco" o "Mansiche".` : ''}`,
+      found: false,
+    };
+  }
   const context = [
     `Nombre: ${data.name}`,
     `Distrito/Departamento: ${data.district}, ${data.department}`,
+    `Nivel de vulnerabilidad: ${data.vulnerability_level ?? 'No registrado'}`,
     `Temperatura base: ${data.baseline_temp} °C`,
     `PM2.5 base: ${data.baseline_pm25} µg/m³`,
     `Población total / vulnerable: ${data.target_population} / ${data.vulnerable_population}`,

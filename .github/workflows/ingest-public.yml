@@ -1,0 +1,26 @@
+# Ingesta horaria gratuita de datasets públicos (Open-Meteo + OpenAQ).
+# Llama a /api/ingest-public en Vercel. Costo $0 (GitHub Actions free tier).
+# Requiere 2 secrets en el repo (Settings → Secrets → Actions):
+#   APP_URL     → ej. https://tu-app.vercel.app (SIN barra final)
+#   CRON_SECRET → mismo valor que la env var CRON_SECRET en Vercel
+# Probar manual: pestaña Actions → "Ingesta pública (Open-Meteo + OpenAQ)" → Run workflow.
+
+name: Ingesta pública (Open-Meteo + OpenAQ)
+
+on:
+  schedule:
+    - cron: '17 * * * *' # cada hora, minuto 17 UTC
+  workflow_dispatch: # botón manual
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Disparar ingesta en Vercel
+        run: |
+          curl -sS -X POST "${{ secrets.APP_URL }}/api/ingest-public" \
+            -H "Content-Type: application/json" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            -d '{"zone_id":"zona-centro"}' \
+            --fail-with-body --max-time 90
