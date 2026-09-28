@@ -29,12 +29,15 @@ export interface TrialArtifact {
   featureMeans: number[];
   featureStds: number[];
   payload: unknown; // pesos / vecinos / red
-  metrics: Metrics;
+  metrics: Metrics; // test
+  metricsTrain: Metrics; // train (brecha train-test = diagnóstico de overfitting)
   nTrain: number;
   nTest: number;
   datasetHash: string;
   createdAt: string;
 }
+
+const EMPTY_METRICS: Metrics = { r2: 0, rmse: 0, mae: 0, mape: 0 };
 
 export interface TrialRecord extends TrialArtifact {
   id: string;
@@ -149,7 +152,7 @@ export function trainLinearModel(train: TrainRow[], seed: number): TrialArtifact
     }
   });
   const weights = solveLinear(XtX, Xty);
-  return { model: 'linear', seed, hyper: {}, featureMeans: means, featureStds: stds, payload: { weights }, metrics: { r2: 0, rmse: 0, mae: 0, mape: 0 }, nTrain: train.length, nTest: 0, datasetHash: '', createdAt: new Date().toISOString() };
+  return { model: 'linear', seed, hyper: {}, featureMeans: means, featureStds: stds, payload: { weights }, metrics: { ...EMPTY_METRICS }, metricsTrain: { ...EMPTY_METRICS }, nTrain: train.length, nTest: 0, datasetHash: '', createdAt: new Date().toISOString() };
 }
 
 export function predictWithArtifact(a: TrialArtifact, x: number[]): number {
@@ -177,7 +180,7 @@ export function trainKnnModel(train: TrainRow[], seed: number, k = 5): TrialArti
     model: 'knn', seed, hyper: { k },
     featureMeans: means, featureStds: stds,
     payload: { k, XZ: Z, y: train.map((r) => r.y) },
-    metrics: { r2: 0, rmse: 0, mae: 0, mape: 0 },
+    metrics: { ...EMPTY_METRICS }, metricsTrain: { ...EMPTY_METRICS },
     nTrain: train.length, nTest: 0, datasetHash: '', createdAt: new Date().toISOString(),
   };
 }
@@ -233,7 +236,7 @@ export function trainMlpModel(train: TrainRow[], seed: number, hidden = 8, epoch
     model: 'mlp', seed, hyper: { hidden, epochs, lr },
     featureMeans: means, featureStds: stds,
     payload: { w1, b1, w2, b2, yMean, yStd, lossHist },
-    metrics: { r2: 0, rmse: 0, mae: 0, mape: 0 },
+    metrics: { ...EMPTY_METRICS }, metricsTrain: { ...EMPTY_METRICS },
     nTrain: train.length, nTest: 0, datasetHash: '', createdAt: new Date().toISOString(),
   };
 }
@@ -252,6 +255,8 @@ export function runTrialWithHyper(
   const preds = test.map((r) => predictWithArtifact(artifact, r.x));
   const actual = test.map((r) => r.y);
   artifact.metrics = computeMetrics(actual, preds);
+  const trainPreds = train.map((r) => predictWithArtifact(artifact, r.x));
+  artifact.metricsTrain = computeMetrics(train.map((r) => r.y), trainPreds);
   artifact.nTest = test.length;
   artifact.datasetHash = datasetHash(rows);
   return {

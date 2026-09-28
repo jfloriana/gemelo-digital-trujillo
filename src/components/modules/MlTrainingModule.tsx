@@ -48,64 +48,127 @@ function ModelDetail({ tr }: { tr: TrialRecord }) {
   const { t } = useI18n();
   const a = tr;
   const hyperRows = Object.entries(a.hyper);
+  const errs = a.preds.map((p) => p.pred - p.actual);
+  const meanErr = errs.length ? errs.reduce((s, v) => s + v, 0) / errs.length : 0;
+  const maxErr = errs.length ? Math.max(...errs.map((v) => Math.abs(v))) : 0;
+  const within5 = errs.length ? (100 * errs.filter((v) => Math.abs(v) <= 5).length) / errs.length : 0;
+  const testPub = a.preds.filter((p) => p.label.startsWith('"PUB-')).length;
+  const gap = a.metricsTrain ? a.metrics.r2 - a.metricsTrain.r2 : null;
+  const Sec = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <div>
+      <div className="font-bold text-slate-700 dark:text-slate-200 mb-1 uppercase text-[10px] tracking-wide">{title}</div>
+      {children}
+    </div>
+  );
   return (
     <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700 rounded-xl p-3 space-y-3 text-[11px]">
-      <div className="grid sm:grid-cols-3 gap-2 font-mono text-slate-600 dark:text-slate-300">
-        <span>seed={a.seed}</span>
-        <span>n={a.nTrain}/{a.nTest}</span>
-        <span className="truncate">{a.datasetHash}</span>
-      </div>
-      {hyperRows.length > 0 && (
-        <div>
-          <div className="font-bold text-slate-700 dark:text-slate-200 mb-1">{t('mlt.hyperTitle')}</div>
-          <div className="flex flex-wrap gap-1.5">
+      <Sec title={t('mlt.fichaRep')}>
+        <div className="grid sm:grid-cols-2 gap-x-3 gap-y-0.5 font-mono text-slate-600 dark:text-slate-300">
+          <span>ID: {a.id}</span>
+          <span>seed={a.seed}</span>
+          <span className="truncate sm:col-span-2">hash: {a.datasetHash}</span>
+          <span className="sm:col-span-2">{t('mlt.createdAt')}: {new Date(a.createdAt).toLocaleString('es-PE')}</span>
+        </div>
+        {hyperRows.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
             {hyperRows.map(([k, v]) => (
               <span key={k} className="px-2 py-0.5 rounded-md bg-violet-100 dark:bg-violet-950 text-violet-800 dark:text-violet-300 font-mono">{k}={String(v)}</span>
             ))}
           </div>
+        )}
+      </Sec>
+      <Sec title={t('mlt.fichaData')}>
+        <div className="text-slate-600 dark:text-slate-300">
+          n train/test = {a.nTrain}/{a.nTest} · test: {testPub} {t('mlt.rowsPub')} / {a.preds.length - testPub} {t('mlt.rowsCal')}
         </div>
-      )}
+      </Sec>
+      <Sec title={t('mlt.fichaEval')}>
+        <table className="w-full text-left font-mono">
+          <thead className="text-slate-500 uppercase text-[10px]">
+            <tr><th className="py-0.5 pr-2"></th><th className="py-0.5 pr-2">R²</th><th className="py-0.5 pr-2">RMSE</th><th className="py-0.5 pr-2">MAE</th><th className="py-0.5">MAPE%</th></tr>
+          </thead>
+          <tbody className="divide-y divide-slate-200/60 dark:divide-slate-700/60">
+            <tr><td className="py-0.5 pr-2 font-sans">train</td><td className="py-0.5 pr-2">{a.metricsTrain ? a.metricsTrain.r2.toFixed(3) : '—'}</td><td className="py-0.5 pr-2">{a.metricsTrain ? a.metricsTrain.rmse.toFixed(2) : '—'}</td><td className="py-0.5 pr-2">{a.metricsTrain ? a.metricsTrain.mae.toFixed(2) : '—'}</td><td className="py-0.5">{a.metricsTrain ? a.metricsTrain.mape.toFixed(1) : '—'}</td></tr>
+            <tr><td className="py-0.5 pr-2 font-sans">test</td><td className="py-0.5 pr-2">{a.metrics.r2.toFixed(3)}</td><td className="py-0.5 pr-2">{a.metrics.rmse.toFixed(2)}</td><td className="py-0.5 pr-2">{a.metrics.mae.toFixed(2)}</td><td className="py-0.5">{a.metrics.mape.toFixed(1)}</td></tr>
+          </tbody>
+        </table>
+        {gap != null && <div className="text-slate-500 mt-0.5">{t('mlt.gapOverfit')}: ΔR² = {gap.toFixed(3)} {gap < -0.15 ? `(${t('mlt.gapWarn')})` : `(${t('mlt.gapOk')})`}</div>}
+      </Sec>
+      <Sec title={t('mlt.fichaResid')}>
+        <div className="font-mono text-slate-600 dark:text-slate-300">
+          {t('mlt.meanErr')}: {meanErr >= 0 ? '+' : ''}{meanErr.toFixed(2)} · {t('mlt.maxErr')}: {maxErr.toFixed(2)} · |e|≤5: {within5.toFixed(0)}%
+        </div>
+      </Sec>
       {a.model === 'linear' && (() => {
         const w = (a.payload as { weights: number[] }).weights;
+        const raw = w.slice(1).map((c, j) => c / a.featureStds[j]);
+        const b0 = w[0] - raw.reduce((s, c, j) => s + c * a.featureMeans[j], 0);
         return (
           <div className="space-y-2">
-            <div className="font-bold text-slate-700 dark:text-slate-200">{t('mlt.equation')}</div>
+            <div className="font-bold text-slate-700 dark:text-slate-200 uppercase text-[10px] tracking-wide">{t('mlt.methodLinear')}</div>
             <div className="font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-2 overflow-x-auto whitespace-nowrap">
               PM = {w[0].toFixed(2)}{w.slice(1).map((c, j) => ` ${c >= 0 ? '+' : '−'} ${Math.abs(c).toFixed(2)}·z(${FEATURE_NAMES[j]})`).join('')}
             </div>
             <table className="w-full text-left">
               <thead className="text-slate-500 uppercase text-[10px]">
-                <tr><th className="py-1 pr-2">{t('mlt.featureCol')}</th><th className="py-1 pr-2">{t('mlt.coefCol')}</th><th className="py-1">{t('mlt.effectCol')}</th></tr>
+                <tr><th className="py-1 pr-2">{t('mlt.featureCol')}</th><th className="py-1 pr-2">{t('mlt.coefCol')} z</th><th className="py-1 pr-2">{t('mlt.rawCoef')}</th><th className="py-1">{t('mlt.effectCol')}</th></tr>
               </thead>
               <tbody className="divide-y divide-slate-200/60 dark:divide-slate-700/60 font-mono">
                 {FEATURE_NAMES.map((f, j) => (
                   <tr key={f}>
                     <td className="py-1 pr-2 font-sans">{f}</td>
                     <td className="py-1 pr-2">{w[j + 1].toFixed(3)}</td>
-                    <td className="py-1">{w[j + 1] >= 0 ? t('mlt.effectUp') : t('mlt.effectDown')}</td>
+                    <td className="py-1 pr-2">{raw[j] >= 0 ? '+' : ''}{raw[j].toFixed(3)}</td>
+                    <td className="py-1">{t('mlt.perUnit').replace('{v}', `${raw[j] >= 0 ? '+' : ''}${raw[j].toFixed(2)}`)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            <div className="font-mono text-slate-500">b₀ (unidades reales) = {b0.toFixed(2)} µg/m³</div>
           </div>
         );
       })()}
       {a.model === 'knn' && (() => {
         const p = a.payload as { k: number; XZ: number[][]; y: number[] };
+        const ys = p.y;
+        const mn = Math.min(...ys);
+        const mx = Math.max(...ys);
+        // Vecinos de ejemplo: query = centroide del train, top-3 distancias
+        const centroid = p.XZ[0].map((_, j) => p.XZ.reduce((s, r) => s + r[j], 0) / p.XZ.length);
+        const ex = p.XZ.map((r, i) => ({ i, d: Math.sqrt(r.reduce((s, v, j) => s + (v - centroid[j]) ** 2, 0)) }))
+          .sort((u, v) => u.d - v.d).slice(0, 3);
         return (
-          <div className="space-y-1 text-slate-600 dark:text-slate-300">
+          <div className="space-y-2 text-slate-600 dark:text-slate-300">
             <div><strong>k</strong> = {p.k} · <strong>N</strong> = {p.y.length} · {t('mlt.knnMetric')}</div>
             <div>{t('mlt.knnRule')}</div>
+            <div>{t('mlt.targetRange')}: [{mn.toFixed(1)}, {mx.toFixed(1)}] µg/m³</div>
+            <div>
+              <div className="font-bold text-slate-700 dark:text-slate-200 uppercase text-[10px] tracking-wide mb-1">{t('mlt.knnExample')}</div>
+              <table className="w-full text-left font-mono">
+                <thead className="text-slate-500 uppercase text-[10px]">
+                  <tr><th className="py-0.5 pr-2">#</th><th className="py-0.5 pr-2">dist</th><th className="py-0.5">y (PM)</th></tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200/60 dark:divide-slate-700/60">
+                  {ex.map((e, k) => (
+                    <tr key={k}><td className="py-0.5 pr-2">#{e.i}</td><td className="py-0.5 pr-2">{e.d.toFixed(3)}</td><td className="py-0.5">{ys[e.i].toFixed(1)}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         );
       })()}
       {a.model === 'mlp' && (() => {
-        const p = a.payload as { w1: number[][]; b1: number[]; w2: number[]; b2: number; lossHist?: number[] };
+        const p = a.payload as { w1: number[][]; b1: number[]; w2: number[]; b2: number; yMean: number; yStd: number; lossHist?: number[] };
         const hidden = p.b1.length;
         const nParams = 4 * hidden + hidden + hidden + 1;
+        const stat = (v: number[]) => ({ min: Math.min(...v).toFixed(3), max: Math.max(...v).toFixed(3) });
+        const sW1 = stat(p.w1.flat());
+        const sW2 = stat(p.w2);
         return (
           <div className="space-y-2">
-            <div className="font-bold text-slate-700 dark:text-slate-200">{t('mlt.architecture')} · {nParams} {t('mlt.params')}</div>
+            <div className="font-bold text-slate-700 dark:text-slate-200 uppercase text-[10px] tracking-wide">{t('mlt.methodMlp')}</div>
+            <div className="font-bold text-slate-700 dark:text-slate-200">{t('mlt.architecture')} · {nParams} {t('mlt.params')} · y→({p.yMean.toFixed(1)}±{p.yStd.toFixed(1)})</div>
             <div className="flex items-center gap-1.5 font-mono text-[10px]">
               {[`in(4)`, `h(${hidden}) tanh`, `out(1)`].map((s, i, arr) => (
                 <span key={s} className="flex items-center gap-1.5">
@@ -113,6 +176,27 @@ function ModelDetail({ tr }: { tr: TrialRecord }) {
                   {i < arr.length - 1 && <span className="text-slate-400">→</span>}
                 </span>
               ))}
+            </div>
+            <div className="font-mono text-slate-500">W1∈[{sW1.min},{sW1.max}] · W2∈[{sW2.min},{sW2.max}] · b2={p.b2.toFixed(3)}</div>
+            <div>
+              <div className="font-bold text-slate-700 dark:text-slate-200 uppercase text-[10px] tracking-wide mb-1">{t('mlt.wTable')}</div>
+              <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                <table className="w-full text-left font-mono text-[10px]">
+                  <thead className="bg-white dark:bg-slate-900 text-slate-500">
+                    <tr><th className="py-1 px-2">h⧵in</th>{FEATURE_NAMES.map((f) => <th key={f} className="py-1 px-2">{f.split(' ')[0]}</th>)}<th className="py-1 px-2">b</th><th className="py-1 px-2">→out</th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200/60 dark:divide-slate-700/60">
+                    {p.b1.map((b, j) => (
+                      <tr key={j}>
+                        <td className="py-0.5 px-2 font-bold">h{j}</td>
+                        {p.w1.map((row, k) => <td key={k} className="py-0.5 px-2">{row[j].toFixed(3)}</td>)}
+                        <td className="py-0.5 px-2">{b.toFixed(3)}</td>
+                        <td className="py-0.5 px-2 font-bold">{p.w2[j].toFixed(3)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
             {p.lossHist?.length ? (
               <div className="h-[140px] w-full">
