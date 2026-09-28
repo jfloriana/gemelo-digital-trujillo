@@ -20,7 +20,13 @@ usa la herramienta get_zone_data. Cuando el usuario pida estimar el efecto de un
 intervencion (arbolado, techos verdes, muros verdes, pavimento permeable), usa
 estimate_nbs_impact con los datos base de la zona. Responde en el mismo idioma del usuario,
 de forma tecnica pero clara, y cita las cifras que obtengas de las herramientas — no inventes
-numeros que las herramientas puedan calcular.`;
+numeros que las herramientas puedan calcular.
+REGLA DE FUENTES (obligatoria): get_zone_data devuelve baselines estáticas de la zona y,
+cuando existen, latest_calibrated (nodo propio con calibración 2-etapas) y
+latest_public_ref (referencia pública Open-Meteo/OpenAQ, SIN calibrar, solo contraste).
+Prioriza siempre el dato calibrado propio; si usas la referencia pública, etiquétala
+explícitamente como "referencia pública sin calibrar" y nunca la presentes como
+medición validada ni la uses para validar modelos.`;
 
 // Formulas deterministas que reflejan las mismas heuristicas usadas en el simulador NbS del
 // front-end (src/components/modules/NbsSimulatorModule.tsx), para que el agente no "invente"
@@ -49,11 +55,46 @@ function buildTools(supabase) {
         const names = (all || []).map((z) => z.name).join(' | ');
         return `No se encontro ninguna zona que coincida con "${q}".${names ? ` Zonas disponibles: ${names}.` : ''}`;
       }
-      return JSON.stringify(data);
+      // Contexto vivo: última lectura del nodo calibrado + de la referencia
+      // pública (si existen). Nunca lanzar: el baseline estático basta.
+      let latest_calibrated = null;
+      let latest_public_ref = null;
+      try {
+        const { data: zoneSensors } = await supabase
+          .from('sensor_nodes')
+          .select('id,code,sensor_type')
+          .eq('zone_id', data.id)
+          .limit(12);
+        if (zoneSensors?.length) {
+          const ids = zoneSensors.map((s) => s.id);
+          const { data: readings } = await supabase
+            .from('environmental_readings')
+            .select('sensor_id,measured_at,temperature,pm25,pm10,humidity,wind_speed,aqi_index,aqi_category')
+            .in('sensor_id', ids)
+            .order('measured_at', { ascending: false })
+            .limit(30);
+          const newest = {};
+          for (const r of readings || []) {
+            if (!newest[r.sensor_id]) newest[r.sensor_id] = r;
+          }
+          const pick = (virtual) => Object.entries(newest)
+            .filter(([id]) => {
+              const st = zoneSensors.find((s) => s.id === id)?.sensor_type;
+              return virtual
+                ? st === 'Referencia pública (OpenAQ/Open-Meteo)'
+                : st !== 'Referencia pública (OpenAQ/Open-Meteo)';
+            })
+            .map(([, r]) => r)
+            .sort((a, b) => new Date(b.measured_at) - new Date(a.measured_at))[0] || null;
+          latest_calibrated = pick(false);
+          latest_public_ref = pick(true);
+        }
+      } catch { /* contexto vivo opcional: se ignora el fallo */ }
+      return JSON.stringify({ ...data, latest_calibrated, latest_public_ref });
     },
     {
       name: 'get_zone_data',
-      description: 'Obtiene los datos ambientales reales (temperatura base, PM2.5 base, poblacion, cobertura arborea) de una zona urbana de Trujillo desde la base de datos del gemelo digital.',
+      description: 'Obtiene los datos ambientales reales de una zona (baselines, población, cobertura) MÁS la última lectura viva del nodo calibrado (latest_calibrated) y de la referencia pública Open-Meteo/OpenAQ (latest_public_ref, sin calibrar, solo contraste).',
       schema: z.object({ zoneName: z.string().describe('Nombre o parte del nombre de la zona, ej. "Centro Historico", "Av. España", "Mercado Hermelinda"') }),
     }
   );

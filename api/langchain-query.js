@@ -33,7 +33,7 @@ async function retrieveZoneContext(supabase, zoneName) {
   const like = `%${q}%`;
   const { data, error } = await supabase
     .from('urban_zones')
-    .select('name,district,department,vulnerability_level,baseline_temp,baseline_pm25,target_population,vulnerable_population,tree_cover,built_density,primary_pollution_source,description')
+    .select('id,name,district,department,vulnerability_level,baseline_temp,baseline_pm25,target_population,vulnerable_population,tree_cover,built_density,primary_pollution_source,description')
     .or(`name.ilike.${like},district.ilike.${like},department.ilike.${like},description.ilike.${like},primary_pollution_source.ilike.${like}`)
     .limit(1)
     .maybeSingle();
@@ -47,6 +47,41 @@ async function retrieveZoneContext(supabase, zoneName) {
       found: false,
     };
   }
+  // Contexto vivo (best-effort): última lectura calibrada + referencia pública.
+  let liveLines = [];
+  try {
+    const { data: zoneSensors } = await supabase
+      .from('sensor_nodes')
+      .select('id,code,sensor_type')
+      .eq('zone_id', data.id)
+      .limit(12);
+    if (zoneSensors?.length) {
+      const ids = zoneSensors.map((s) => s.id);
+      const { data: readings } = await supabase
+        .from('environmental_readings')
+        .select('sensor_id,measured_at,temperature,pm25,aqi_category')
+        .in('sensor_id', ids)
+        .order('measured_at', { ascending: false })
+        .limit(30);
+      const newest = {};
+      for (const r of readings || []) {
+        if (!newest[r.sensor_id]) newest[r.sensor_id] = r;
+      }
+      const isVirtual = (id) => zoneSensors.find((s) => s.id === id)?.sensor_type === 'Referencia pública (OpenAQ/Open-Meteo)';
+      const cal = Object.values(newest).filter((r) => !isVirtual(r.sensor_id))
+        .sort((a, b) => new Date(b.measured_at) - new Date(a.measured_at))[0];
+      const pub = Object.values(newest).filter((r) => isVirtual(r.sensor_id))
+        .sort((a, b) => new Date(b.measured_at) - new Date(a.measured_at))[0];
+      if (cal) {
+        const code = zoneSensors.find((s) => s.id === cal.sensor_id)?.code ?? cal.sensor_id;
+        liveLines.push(`Última lectura calibrada (${code}, ${cal.measured_at}): T=${cal.temperature} °C, PM2.5=${cal.pm25} µg/m³, AQI=${cal.aqi_category}.`);
+      }
+      if (pub) {
+        const code = zoneSensors.find((s) => s.id === pub.sensor_id)?.code ?? pub.sensor_id;
+        liveLines.push(`Referencia pública más reciente (${code}, ${pub.measured_at}): T=${pub.temperature} °C, PM2.5=${pub.pm25} µg/m³ — SIN calibrar, solo contraste, no usar para validar.`);
+      }
+    }
+  } catch { /* contexto vivo opcional */ }
   const context = [
     `Nombre: ${data.name}`,
     `Distrito/Departamento: ${data.district}, ${data.department}`,
@@ -57,6 +92,7 @@ async function retrieveZoneContext(supabase, zoneName) {
     `Cobertura arbórea: ${data.tree_cover}% | Densidad edificada: ${data.built_density}%`,
     `Fuente principal de contaminación: ${data.primary_pollution_source}`,
     `Descripción: ${data.description}`,
+    ...liveLines,
   ].join('\n');
   return { context, found: true };
 }
