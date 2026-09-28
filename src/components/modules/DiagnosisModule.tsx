@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { supabase } from '../../lib/supabase';
 import { ZoneFormModal } from './ZoneFormModal';
+import { EcaAlertStrip } from './EcaAlertStrip';
 import { 
   ResponsiveContainer, 
   AreaChart, 
@@ -134,6 +135,9 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Alertas ECA-Aire / OMS / calor (todos los nodos, incl. referencias públicas) */}
+      <EcaAlertStrip sensors={sensors} />
 
       {/* Filtrar por departamento */}
       <div className="flex flex-wrap items-center gap-2">
