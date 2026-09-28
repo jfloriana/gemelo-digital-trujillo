@@ -84,10 +84,10 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
 
   // Línea base viva opt-in (Fase B): OFF = baselines estáticos de tesis.
-  const [useLiveBaseline, setUseLiveBaseline] = useState<boolean>(false);
-  const { data: liveBaseline, loading: liveLoading } = useLiveBaseline(selectedZone.id, useLiveBaseline);
-  const effTemp = useLiveBaseline && liveBaseline ? liveBaseline.temp : selectedZone.baselineTemp;
-  const effPm25 = useLiveBaseline && liveBaseline ? liveBaseline.pm25 : selectedZone.baselinePM25;
+  const [liveOn, setLiveOn] = useState<boolean>(false);
+  const { data: liveBaseline, loading: liveLoading } = useLiveBaseline(selectedZone.id, liveOn);
+  const effTemp = liveOn && liveBaseline ? liveBaseline.temp : selectedZone.baselineTemp;
+  const effPm25 = liveOn && liveBaseline ? liveBaseline.pm25 : selectedZone.baselinePM25;
 
   // Model Coefficients & Multipliers (Grounded on Naveed 2025, Zhivkov 2025, Abbas 2025 GREENPASS)
   const getModelMultiplier = (model: SimulationModelType) => {
@@ -316,18 +316,18 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
 
           {/* Línea base viva opt-in (Fase B): OFF = estática de tesis */}
           <button
-            onClick={() => setUseLiveBaseline(v => !v)}
+            onClick={() => setLiveOn(v => !v)}
             className={`w-full py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer border ${
-              useLiveBaseline
+              liveOn
                 ? 'bg-teal-700 text-white border-teal-700'
                 : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
             }`}
             title={t('live.toggleHint')}
           >
-            <span className={`w-2 h-2 rounded-full ${useLiveBaseline ? 'bg-emerald-300 animate-pulse' : 'bg-slate-300'}`} />
-            {useLiveBaseline ? t('live.toggleOn') : t('live.toggleOff')}
+            <span className={`w-2 h-2 rounded-full ${liveOn ? 'bg-emerald-300 animate-pulse' : 'bg-slate-300'}`} />
+            {liveOn ? t('live.toggleOn') : t('live.toggleOff')}
           </button>
-          {useLiveBaseline && (
+          {liveOn && (
             <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
               {liveLoading
                 ? t('live.loading')
