@@ -6,7 +6,7 @@ import {
   gridSearch, predictWithArtifact, contrastPairs, pairedTTest,
   FEATURE_NAMES, ModelKind, TrialRecord, Metrics, HyperResult, DomainGap,
 } from '../../utils/mlTraining';
-import { exportTrainingToExcel, exportTrainingToPDF } from '../../utils/exportUtils';
+import { exportTrainingToExcel, exportTrainingToPDF, exportModelReportToExcel, exportModelReportToPDF } from '../../utils/exportUtils';
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts';
@@ -511,12 +511,34 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
                 <div className="text-[10px] text-slate-400 font-mono">
                   n={tr.nTrain}/{tr.nTest} · {t('mlt.cv')}: {tr.cvMeanR2 == null ? '—' : `${tr.cvMeanR2.toFixed(3)} ± ${tr.cvStdR2?.toFixed(3)}`} · {t('mlt.noise')}: {tr.noiseDegradPct == null ? '—' : `+${tr.noiseDegradPct.toFixed(1)}%`}
                 </div>
-                <button
-                  onClick={() => setExpanded((prev) => (prev === kind ? null : kind))}
-                  className="text-[11px] font-bold text-violet-700 dark:text-violet-300 hover:underline cursor-pointer"
-                >
-                  {expanded === kind ? t('mlt.hideModel') : t('mlt.showModel')}
-                </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={() => setExpanded((prev) => (prev === kind ? null : kind))}
+                    className="text-[11px] font-bold text-violet-700 dark:text-violet-300 hover:underline cursor-pointer"
+                  >
+                    {expanded === kind ? t('mlt.hideModel') : t('mlt.showModel')}
+                  </button>
+                  <button
+                    onClick={() => exportModelReportToPDF(tr, {
+                      nRows: rows.length, nPub, nCal,
+                      gapPubCal: gaps?.[kind].pubToCalRmse ?? null,
+                      gapCalPub: gaps?.[kind].calToPubRmse ?? null,
+                    })}
+                    className="px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-800 text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <FileText className="w-3 h-3" /> {t('mlt.modelReportPdf')}
+                  </button>
+                  <button
+                    onClick={() => exportModelReportToExcel(tr, {
+                      nRows: rows.length, nPub, nCal,
+                      gapPubCal: gaps?.[kind].pubToCalRmse ?? null,
+                      gapCalPub: gaps?.[kind].calToPubRmse ?? null,
+                    })}
+                    className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <FileText className="w-3 h-3" /> {t('mlt.modelReportExcel')}
+                  </button>
+                </div>
                 {expanded === kind && <ModelDetail tr={tr} />}
               </>
             )}

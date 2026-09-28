@@ -18,7 +18,7 @@ import {
 } from 'docx';
 import saveAs from 'file-saver';
 import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, SimulationScenario } from '../types';
-import { TrialRecord, ModelKind, DomainGap, contrastPairs } from './mlTraining';
+import { TrialRecord, ModelKind, DomainGap, contrastPairs, pairedTTest } from './mlTraining';
 
 type ExportLang = 'es' | 'en' | 'zh' | 'de' | 'fr' | 'pt';
 
@@ -533,6 +533,151 @@ export function exportTrainingToPDF(trials: TrialRecord[], nRows: number) {
     : 'Sin pruebas registradas.';
   doc.text(bestLine, 14, y + 5, { maxWidth: 182 });
   doc.save(`Reporte_Laboratorio_IA_${Date.now()}.pdf`);
+}
+
+// ============ Reporte profesional completo POR MODELO ============
+
+export interface ModelReportCtx {
+  nRows: number;
+  nPub: number;
+  nCal: number;
+  gapPubCal: number | null;
+  gapCalPub: number | null;
+}
+
+function modelTitle(model: string): string {
+  return model === 'linear' ? 'Regresión Lineal (mínimos cuadrados)'
+    : model === 'knn' ? 'k-NN (euclídeo estandarizado)'
+    : 'Perceptrón Multicapa MLP (SGD, tanh)';
+}
+
+function archLine(tr: TrialRecord): string {
+  if (tr.model === 'linear') return 'Lineal 4 features estandarizadas + bias (ecuaciones normales, 5 parámetros)';
+  if (tr.model === 'knn') {
+    const p = tr.payload as { k: number; y: number[] };
+    return `k=${p.k}, N=${p.y.length} vecinos memorizados, distancia euclídea estandarizada`;
+  }
+  const p = tr.payload as { w1: number[][]; b1: number[] };
+  const h = p.b1.length;
+  return `MLP 4-${h}-1 tanh, ${4 * h + h + h + 1} parámetros, SGD full-batch MSE`;
+}
+
+export function exportModelReportToExcel(tr: TrialRecord, ctx: ModelReportCtx) {
+  const wb = XLSX.utils.book_new();
+  const resid = pairedTTest(tr.preds.map((p) => p.pred - p.actual));
+  const ficha: (string | number)[][] = [
+    ['FICHA TÉCNICA DEL MODELO', `${tr.model} · ${tr.id}`],
+    ['Fecha de entrenamiento', new Date(tr.createdAt).toLocaleString('es-PE')],
+    ['Arquitectura', archLine(tr)],
+    ['Hiperparámetros', JSON.stringify(tr.hyper)],
+    ['Semilla', tr.seed],
+    ['Hash del dataset', tr.datasetHash],
+    ['Filas dataset (total / públicas / calibradas)', `${ctx.nRows} / ${ctx.nPub} / ${ctx.nCal}`],
+    ['Split', `cronológico 80/20 → train ${tr.nTrain} / test ${tr.nTest}`],
+    [],
+    ['MÉTRICAS', 'Train', 'Test'],
+    ['R²', tr.metricsTrain?.r2.toFixed(4) ?? '—', tr.metrics.r2.toFixed(4)],
+    ['RMSE', tr.metricsTrain?.rmse.toFixed(2) ?? '—', tr.metrics.rmse.toFixed(2)],
+    ['MAE', tr.metricsTrain?.mae.toFixed(2) ?? '—', tr.metrics.mae.toFixed(2)],
+    ['MAPE %', tr.metricsTrain?.mape.toFixed(2) ?? '—', tr.metrics.mape.toFixed(2)],
+    [],
+    ['ROBUSTEZ', 'Valor'],
+    ['CV 5-fold R² (media ± std)', tr.cvMeanR2 == null ? '—' : `${tr.cvMeanR2.toFixed(3)} ± ${tr.cvStdR2?.toFixed(3)}`],
+    ['Ruido ±10% (degradación RMSE)', tr.noiseDegradPct == null ? '—' : `+${tr.noiseDegradPct.toFixed(1)}% (RMSE ${tr.noiseRmse?.toFixed(2)})`],
+    ['Brecha entrena-público → prueba-calibrado (RMSE)', ctx.gapPubCal?.toFixed(2) ?? '—'],
+    ['Brecha entrena-calibrado → prueba-público (RMSE)', ctx.gapCalPub?.toFixed(2) ?? '—'],
+    ['T-Student residuales (H0: error medio = 0)', resid.t == null ? '—' : `t=${resid.t.toFixed(2)}, p=${resid.p == null ? '—' : resid.p < 0.001 ? '<0.001' : resid.p.toFixed(3)}`],
+    ['Referencia tesis 1D-CNN (Naveed et al., 2025)', 'R²=0.9925'],
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ficha), 'Ficha_Tecnica');
+  const preds: (string | number)[][] = [['#', 'Etiqueta', 'PM2.5 real', 'PM2.5 predicho', 'Error', 'Error²']];
+  tr.preds.forEach((p, i) => {
+    preds.push([i + 1, p.label, p.actual, p.pred, Number((p.pred - p.actual).toFixed(2)), Number(((p.pred - p.actual) ** 2).toFixed(2))]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(preds), 'Predicciones_Test');
+  if (tr.model === 'mlp') {
+    const loss = (tr.payload as { lossHist?: number[] }).lossHist ?? [];
+    const lh: (string | number)[][] = [['Época', 'MSE train']];
+    loss.forEach((v, i) => lh.push([i * 10, v]));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(lh), 'Curva_MSE');
+  }
+  if (tr.model === 'linear') {
+    const w = (tr.payload as { weights: number[] }).weights;
+    const means = tr.featureMeans, stds = tr.featureStds;
+    const names = ['Temp (°C)', 'HR (%)', 'Viento (m/s)', 'Radiación (W/m²)'];
+    const coef: (string | number)[][] = [['Feature', 'Coef. estandarizado', 'Coef. real (por unidad)', 'Media', 'Std']];
+    names.forEach((f, j) => {
+      coef.push([f, Number(w[j + 1].toFixed(4)), Number((w[j + 1] / stds[j]).toFixed(4)), means[j], stds[j]]);
+    });
+    coef.push(['Intercepto (b0 est.)', Number(w[0].toFixed(4)), '', '', '']);
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(coef), 'Coeficientes');
+  }
+  const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  saveAs(new Blob([out], { type: 'application/octet-stream' }), `Reporte_Modelo_${tr.model}_${tr.id}.xlsx`);
+}
+
+export function exportModelReportToPDF(tr: TrialRecord, ctx: ModelReportCtx) {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const teal: [number, number, number] = [15, 118, 110];
+  const resid = pairedTTest(tr.preds.map((p) => p.pred - p.actual));
+  doc.setFillColor(...teal);
+  doc.rect(0, 0, 210, 24, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`REPORTE DE MODELO — ${modelTitle(tr.model).toUpperCase()}`, 105, 10, { align: 'center' });
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Prueba ${tr.id} · ${new Date(tr.createdAt).toLocaleString('es-PE')} · Dataset ${ctx.nRows} filas (${ctx.nPub} públicas + ${ctx.nCal} calibradas)`, 105, 18, { align: 'center' });
+
+  const sec = (y: number, title: string) => {
+    doc.setFontSize(10.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...teal);
+    doc.text(title, 14, y);
+    return y;
+  };
+  const tbl = (y: number, head: string[], body: string[][]) => {
+    autoTable(doc, {
+      startY: y + 2, head: [head], body, theme: 'grid',
+      headStyles: { fillColor: teal, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+      styles: { fontSize: 7, cellPadding: 1.8 },
+    });
+    return (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
+  };
+
+  let y = sec(30, '1. Ficha técnica');
+  y = tbl(y, ['Campo', 'Valor'], [
+    ['Arquitectura', archLine(tr)],
+    ['Hiperparámetros', JSON.stringify(tr.hyper)],
+    ['Semilla / Hash dataset', `${tr.seed} / ${tr.datasetHash}`],
+    ['Split', `cronológico 80/20 → train ${tr.nTrain} / test ${tr.nTest}`],
+  ]) + 6;
+
+  y = sec(y, '2. Evaluación train vs test');
+  y = tbl(y, ['Métrica', 'Train', 'Test'], [
+    ['R²', tr.metricsTrain?.r2.toFixed(4) ?? '—', tr.metrics.r2.toFixed(4)],
+    ['RMSE', tr.metricsTrain?.rmse.toFixed(2) ?? '—', tr.metrics.rmse.toFixed(2)],
+    ['MAE', tr.metricsTrain?.mae.toFixed(2) ?? '—', tr.metrics.mae.toFixed(2)],
+    ['MAPE %', tr.metricsTrain?.mape.toFixed(2) ?? '—', tr.metrics.mape.toFixed(2)],
+  ]) + 6;
+
+  y = sec(y, '3. Robustez y significancia');
+  y = tbl(y, ['Prueba', 'Resultado'], [
+    ['CV 5-fold R²', tr.cvMeanR2 == null ? '—' : `${tr.cvMeanR2.toFixed(3)} ± ${tr.cvStdR2?.toFixed(3)}`],
+    ['Ruido ±10%', tr.noiseDegradPct == null ? '—' : `+${tr.noiseDegradPct.toFixed(1)}% (RMSE ${tr.noiseRmse?.toFixed(2)})`],
+    ['Brecha pub→cal (RMSE)', ctx.gapPubCal?.toFixed(2) ?? '—'],
+    ['Brecha cal→pub (RMSE)', ctx.gapCalPub?.toFixed(2) ?? '—'],
+    ['T residuales (H0: error=0)', resid.t == null ? '—' : `t=${resid.t.toFixed(2)}, p=${resid.p == null ? '—' : resid.p < 0.001 ? '<0.001' : resid.p.toFixed(3)}`],
+    ['Referencia 1D-CNN', 'R²=0.9925 (Naveed et al., 2025)'],
+  ]) + 6;
+
+  y = sec(y, '4. Predicciones del set de test (primeras 20)');
+  tbl(y, ['#', 'Etiqueta', 'Real', 'Predicho', 'Error'], tr.preds.slice(0, 20).map((p, i) => [
+    String(i + 1), p.label, String(p.actual), String(p.pred), (p.pred - p.actual).toFixed(2),
+  ]));
+
+  doc.save(`Reporte_Modelo_${tr.model}_${tr.id}.pdf`);
 }
 
 export const exportToPDF = (
