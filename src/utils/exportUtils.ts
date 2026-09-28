@@ -18,7 +18,7 @@ import {
 } from 'docx';
 import saveAs from 'file-saver';
 import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, SimulationScenario } from '../types';
-import { TrialRecord, ModelKind, contrastPairs } from './mlTraining';
+import { TrialRecord, ModelKind, DomainGap, contrastPairs } from './mlTraining';
 
 type ExportLang = 'es' | 'en' | 'zh' | 'de' | 'fr' | 'pt';
 
@@ -444,7 +444,7 @@ export const exportToCSV = (sensors: SensorNode[], _lang: ExportLang = 'es') => 
 
 // ============ Laboratorio IA: reportes de entrenamiento ============
 
-export type TrainingGaps = Record<ModelKind, { pubToCalRmse: number | null; calToPubRmse: number | null }>;
+export type TrainingGaps = Record<ModelKind, DomainGap>;
 
 const trainingBest = (trials: TrialRecord[]) =>
   [...trials].sort((a, b) => a.metrics.rmse - b.metrics.rmse)[0] ?? null;

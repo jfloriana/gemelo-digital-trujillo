@@ -4,7 +4,7 @@ import { SensorNode } from '../../types';
 import {
   buildDataset, datasetHash, runTrial, runTrialWithHyper, crossValidate, noiseTest, crossDomainGap,
   gridSearch, predictWithArtifact, contrastPairs, pairedTTest,
-  FEATURE_NAMES, ModelKind, TrialRecord, Metrics, HyperResult,
+  FEATURE_NAMES, ModelKind, TrialRecord, Metrics, HyperResult, DomainGap,
 } from '../../utils/mlTraining';
 import { exportTrainingToExcel, exportTrainingToPDF } from '../../utils/exportUtils';
 import {
@@ -243,7 +243,6 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
   const [trials, setTrials] = useState<TrialRecord[]>(loadTrials);
   const [training, setTraining] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [gaps, setGaps] = useState<Record<ModelKind, { pubToCalRmse: number | null; calToPubRmse: number | null }> | null>(null);
   const [grid, setGrid] = useState<HyperResult[] | null>(null);
   const [gridRunning, setGridRunning] = useState(false);
   const [inferX, setInferX] = useState<number[]>([28, 70, 2.5, 400]);
@@ -254,6 +253,20 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
   const nPub = rows.filter((r) => r.source === 'public').length;
   const nCal = rows.filter((r) => r.source === 'calibrated').length;
   const canTrain = rows.length >= 12;
+
+  // Brecha en vivo: siempre actual, no depende de haber entrenado ni se pierde
+  // con F5 (antes quedaba en "—" tras recargar). Tope de muestra por perf.
+  const gaps = useMemo<Record<ModelKind, DomainGap> | null>(() => {
+    if (rows.length < 8) return null;
+    const sample = rows.length > 400
+      ? [...rows.filter((r) => r.source === 'public').slice(-200), ...rows.filter((r) => r.source === 'calibrated').slice(-200)]
+      : rows;
+    return {
+      linear: crossDomainGap(sample, 'linear', 501),
+      knn: crossDomainGap(sample, 'knn', 502),
+      mlp: crossDomainGap(sample, 'mlp', 503),
+    };
+  }, [rows]);
 
   const latestByModel = useMemo(() => {
     const m = {} as Record<ModelKind, TrialRecord | undefined>;
@@ -298,11 +311,6 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
         try {
           localStorage.setItem(TRIALS_KEY, JSON.stringify(next));
         } catch { /* almacenamiento lleno: se ignora */ }
-        setGaps({
-          linear: crossDomainGap(rows, 'linear', seed + 7),
-          knn: crossDomainGap(rows, 'knn', seed + 8),
-          mlp: crossDomainGap(rows, 'mlp', seed + 9),
-        });
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       } finally {

@@ -339,8 +339,16 @@ export function noiseTest(rows: TrainRow[], model: ModelKind, seed: number, base
   return { noiseRmse: rmse, degradPct: baseRmse > 0 ? ((rmse - baseRmse) / baseRmse) * 100 : null };
 }
 
-// Brecha de generalización: entrena en un dominio, evalúa en el otro
-export function crossDomainGap(rows: TrainRow[], model: ModelKind, seed: number): { pubToCalRmse: number | null; calToPubRmse: number | null } {
+// Brecha de generalización: entrena en un dominio, evalúa en el otro.
+// Incluye conteos para que la UI explique los "—".
+export interface DomainGap {
+  pubToCalRmse: number | null;
+  calToPubRmse: number | null;
+  nPub: number;
+  nCal: number;
+}
+
+export function crossDomainGap(rows: TrainRow[], model: ModelKind, seed: number): DomainGap {
   const pub = rows.filter((r) => r.source === 'public');
   const cal = rows.filter((r) => r.source === 'calibrated');
   const one = (tr: TrainRow[], te: TrainRow[]) => {
@@ -351,7 +359,7 @@ export function crossDomainGap(rows: TrainRow[], model: ModelKind, seed: number)
     const preds = te.map((r) => predictWithArtifact(a, r.x));
     return computeMetrics(te.map((r) => r.y), preds).rmse;
   };
-  return { pubToCalRmse: one(pub, cal), calToPubRmse: one(cal, pub) };
+  return { pubToCalRmse: one(pub, cal), calToPubRmse: one(cal, pub), nPub: pub.length, nCal: cal.length };
 }
 
 // ---- Pares de contraste (misma lógica para panel IoT, reportes y T-Student) ----
