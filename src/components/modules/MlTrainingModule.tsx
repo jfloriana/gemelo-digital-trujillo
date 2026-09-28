@@ -11,7 +11,7 @@ import { PublicRecordsViewer } from './PublicRecordsViewer';
 import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine,
 } from 'recharts';
-import { Brain, Play, Download, Trophy, FlaskConical, ShieldCheck, FileJson, Table2, SlidersHorizontal, FileText, Crosshair, BarChart3 } from 'lucide-react';
+import { Brain, Play, Download, Trophy, FlaskConical, ShieldCheck, FileJson, Table2, SlidersHorizontal, FileText, Crosshair, BarChart3, ExternalLink } from 'lucide-react';
 
 interface MlTrainingModuleProps {
   sensors: SensorNode[];
@@ -566,7 +566,17 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
               <button onClick={downloadDataset} className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-800 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer">
                 <Download className="w-3.5 h-3.5" /> {t('mlt.dataDownload')} (CSV)
               </button>
+              <a
+                href="https://archive.ics.uci.edu/dataset/360/air+quality"
+                target="_blank"
+                rel="noopener noreferrer"
+                title={t('mlt.uciHint')}
+                className="px-3 py-1.5 rounded-lg bg-sky-700 hover:bg-sky-800 text-white text-[11px] font-bold flex items-center gap-1 transition-all"
+              >
+                <ExternalLink className="w-3.5 h-3.5" /> {t('mlt.uciBtn')}
+              </a>
             </div>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">{t('mlt.uciNote')}</p>
           </>
         )}
         {error && (
