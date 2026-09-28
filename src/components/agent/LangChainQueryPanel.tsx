@@ -66,6 +66,22 @@ export const LangChainQueryPanel: React.FC = () => {
 
           <div className="p-3.5 space-y-3 overflow-y-auto">
             <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('lc.desc')}</p>
+            <details className="text-[11px] bg-violet-50/60 dark:bg-violet-950/20 border border-violet-200/70 dark:border-violet-900 rounded-xl p-2.5">
+              <summary className="font-bold text-violet-700 dark:text-violet-300 cursor-pointer">{t('lc.flowTitle')}</summary>
+              <p className="text-slate-500 dark:text-slate-400 mt-1">{t('lc.flowDesc')}</p>
+              <ol className="list-decimal ml-4 mt-1 space-y-0.5 text-slate-600 dark:text-slate-300">
+                <li>{t('lc.flowStep1')}</li>
+                <li>{t('lc.flowStep2')}</li>
+                <li>{t('lc.flowStep3')}</li>
+              </ol>
+              <a
+                href="/langflow-rag-trujillo.blueprint.json"
+                download
+                className="inline-block mt-2 px-2.5 py-1 rounded-lg bg-violet-700 hover:bg-violet-800 text-white text-[10px] font-bold transition-all"
+              >
+                {t('lc.flowDownload')}
+              </a>
+            </details>
 
             <div className="space-y-1">
               <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">{t('lc.zoneLabel')}</label>

@@ -587,6 +587,7 @@ export function exportModelReportToExcel(tr: TrialRecord, ctx: ModelReportCtx) {
     ['Brecha entrena-público → prueba-calibrado (RMSE)', ctx.gapPubCal?.toFixed(2) ?? '—'],
     ['Brecha entrena-calibrado → prueba-público (RMSE)', ctx.gapCalPub?.toFixed(2) ?? '—'],
     ['T-Student residuales (H0: error medio = 0)', resid.t == null ? '—' : `t=${resid.t.toFixed(2)}, p=${resid.p == null ? '—' : resid.p < 0.001 ? '<0.001' : resid.p.toFixed(3)}`],
+    ['Interpretación', `Explica el ${(tr.metrics.r2 * 100).toFixed(1)}% de la varianza del test (±${tr.metrics.rmse.toFixed(1)} µg/m³).` + (resid.significant == null ? '' : resid.significant ? ' Con sesgo sistemático: revisar.' : ' Sin sesgo sistemático.')],
     ['Referencia tesis 1D-CNN (Naveed et al., 2025)', 'R²=0.9925'],
   ];
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ficha), 'Ficha_Tecnica');
@@ -676,6 +677,18 @@ export function exportModelReportToPDF(tr: TrialRecord, ctx: ModelReportCtx) {
   tbl(y, ['#', 'Etiqueta', 'Real', 'Predicho', 'Error'], tr.preds.slice(0, 20).map((p, i) => [
     String(i + 1), p.label, String(p.actual), String(p.pred), (p.pred - p.actual).toFixed(2),
   ]));
+
+  const yEnd = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4;
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'italic');
+  doc.setTextColor(100, 116, 139);
+  doc.text(
+    `Interpretación: el modelo explica el ${(tr.metrics.r2 * 100).toFixed(1)}% de la varianza del test con desviación típica de ±${tr.metrics.rmse.toFixed(1)} µg/m³.` +
+    (resid.significant == null ? '' : resid.significant
+      ? ' Los residuales muestran sesgo sistemático (p<0.05): revisar features o hiperparámetros.'
+      : ' Los residuales no muestran sesgo sistemático (p≥0.05).'),
+    14, yEnd, { maxWidth: 182 },
+  );
 
   doc.save(`Reporte_Modelo_${tr.model}_${tr.id}.pdf`);
 }

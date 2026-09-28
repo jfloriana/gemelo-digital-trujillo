@@ -196,6 +196,15 @@ const ContrastPanel: React.FC<{ publicSensors: SensorNode[]; hardwareSensors: Se
               <Line type="monotone" dataKey="ref" name={`${ref.code} (ref)`} stroke="#38bdf8" strokeWidth={2} strokeDasharray="5 4" dot={false} />
             </LineChart>
           </ResponsiveContainer>
+          {stats && (
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">
+              {t('iot.contrastInterp')
+                .replace('{n}', String(stats.n))
+                .replace('{bias}', `${stats.bias >= 0 ? '+' : ''}${stats.bias.toFixed(2)}`)
+                .replace('{unit}', unit)
+                .replace('{r}', stats.r == null ? '—' : stats.r.toFixed(2))}
+            </p>
+          )}
         </>
       )}
     </div>

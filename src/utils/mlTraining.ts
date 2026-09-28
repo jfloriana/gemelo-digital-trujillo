@@ -50,13 +50,14 @@ export interface TrialRecord extends TrialArtifact {
 
 export const FEATURE_NAMES = ['Temp (°C)', 'HR (%)', 'Viento (m/s)', 'Radiación (W/m²)'];
 
-export function buildDataset(sensors: SensorNode[]): TrainRow[] {
+export function buildDatasetFull(sensors: SensorNode[]): { rows: TrainRow[]; dropped: number } {
   const rows: TrainRow[] = [];
+  let dropped = 0;
   for (const s of sensors) {
     const pub = s.sensorType === VIRTUAL_SENSOR_TYPE;
     for (const r of s.hourlyHistory || []) {
-      if (!Number.isFinite(r.temperature) || !Number.isFinite(r.pm25)) continue;
-      if (r.pm25 <= 0 && r.temperature <= 0) continue; // placeholder sin telemetría
+      if (!Number.isFinite(r.temperature) || !Number.isFinite(r.pm25)) { dropped++; continue; }
+      if (r.pm25 <= 0 && r.temperature <= 0) { dropped++; continue; } // placeholder sin telemetría
       rows.push({
         x: [r.temperature, r.humidity, r.windSpeed, r.solarRadiation],
         y: r.pm25,
@@ -66,7 +67,79 @@ export function buildDataset(sensors: SensorNode[]): TrainRow[] {
       });
     }
   }
-  return rows;
+  return { rows, dropped };
+}
+
+export function buildDataset(sensors: SensorNode[]): TrainRow[] {
+  return buildDatasetFull(sensors).rows;
+}
+
+// ---- EDA: descriptivos, correlación, outliers, histograma ----
+export interface EdaCol {
+  name: string;
+  n: number;
+  min: number;
+  max: number;
+  mean: number;
+  std: number;
+  median: number;
+  outliers: number;
+}
+
+export interface EdaReport {
+  cols: EdaCol[];
+  corr: number[][]; // 5x5: 4 features + PM
+  corrNames: string[];
+  pmHist: { bin: string; count: number }[];
+  dropped: number;
+}
+
+export function edaReport(rows: TrainRow[], dropped: number): EdaReport {
+  const names = [...FEATURE_NAMES, 'PM2.5'];
+  if (!rows.length) {
+    return {
+      cols: names.map((name) => ({ name, n: 0, min: 0, max: 0, mean: 0, std: 0, median: 0, outliers: 0 })),
+      corr: Array.from({ length: 5 }, () => new Array(5).fill(0)),
+      corrNames: names,
+      pmHist: [],
+      dropped,
+    };
+  }
+  const series: number[][] = [0, 1, 2, 3].map((j) => rows.map((r) => r.x[j]));
+  series.push(rows.map((r) => r.y));
+  const desc = (v: number[]) => {
+    const s = [...v].sort((a, b) => a - b);
+    const mean = v.reduce((a, b) => a + b, 0) / v.length;
+    const std = Math.sqrt(v.reduce((a, b) => a + (b - mean) ** 2, 0) / v.length) || 0;
+    const median = s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
+    const outliers = v.filter((x) => std > 0 && Math.abs((x - mean) / std) > 3).length;
+    return { min: s[0], max: s[s.length - 1], mean, std, median, outliers };
+  };
+  const cols = series.map((v, i) => ({ name: names[i], n: v.length, ...desc(v) }));
+  const corr: number[][] = series.map((a) =>
+    series.map((b) => {
+      const ma = a.reduce((s, v) => s + v, 0) / a.length;
+      const mb = b.reduce((s, v) => s + v, 0) / b.length;
+      let num = 0, da = 0, db = 0;
+      for (let i = 0; i < a.length; i++) {
+        num += (a[i] - ma) * (b[i] - mb);
+        da += (a[i] - ma) ** 2;
+        db += (b[i] - mb) ** 2;
+      }
+      return da && db ? num / Math.sqrt(da * db) : 0;
+    }),
+  );
+  const pm = series[4];
+  const lo = Math.min(...pm);
+  const hi = Math.max(...pm);
+  const bins = 10;
+  const width = (hi - lo) / bins || 1;
+  const pmHist = Array.from({ length: bins }, (_, i) => {
+    const a = lo + i * width;
+    const count = pm.filter((v) => (i === bins - 1 ? v >= a && v <= hi : v >= a && v < a + width)).length;
+    return { bin: `${a.toFixed(0)}–${(a + width).toFixed(0)}`, count };
+  });
+  return { cols, corr, corrNames: names, pmHist, dropped };
 }
 
 export function datasetHash(rows: TrainRow[]): string {
@@ -469,6 +542,13 @@ function studentP2(t: number, df: number): number {
   return betai(df / 2, 0.5, df / (df + t * t));
 }
 
+export interface WilcoxonResult {
+  n: number;
+  w: number | null;
+  p: number | null;
+  significant: boolean | null; // p < 0.05
+}
+
 export interface TTestResult {
   n: number;
   mean: number;
@@ -476,17 +556,75 @@ export interface TTestResult {
   t: number | null;
   p: number | null;
   significant: boolean | null; // p < 0.05
+  ci95: [number, number] | null;
+  wilcoxon: WilcoxonResult;
+}
+
+function normCDF(x: number): number {
+  const t = 1 / (1 + 0.2316419 * Math.abs(x));
+  const d = 0.3989423 * Math.exp((-x * x) / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return x > 0 ? 1 - p : p;
+}
+
+// Cuantil t two-tailed al 95% por bisección sobre la CDF exacta
+export function tQuantile975(df: number): number {
+  if (!(df > 0)) return NaN;
+  let lo = 0, hi = 50;
+  for (let i = 0; i < 80; i++) {
+    const mid = (lo + hi) / 2;
+    if (studentP2(mid, df) > 0.05) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+// Wilcoxon signed-rank (alternativa no paramétrica, ideal con n pequeño).
+// H0: mediana de las diferencias = 0. Aproximación normal con corrección
+// por continuidad + corrección por empates.
+export function wilcoxonSignedRank(diffs: number[]): WilcoxonResult {
+  const nz = diffs.filter((v) => v !== 0);
+  const n = nz.length;
+  if (n < 6) return { n, w: null, p: null, significant: null };
+  const ranked = nz
+    .map((v, i) => ({ v, a: Math.abs(v), i }))
+    .sort((u, w) => u.a - w.a);
+  const ranks = new Array(n).fill(0);
+  let k = 0;
+  let tieCorr = 0;
+  while (k < n) {
+    let j = k;
+    while (j + 1 < n && ranked[j + 1].a === ranked[k].a) j++;
+    const avg = (k + 1 + j + 1) / 2;
+    for (let m = k; m <= j; m++) ranks[m] = avg;
+    const tlen = j - k + 1;
+    if (tlen > 1) tieCorr += (tlen ** 3 - tlen) / 48;
+    k = j + 1;
+  }
+  let wPlus = 0;
+  for (let m = 0; m < n; m++) {
+    if (ranked[m].v > 0) wPlus += ranks[m];
+  }
+  const mean = (n * (n + 1)) / 4;
+  const variance = (n * (n + 1) * (2 * n + 1)) / 24 - tieCorr;
+  if (!(variance > 0)) return { n, w: wPlus, p: null, significant: null };
+  const z = (wPlus - mean - 0.5 * Math.sign(wPlus - mean)) / Math.sqrt(variance);
+  const p = 2 * (1 - normCDF(Math.abs(z)));
+  return { n, w: wPlus, p, significant: p < 0.05 };
 }
 
 // T pareada (o de una muestra si se pasa una sola serie de diferencias).
-// H0: media de las diferencias = 0.
+// H0: media de las diferencias = 0. Incluye IC95% y Wilcoxon.
 export function pairedTTest(diffs: number[]): TTestResult {
   const n = diffs.length;
-  if (n < 3) return { n, mean: NaN, sd: NaN, t: null, p: null, significant: null };
+  const wilcoxon = wilcoxonSignedRank(diffs);
+  if (n < 3) return { n, mean: NaN, sd: NaN, t: null, p: null, significant: null, ci95: null, wilcoxon };
   const mean = diffs.reduce((s, v) => s + v, 0) / n;
   const sd = Math.sqrt(diffs.reduce((s, v) => s + (v - mean) ** 2, 0) / (n - 1));
-  if (!(sd > 0)) return { n, mean, sd, t: null, p: null, significant: null };
+  if (!(sd > 0)) return { n, mean, sd, t: null, p: null, significant: null, ci95: null, wilcoxon };
   const t = mean / (sd / Math.sqrt(n));
   const p = studentP2(Math.abs(t), n - 1);
-  return { n, mean, sd, t, p, significant: p < 0.05 };
+  const q = tQuantile975(n - 1);
+  const half = q * (sd / Math.sqrt(n));
+  return { n, mean, sd, t, p, significant: p < 0.05, ci95: [mean - half, mean + half], wilcoxon };
 }
