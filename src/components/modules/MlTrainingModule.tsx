@@ -303,6 +303,9 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
   const [inferX, setInferX] = useState<number[]>([28, 70, 2.5, 400]);
   const [inferSensor, setInferSensor] = useState<string>('');
   const [expanded, setExpanded] = useState<ModelKind | null>(null);
+  const [dsPage, setDsPage] = useState(0);
+  const [dsFilter, setDsFilter] = useState<'all' | 'public' | 'calibrated'>('all');
+  const DS_PAGE_SIZE = 15;
 
   const { rows, dropped } = useMemo(() => buildDatasetFull(sensors), [sensors]);
   const eda = useMemo(() => edaReport(rows, dropped), [rows, dropped]);
@@ -432,6 +435,14 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
 
   const pairs = useMemo(() => contrastPairs(sensors), [sensors]);
 
+  const dsFiltered = useMemo(
+    () => (dsFilter === 'all' ? rows : rows.filter((r) => r.source === dsFilter)),
+    [rows, dsFilter],
+  );
+  const dsPages = Math.max(1, Math.ceil(dsFiltered.length / DS_PAGE_SIZE));
+  const dsSafePage = Math.min(dsPage, dsPages - 1);
+  const dsSlice = dsFiltered.slice(dsSafePage * DS_PAGE_SIZE, dsSafePage * DS_PAGE_SIZE + DS_PAGE_SIZE);
+
   const downloadArtifact = (tr: TrialRecord) => {
     const { id, cvMeanR2, cvStdR2, noiseRmse, noiseDegradPct, preds, ...artifact } = tr;
     download(`artefacto_${tr.model}_${tr.id}.json`, JSON.stringify(artifact, null, 2), 'application/json');
@@ -482,6 +493,24 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
         </p>
         {rows.length > 0 && (
           <>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {(['all', 'public', 'calibrated'] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => { setDsFilter(f); setDsPage(0); }}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                    dsFilter === f
+                      ? 'bg-violet-700 text-white'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {f === 'all' ? t('mlt.filterAll') : f === 'public' ? t('mlt.rowsPub') : t('mlt.rowsCal')}
+                </button>
+              ))}
+              <span className="text-[11px] text-slate-400 font-mono">
+                {t('mlt.pageOf').replace('{p}', String(dsSafePage + 1)).replace('{n}', String(dsPages))} · {dsFiltered.length} {t('mlt.rows')}
+              </span>
+            </div>
             <div className="overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-700">
               <table className="w-full text-left text-[11px]">
                 <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 uppercase text-[10px]">
@@ -498,9 +527,9 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-                  {rows.slice(0, 10).map((r, i) => (
-                    <tr key={i}>
-                      <td className="py-1.5 px-3">{i + 1}</td>
+                  {dsSlice.map((r, i) => (
+                    <tr key={`${dsSafePage}-${i}`}>
+                      <td className="py-1.5 px-3">{dsSafePage * DS_PAGE_SIZE + i + 1}</td>
                       <td className="py-1.5 px-3">{r.sensorCode}</td>
                       <td className="py-1.5 px-3">{r.timestamp}</td>
                       <td className="py-1.5 px-3">{r.x[0]}</td>
@@ -519,9 +548,20 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
               </table>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] text-slate-400">
-                {rows.length > 10 ? t('mlt.moreRows').replace('{n}', String(rows.length - 10)) : t('mlt.allRows').replace('{n}', String(rows.length))}
-              </span>
+              <button
+                onClick={() => setDsPage((p) => Math.max(0, p - 1))}
+                disabled={dsSafePage === 0}
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 disabled:opacity-40 text-[11px] font-bold cursor-pointer"
+              >
+                ← {t('mlt.prev')}
+              </button>
+              <button
+                onClick={() => setDsPage((p) => Math.min(dsPages - 1, p + 1))}
+                disabled={dsSafePage >= dsPages - 1}
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 disabled:opacity-40 text-[11px] font-bold cursor-pointer"
+              >
+                {t('mlt.next')} →
+              </button>
               <button onClick={downloadDataset} className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-800 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer">
                 <Download className="w-3.5 h-3.5" /> {t('mlt.dataDownload')} (CSV)
               </button>
