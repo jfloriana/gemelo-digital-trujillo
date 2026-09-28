@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLiveBaseline } from '../../hooks/useLiveBaseline';
 import { useI18n } from '../../context/I18nContext';
 import { AiModelMetric, UrbanZone } from '../../types';
 import { 
@@ -72,14 +73,20 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
     { feature: 'Cobertura Arbórea (NDVI)', importance: 6.0 }
   ];
 
+  // Línea base viva opt-in (Fase B): OFF = estática de tesis
+  const [aiUseLive, setAiUseLive] = useState<boolean>(false);
+  const { data: aiLive, loading: aiLiveLoading } = useLiveBaseline(selectedZone.id, aiUseLive);
+  const aiEffTemp = aiUseLive && aiLive ? aiLive.temp : selectedZone.baselineTemp;
+  const aiEffPm25 = aiUseLive && aiLive ? aiLive.pm25 : selectedZone.baselinePM25;
+
   // Forecast curve for chosen horizon in Trujillo
   const forecastData = Array.from({ length: Math.min(forecastHorizon, 24) }, (_, i) => {
     const hour = (i + 1);
     const trafficBump = (hour === 8 || hour === 18) ? 18 : (hour >= 9 && hour <= 17) ? 8 : -10;
     const solarBump = Math.sin((hour / 24) * Math.PI * 2 - Math.PI / 2) * 4.5;
     
-    const predPM25 = Number((selectedZone.baselinePM25 + trafficBump + (Math.random() * 3 - 1.5)).toFixed(1));
-    const predTemp = Number((selectedZone.baselineTemp - 2 + solarBump).toFixed(1));
+    const predPM25 = Number((aiEffPm25 + trafficBump + (Math.random() * 3 - 1.5)).toFixed(1));
+    const predTemp = Number((aiEffTemp - 2 + solarBump).toFixed(1));
     const upperPM = Number((predPM25 * 1.08).toFixed(1));
     const lowerPM = Number((predPM25 * 0.92).toFixed(1));
 
@@ -244,6 +251,17 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
                 {t('ai.forecastTitle')} {selectedZone.name.split(':')[1]?.trim() || selectedZone.name}
               </span>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setAiUseLive(v => !v)}
+                  className={`px-2 py-0.5 text-xs rounded-lg font-semibold transition-all cursor-pointer border ${
+                    aiUseLive
+                      ? 'bg-teal-700 text-white border-teal-700'
+                      : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                  }`}
+                  title={aiLive && aiUseLive ? `${aiLive.source} · ${aiLive.sensor_code ?? ''} T=${aiLive.temp} PM=${aiLive.pm25}` : t('live.toggleHint')}
+                >
+                  {aiLiveLoading ? '…' : aiUseLive ? t('live.toggleOn') : t('live.toggleOff')}
+                </button>
                 <span className="text-xs text-slate-500 dark:text-slate-400">{t('ai.horizon')}</span>
                 {[6, 12, 24].map(h => (
                   <button

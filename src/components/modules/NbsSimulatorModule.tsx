@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLiveBaseline } from '../../hooks/useLiveBaseline';
 import { NbsIntervention, UrbanZone, SimulationScenario, SimulationModelType, SimulationMlParams } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
@@ -82,6 +83,12 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
   const [scenarioName, setScenarioName] = useState<string>('Plan Verde Integral Microescala Trujillo Centro');
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
 
+  // Línea base viva opt-in (Fase B): OFF = baselines estáticos de tesis.
+  const [useLiveBaseline, setUseLiveBaseline] = useState<boolean>(false);
+  const { data: liveBaseline, loading: liveLoading } = useLiveBaseline(selectedZone.id, useLiveBaseline);
+  const effTemp = useLiveBaseline && liveBaseline ? liveBaseline.temp : selectedZone.baselineTemp;
+  const effPm25 = useLiveBaseline && liveBaseline ? liveBaseline.pm25 : selectedZone.baselinePM25;
+
   // Model Coefficients & Multipliers (Grounded on Naveed 2025, Zhivkov 2025, Abbas 2025 GREENPASS)
   const getModelMultiplier = (model: SimulationModelType) => {
     switch (model) {
@@ -113,7 +120,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
   const rainCooling = (rainGardenArea / 1000) * 0.48;
 
   const totalTempDrop = Math.min(5.6, Number(((treeCooling + roofCooling + wallCooling + permCooling + rainCooling) / canyonTrappingFactor).toFixed(1)));
-  const simulatedTemp = Number((selectedZone.baselineTemp - totalTempDrop).toFixed(1));
+  const simulatedTemp = Number((effTemp - totalTempDrop).toFixed(1));
 
   // PM2.5 and PM10 Interception Calculations
   const treePmRed = (treeCount / 100) * 15.2 * currentModelMeta.pmFactor;
@@ -123,8 +130,8 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
   const rainPmRed = (rainGardenArea / 1000) * 3.8;
 
   const totalPmRedPercent = Math.min(42, Number(((treePmRed + roofPmRed + wallPmRed + permPmRed + rainPmRed) * windDispersionFactor).toFixed(1)));
-  const simulatedPM25 = Number((selectedZone.baselinePM25 * (1 - totalPmRedPercent / 100)).toFixed(1));
-  const simulatedPM10 = Number(((selectedZone.baselinePM25 * 1.76) * (1 - (totalPmRedPercent * 1.1) / 100)).toFixed(1));
+  const simulatedPM25 = Number((effPm25 * (1 - totalPmRedPercent / 100)).toFixed(1));
+  const simulatedPM10 = Number(((effPm25 * 1.76) * (1 - (totalPmRedPercent * 1.1) / 100)).toFixed(1));
 
   // Secondary Pollutants O3 & NO2 Photochemical Mitigation
   const initialO3 = 24.5;
@@ -133,9 +140,9 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
   const simulatedNO2 = Number((initialNO2 * (1 - (greenWallArea / 5000 * 0.15 + treeCount / 200 * 0.12))).toFixed(1));
 
   // Confort Térmico PET & TCS (GREENPASS® standard)
-  const petBefore = Number((selectedZone.baselineTemp + 4.2).toFixed(1));
+  const petBefore = Number((effTemp + 4.2).toFixed(1));
   const petAfter = Number((simulatedTemp + 1.2).toFixed(1));
-  const tcsBefore = Math.max(15, Math.min(100, Math.round(100 - (selectedZone.baselineTemp - 20) * 5.2 - (selectedZone.baselinePM25 / 1.6))));
+  const tcsBefore = Math.max(15, Math.min(100, Math.round(100 - (effTemp - 20) * 5.2 - (effPm25 / 1.6))));
   const tcsAfter = Math.min(96, Math.round(tcsBefore + (totalTempDrop * 7.5) + (totalPmRedPercent * 0.45)));
 
   // Budget in Peruvian Soles (PEN) & Benefit/Cost
@@ -189,13 +196,13 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
     ambientSolarRadiation: ambientSolarRad,
     simulationHours: 24,
     results: {
-      initialTemp: selectedZone.baselineTemp,
+      initialTemp: effTemp,
       simulatedTemp,
       tempReduction: totalTempDrop,
-      initialPM25: selectedZone.baselinePM25,
+      initialPM25: effPm25,
       simulatedPM25,
       pm25ReductionPercent: totalPmRedPercent,
-      initialPM10: Number((selectedZone.baselinePM25 * 1.76).toFixed(1)),
+      initialPM10: Number((effPm25 * 1.76).toFixed(1)),
       simulatedPM10,
       pm10ReductionPercent: Math.min(48, Number((totalPmRedPercent * 1.1).toFixed(1))),
       initialO3,
@@ -204,7 +211,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
       initialNO2,
       simulatedNO2,
       no2ReductionPercent: Number((((initialNO2 - simulatedNO2) / initialNO2) * 100).toFixed(1)),
-      initialUhiDelta: Number(((selectedZone.baselineTemp - 23.5) * 0.65).toFixed(1)),
+      initialUhiDelta: Number(((effTemp - 23.5) * 0.65).toFixed(1)),
       simulatedUhiDelta: Number(((simulatedTemp - 23.5) * 0.65).toFixed(1)),
       petBefore,
       petAfter,
@@ -227,15 +234,15 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
 
   // Bar Chart Data
   const comparisonData = [
-    { metric: 'Temp (°C)', Pre_Intervencion: selectedZone.baselineTemp, Post_NbS: simulatedTemp },
-    { metric: 'PM2.5 (µg/m³)', Pre_Intervencion: selectedZone.baselinePM25, Post_NbS: simulatedPM25 },
-    { metric: 'PM10 (µg/m³)', Pre_Intervencion: Number((selectedZone.baselinePM25 * 1.76).toFixed(1)), Post_NbS: simulatedPM10 },
+    { metric: 'Temp (°C)', Pre_Intervencion: effTemp, Post_NbS: simulatedTemp },
+    { metric: 'PM2.5 (µg/m³)', Pre_Intervencion: effPm25, Post_NbS: simulatedPM25 },
+    { metric: 'PM10 (µg/m³)', Pre_Intervencion: Number((effPm25 * 1.76).toFixed(1)), Post_NbS: simulatedPM10 },
     { metric: 'PET Confort (°C)', Pre_Intervencion: petBefore, Post_NbS: petAfter },
   ];
 
   const radarData = [
     { category: 'Confort Térmico TCS', Antes: tcsBefore, Despues: tcsAfter, fullMark: 100 },
-    { category: 'Calidad Aire PM2.5', Antes: Math.max(15, 100 - selectedZone.baselinePM25), Despues: Math.min(95, 100 - simulatedPM25), fullMark: 100 },
+    { category: 'Calidad Aire PM2.5', Antes: Math.max(15, 100 - effPm25), Despues: Math.min(95, 100 - simulatedPM25), fullMark: 100 },
     { category: 'Retención Hídrica', Antes: 18, Despues: 88, fullMark: 100 },
     { category: 'Captura Carbono', Antes: 12, Despues: 92, fullMark: 100 },
     { category: 'Atenuación Sonora', Antes: 25, Despues: 80, fullMark: 100 },
@@ -306,6 +313,29 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
               {t('nbs.panel1.inference')}
             </span>
           </div>
+
+          {/* Línea base viva opt-in (Fase B): OFF = estática de tesis */}
+          <button
+            onClick={() => setUseLiveBaseline(v => !v)}
+            className={`w-full py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer border ${
+              useLiveBaseline
+                ? 'bg-teal-700 text-white border-teal-700'
+                : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
+            }`}
+            title={t('live.toggleHint')}
+          >
+            <span className={`w-2 h-2 rounded-full ${useLiveBaseline ? 'bg-emerald-300 animate-pulse' : 'bg-slate-300'}`} />
+            {useLiveBaseline ? t('live.toggleOn') : t('live.toggleOff')}
+          </button>
+          {useLiveBaseline && (
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+              {liveLoading
+                ? t('live.loading')
+                : liveBaseline
+                  ? `${t(liveBaseline.source === 'calibrated' ? 'live.sourceCalibrated' : liveBaseline.source === 'public_ref' ? 'live.sourcePublic' : 'live.sourceBaseline')}${liveBaseline.sensor_code ? ` · ${liveBaseline.sensor_code}` : ''} · T=${liveBaseline.temp} °C PM=${liveBaseline.pm25}`
+                  : t('live.noData')}
+            </p>
+          )}
 
           {/* Model Selector Dropdown */}
           <div className="space-y-1">
@@ -507,7 +537,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
               <strong className="text-xl font-bold font-mono text-emerald-700">
                 -{totalTempDrop} °C
               </strong>
-              <p className="text-[10px] text-slate-400">De {selectedZone.baselineTemp}° a {simulatedTemp}°C</p>
+              <p className="text-[10px] text-slate-400">De {effTemp}° a {simulatedTemp}°C</p>
             </div>
 
             <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 p-3.5 rounded-xl shadow-xs space-y-0.5">
@@ -515,7 +545,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
               <strong className="text-xl font-bold font-mono text-amber-700">
                 -{totalPmRedPercent}%
               </strong>
-              <p className="text-[10px] text-slate-400">De {selectedZone.baselinePM25} a {simulatedPM25} µg</p>
+              <p className="text-[10px] text-slate-400">De {effPm25} a {simulatedPM25} µg</p>
             </div>
 
             <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 p-3.5 rounded-xl shadow-xs space-y-0.5">
