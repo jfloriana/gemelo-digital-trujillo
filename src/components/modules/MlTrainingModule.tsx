@@ -3,7 +3,7 @@ import { useI18n } from '../../context/I18nContext';
 import { SensorNode } from '../../types';
 import {
   buildDatasetFull, datasetHash, runTrial, runTrialWithHyper, crossValidate, noiseTest, crossDomainGap,
-  gridSearch, predictWithArtifact, contrastPairs, pairedTTest, edaReport,
+  gridSearch, predictWithArtifact, explainPrediction, contrastPairs, pairedTTest, edaReport,
   FEATURE_NAMES, ModelKind, TrialRecord, Metrics, HyperResult, DomainGap,
 } from '../../utils/mlTraining';
 import { exportTrainingToExcel, exportTrainingToPDF, exportModelReportToExcel, exportModelReportToPDF } from '../../utils/exportUtils';
@@ -853,16 +853,68 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
           </div>
           {(() => {
             const pm = Math.max(0, Number(predictWithArtifact(best, inferX).toFixed(1)));
+            const ex = explainPrediction(best, inferX);
             return (
-              <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 rounded-xl px-4 py-3">
-                <div>
-                  <div className="text-[10px] text-slate-500 font-semibold uppercase">{t('mlt.inferResult')}</div>
-                  <div className="text-2xl font-bold font-mono text-emerald-700 dark:text-emerald-400">{pm} µg/m³</div>
+              <>
+                <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 rounded-xl px-4 py-3">
+                  <div>
+                    <div className="text-[10px] text-slate-500 font-semibold uppercase">{t('mlt.inferResult')}</div>
+                    <div className="text-2xl font-bold font-mono text-emerald-700 dark:text-emerald-400">{pm} µg/m³</div>
+                  </div>
+                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                    AQI: {aqiOf(pm)}
+                  </span>
                 </div>
-                <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-                  AQI: {aqiOf(pm)}
-                </span>
-              </div>
+                <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 rounded-xl px-4 py-3 space-y-1.5">
+                  <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t('mlt.whyTitle')}</div>
+                  {ex.kind === 'linear' && (
+                    <div className="space-y-1">
+                      {(ex.contributions || []).map((c) => {
+                        const mx = Math.max(...(ex.contributions || []).map((q) => Math.abs(q.value)), 1e-9);
+                        const w = Math.min(50, (Math.abs(c.value) / mx) * 50);
+                        return (
+                          <div key={c.feature} className="flex items-center gap-2 text-[11px]">
+                            <span className="w-28 shrink-0 text-slate-600 dark:text-slate-300">{c.feature}</span>
+                            <div className="flex-1 h-2 rounded bg-slate-200 dark:bg-slate-700 overflow-hidden relative">
+                              <div className="absolute top-0 bottom-0 left-1/2 w-px bg-slate-400" />
+                              <div
+                                className={`absolute top-0 bottom-0 rounded ${c.value >= 0 ? 'bg-amber-500' : 'bg-sky-500'}`}
+                                style={c.value >= 0 ? { left: '50%', width: `${w}%` } : { right: '50%', width: `${w}%` }}
+                              />
+                            </div>
+                            <span className="font-mono w-20 text-right">{c.value >= 0 ? '+' : ''}{c.value.toFixed(2)}</span>
+                          </div>
+                        );
+                      })}
+                      <p className="text-[10px] text-slate-400 italic">{t('mlt.whyLinear').replace('{b}', (ex.intercept ?? 0).toFixed(2))}</p>
+                    </div>
+                  )}
+                  {ex.kind === 'knn' && (
+                    <div className="text-[11px] text-slate-600 dark:text-slate-300 space-y-1">
+                      <p>{t('mlt.whyKnn').replace('{k}', String(ex.k ?? 0))}</p>
+                      <table className="w-full text-left font-mono text-[10px]">
+                        <thead className="text-slate-500 uppercase"><tr><th className="py-0.5 pr-2">#</th><th className="py-0.5 pr-2">dist</th><th className="py-0.5">PM</th></tr></thead>
+                        <tbody className="divide-y divide-slate-200/60 dark:divide-slate-700/60">
+                          {(ex.neighbors || []).map((nb, i) => (
+                            <tr key={i}><td className="py-0.5 pr-2">{i + 1}</td><td className="py-0.5 pr-2">{nb.dist.toFixed(3)}</td><td className="py-0.5 font-bold">{nb.y.toFixed(1)}</td></tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                  {ex.kind === 'mlp' && (
+                    <div className="text-[11px] text-slate-600 dark:text-slate-300 space-y-1">
+                      <p className="italic">{t('mlt.whyMlp')}</p>
+                      {(ex.sensitivities || []).map((s) => (
+                        <div key={s.feature} className="flex justify-between font-mono">
+                          <span className="font-sans">{s.feature}</span>
+                          <span>−10%: {s.down >= 0 ? '+' : ''}{s.down.toFixed(2)} · +10%: {s.up >= 0 ? '+' : ''}{s.up.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
             );
           })()}
         </div>

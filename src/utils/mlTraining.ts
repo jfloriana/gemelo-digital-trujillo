@@ -435,6 +435,48 @@ export function crossDomainGap(rows: TrainRow[], model: ModelKind, seed: number)
   return { pubToCalRmse: one(pub, cal), calToPubRmse: one(cal, pub), nPub: pub.length, nCal: cal.length };
 }
 
+// ---- Explicabilidad por predicción (XAI local, exacta según familia) ----
+export interface PredictionExplanation {
+  kind: ModelKind;
+  // lineal: aporte de cada feature (w·z) + intercepto
+  contributions?: { feature: string; value: number }[];
+  intercept?: number;
+  // kNN: los k vecinos que votaron (distancia estandarizada + su PM)
+  neighbors?: { dist: number; y: number }[];
+  k?: number;
+  // MLP: sensibilidad local ±10% por feature (agnóstico al modelo)
+  sensitivities?: { feature: string; down: number; up: number }[];
+}
+
+export function explainPrediction(a: TrialArtifact, x: number[]): PredictionExplanation {
+  const z = x.map((v, j) => (v - a.featureMeans[j]) / a.featureStds[j]);
+  if (a.model === 'linear') {
+    const w = (a.payload as { weights: number[] }).weights;
+    return {
+      kind: 'linear',
+      intercept: w[0],
+      contributions: FEATURE_NAMES.map((f, j) => ({ feature: f, value: w[j + 1] * z[j] })),
+    };
+  }
+  if (a.model === 'knn') {
+    const p = a.payload as { k: number; XZ: number[][]; y: number[] };
+    const all = p.XZ.map((r, i) => ({
+      dist: Math.sqrt(r.reduce((s, v, j) => s + (v - z[j]) ** 2, 0)),
+      y: p.y[i],
+    })).sort((u, v) => u.dist - v.dist);
+    return { kind: 'knn', k: p.k, neighbors: all.slice(0, Math.min(p.k, all.length)) };
+  }
+  const base = predictWithArtifact(a, x);
+  return {
+    kind: 'mlp',
+    sensitivities: FEATURE_NAMES.map((f, j) => {
+      const dn = [...x]; dn[j] = x[j] * 0.9;
+      const up = [...x]; up[j] = x[j] * 1.1;
+      return { feature: f, down: predictWithArtifact(a, dn) - base, up: predictWithArtifact(a, up) - base };
+    }),
+  };
+}
+
 // ---- Pares de contraste (misma lógica para panel IoT, reportes y T-Student) ----
 export interface ContrastPair {
   refCode: string;
