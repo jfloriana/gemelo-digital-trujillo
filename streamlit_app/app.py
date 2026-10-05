@@ -162,10 +162,6 @@ page = st.sidebar.radio(
     ],
 )
 st.sidebar.markdown("---")
-st.sidebar.caption(
-    "Conectado a la misma base de datos Supabase que usa la app web "
-    "(react-vite). Clave anónima de solo lectura."
-)
 st.sidebar.caption(f"Última carga: {datetime.now().strftime('%H:%M:%S')}")
 
 st.sidebar.markdown("---")
