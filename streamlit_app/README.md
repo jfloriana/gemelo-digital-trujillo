@@ -12,6 +12,13 @@ directamente de la **misma base de datos Supabase**.
 - **Módulos:** Resumen general, OE1 Diagnóstico de zonas, OE2 Red IoT &
   calibración, OE3 Modelos de IA, OE4 Catálogo NbS, OE5 Validación de tesis
   — el mismo mapa de objetivos específicos que la app web.
+- **OE3 incluye un laboratorio de IA/entrenamiento** (scikit-learn), con 4
+  pestañas: comparación de modelos publicados, curva de aprendizaje real
+  (`learning_curve`) sobre las zonas, entrenamiento en vivo (Regresión
+  Lineal / Random Forest / Gradient Boosting) con validación Leave-One-Out
+  sobre los datos reales de `urban_zones`, e importancia de variables del
+  modelo entrenado. Nada de esto escribe en Supabase — es puramente local
+  a la sesión de Streamlit.
 
 ## Cómo correrlo
 

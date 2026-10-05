@@ -21,10 +21,17 @@ from __future__ import annotations
 import os
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 from supabase import create_client
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.model_selection import LeaveOneOut, learning_curve
+from sklearn.preprocessing import LabelEncoder
 
 # ----------------------------------------------------------------------
 # Configuración / conexión a Supabase
@@ -291,37 +298,261 @@ elif page.startswith("📡"):
 
 elif page.startswith("🤖"):
     st.title("OE3 · Modelos de Inteligencia Artificial & Benchmarks")
-    st.caption("Comparativa real de modelos — tabla `ai_models`.")
+    st.caption(
+        "Comparativa de modelos publicados (`ai_models`) + laboratorio de entrenamiento "
+        "en vivo sobre los datos reales de zonas (`urban_zones`)."
+    )
 
-    if models.empty:
-        st.warning("No hay modelos cargados.")
-    else:
-        R2_TARGET = 0.95
-        best = models.iloc[0]
-        passes = best["r2"] >= R2_TARGET
-        st.metric(
-            "Mejor modelo vs. umbral de tesis (R² ≥ 0.95)",
-            f"{best['name']}: {best['r2']:.4f}",
-            delta="Cumple ✅" if passes else "No cumple ⚠️",
-            delta_color="normal" if passes else "inverse",
-        )
+    tab_cmp, tab_curve, tab_train, tab_imp = st.tabs([
+        "📊 Comparación de modelos",
+        "📈 Curva de aprendizaje",
+        "🧪 Entrenar modelo en vivo",
+        "🔍 Importancia de variables",
+    ])
 
-        fig = px.bar(
-            models, x="name", y="r2", color="status",
-            title="R² por modelo",
-            labels={"name": "Modelo", "r2": "R²"},
-        )
-        fig.add_hline(y=R2_TARGET, line_dash="dash", line_color="red",
-                       annotation_text="Umbral R² = 0.95")
-        st.plotly_chart(fig, use_container_width=True)
+    # ------------------------------------------------------------------
+    # Tab 1: comparación de modelos (datos reales de ai_models)
+    # ------------------------------------------------------------------
+    with tab_cmp:
+        if models.empty:
+            st.warning("No hay modelos cargados.")
+        else:
+            R2_TARGET = 0.95
+            best = models.iloc[0]
+            passes = best["r2"] >= R2_TARGET
+            st.metric(
+                "Mejor modelo vs. umbral de tesis (R² ≥ 0.95)",
+                f"{best['name']}: {best['r2']:.4f}",
+                delta="Cumple ✅" if passes else "No cumple ⚠️",
+                delta_color="normal" if passes else "inverse",
+            )
 
-        st.dataframe(
-            models[[
-                "name", "architecture", "reference_author", "year", "r2", "rmse",
-                "mae", "mape", "inference_time_ms", "spatial_resolution", "status",
-            ]],
-            use_container_width=True, hide_index=True,
+            fig = px.bar(
+                models, x="name", y="r2", color="status",
+                title="R² por modelo",
+                labels={"name": "Modelo", "r2": "R²"},
+            )
+            fig.add_hline(y=R2_TARGET, line_dash="dash", line_color="red",
+                           annotation_text="Umbral R² = 0.95")
+            st.plotly_chart(fig, use_container_width=True)
+
+            st.dataframe(
+                models[[
+                    "name", "architecture", "reference_author", "year", "r2", "rmse",
+                    "mae", "mape", "inference_time_ms", "spatial_resolution", "status",
+                ]],
+                use_container_width=True, hide_index=True,
+            )
+
+            st.markdown("#### Comparación multi-métrica normalizada")
+            metric_cols = ["r2", "rmse", "mae", "mape", "inference_time_ms"]
+            norm = models[["name"] + metric_cols].copy()
+            for col in metric_cols:
+                lo, hi = norm[col].min(), norm[col].max()
+                if hi == lo:
+                    norm[col] = 1.0
+                elif col == "r2":
+                    norm[col] = (norm[col] - lo) / (hi - lo)
+                else:
+                    # para errores/tiempo, menor es mejor -> invertir escala
+                    norm[col] = 1 - (norm[col] - lo) / (hi - lo)
+
+            fig_radar = go.Figure()
+            for _, row in norm.iterrows():
+                fig_radar.add_trace(go.Scatterpolar(
+                    r=[row[c] for c in metric_cols] + [row[metric_cols[0]]],
+                    theta=["R²", "RMSE", "MAE", "MAPE", "Latencia"] + ["R²"],
+                    fill="toself", name=row["name"],
+                ))
+            fig_radar.update_layout(
+                polar=dict(radialaxis=dict(visible=True, range=[0, 1])),
+                title="Perfil normalizado por modelo (1.0 = mejor en esa métrica)",
+                showlegend=True,
+            )
+            st.plotly_chart(fig_radar, use_container_width=True)
+
+    # ------------------------------------------------------------------
+    # Tab 2: curva de aprendizaje real (sklearn.learning_curve) sobre
+    # los datos reales de zonas — muestra cómo mejora el modelo al
+    # agregar más datos de entrenamiento.
+    # ------------------------------------------------------------------
+    with tab_curve:
+        st.caption(
+            "Curva de aprendizaje calculada con `sklearn.model_selection.learning_curve` "
+            "sobre los datos reales de `urban_zones`, prediciendo **baseline_pm25** a partir "
+            "de temperatura, cobertura arbórea, densidad edificada y población objetivo."
         )
+        feature_cols = ["baseline_temp", "tree_cover", "built_density", "target_population"]
+        target_col = "baseline_pm25"
+        available = [c for c in feature_cols if c in zones.columns]
+
+        if zones.empty or len(zones) < 6 or not available:
+            st.warning(
+                "Se necesitan al menos ~6 zonas con esas columnas para trazar una curva "
+                "de aprendizaje con validación cruzada."
+            )
+        else:
+            df = zones.dropna(subset=available + [target_col])
+            X = df[available].to_numpy(dtype=float)
+            y = df[target_col].to_numpy(dtype=float)
+
+            algo_curve = st.radio(
+                "Algoritmo", ["Regresión Lineal", "Random Forest"],
+                horizontal=True, key="curve_algo",
+            )
+            estimator = (
+                LinearRegression() if algo_curve == "Regresión Lineal"
+                else RandomForestRegressor(n_estimators=100, random_state=42)
+            )
+
+            cv_folds = min(5, len(df))
+            train_sizes, train_scores, test_scores = learning_curve(
+                estimator, X, y, cv=cv_folds,
+                train_sizes=np.linspace(0.3, 1.0, 6),
+                scoring="r2",
+            )
+            curve_df = pd.DataFrame({
+                "n_muestras": np.concatenate([train_sizes, train_sizes]),
+                "R²": np.concatenate([train_scores.mean(axis=1), test_scores.mean(axis=1)]),
+                "conjunto": ["Entrenamiento"] * len(train_sizes) + ["Validación"] * len(train_sizes),
+            })
+            fig = px.line(
+                curve_df, x="n_muestras", y="R²", color="conjunto", markers=True,
+                title=f"Curva de aprendizaje — {algo_curve} (CV={cv_folds} folds)",
+            )
+            fig.update_yaxes(range=[min(-0.5, curve_df["R²"].min()), 1.05])
+            st.plotly_chart(fig, use_container_width=True)
+            st.caption(
+                "Con pocas zonas el R² de validación es ruidoso — esta curva ilustra el "
+                "comportamiento esperado al crecer el dataset (más zonas/sensores), no una "
+                "garantía de desempeño en producción."
+            )
+
+    # ------------------------------------------------------------------
+    # Tab 3: entrenamiento en vivo sobre datos reales de zonas
+    # ------------------------------------------------------------------
+    with tab_train:
+        st.caption(
+            "Entrena un modelo real, en el momento, sobre los datos actuales de "
+            "`urban_zones` (sin guardarlo ni escribir en la base de datos)."
+        )
+        all_features = [
+            "baseline_temp", "tree_cover", "built_density",
+            "target_population", "vulnerable_population", "vulnerability_level",
+        ]
+        available_features = [c for c in all_features if c in zones.columns]
+        target_options = [c for c in ["baseline_pm25", "baseline_temp"] if c in zones.columns]
+
+        if zones.empty or len(zones) < 6:
+            st.warning("Se necesitan al menos ~6 zonas para entrenar con validación cruzada confiable.")
+        else:
+            col_a, col_b = st.columns(2)
+            with col_a:
+                target_live = st.selectbox("Variable a predecir", target_options, key="train_target")
+            with col_b:
+                algo_live = st.selectbox(
+                    "Algoritmo",
+                    ["Regresión Lineal", "Random Forest", "Gradient Boosting"],
+                    key="train_algo",
+                )
+            feature_choices = [c for c in available_features if c != target_live]
+            selected_features = st.multiselect(
+                "Variables predictoras (features)", feature_choices,
+                default=feature_choices, key="train_features",
+            )
+
+            if st.button("🚀 Entrenar ahora", use_container_width=True) and selected_features:
+                df = zones.dropna(subset=selected_features + [target_live]).copy()
+                X_df = df[selected_features].copy()
+                if "vulnerability_level" in X_df.columns:
+                    X_df["vulnerability_level"] = LabelEncoder().fit_transform(
+                        X_df["vulnerability_level"].astype(str)
+                    )
+                X = X_df.to_numpy(dtype=float)
+                y = df[target_live].to_numpy(dtype=float)
+
+                if len(df) < 4:
+                    st.error("Muy pocas zonas con datos completos para estas variables.")
+                else:
+                    if algo_live == "Regresión Lineal":
+                        model = LinearRegression()
+                    elif algo_live == "Random Forest":
+                        model = RandomForestRegressor(n_estimators=150, random_state=42)
+                    else:
+                        model = GradientBoostingRegressor(random_state=42)
+
+                    # Dataset pequeño (zonas) -> Leave-One-Out CV para métricas honestas
+                    loo = LeaveOneOut()
+                    y_pred_cv = np.zeros_like(y)
+                    for train_idx, test_idx in loo.split(X):
+                        model.fit(X[train_idx], y[train_idx])
+                        y_pred_cv[test_idx] = model.predict(X[test_idx])
+
+                    r2_cv = r2_score(y, y_pred_cv)
+                    rmse_cv = float(np.sqrt(mean_squared_error(y, y_pred_cv)))
+                    mae_cv = mean_absolute_error(y, y_pred_cv)
+
+                    # modelo final entrenado con TODOS los datos, para importancia de variables
+                    model.fit(X, y)
+                    st.session_state["oe3_trained_model"] = model
+                    st.session_state["oe3_trained_features"] = selected_features
+                    st.session_state["oe3_trained_target"] = target_live
+                    st.session_state["oe3_trained_algo"] = algo_live
+
+                    c1, c2, c3 = st.columns(3)
+                    c1.metric("R² (Leave-One-Out CV)", f"{r2_cv:.3f}")
+                    c2.metric("RMSE (CV)", f"{rmse_cv:.3f}")
+                    c3.metric("MAE (CV)", f"{mae_cv:.3f}")
+
+                    fig = px.scatter(
+                        x=y, y=y_pred_cv,
+                        labels={"x": f"{target_live} real", "y": f"{target_live} predicho (CV)"},
+                        title="Predicho vs. real (validación Leave-One-Out)",
+                    )
+                    lims = [min(y.min(), y_pred_cv.min()), max(y.max(), y_pred_cv.max())]
+                    fig.add_trace(go.Scatter(x=lims, y=lims, mode="lines",
+                                              line=dict(dash="dash", color="gray"), name="ideal"))
+                    st.plotly_chart(fig, use_container_width=True)
+                    st.success(
+                        f"Entrenado con {len(df)} zonas, {len(selected_features)} variables. "
+                        "Ve a la pestaña **Importancia de variables** para ver qué pesó más."
+                    )
+            elif not selected_features:
+                st.info("Selecciona al menos una variable predictora.")
+
+    # ------------------------------------------------------------------
+    # Tab 4: importancia de variables del último modelo entrenado
+    # ------------------------------------------------------------------
+    with tab_imp:
+        trained = st.session_state.get("oe3_trained_model")
+        if trained is None:
+            st.info("Entrena un modelo en la pestaña **Entrenar modelo en vivo** primero.")
+        else:
+            feats = st.session_state["oe3_trained_features"]
+            target_live = st.session_state["oe3_trained_target"]
+            algo_live = st.session_state["oe3_trained_algo"]
+            st.caption(f"Modelo actual: **{algo_live}** prediciendo **{target_live}**.")
+
+            if hasattr(trained, "feature_importances_"):
+                imp = pd.DataFrame({
+                    "variable": feats, "importancia": trained.feature_importances_,
+                }).sort_values("importancia", ascending=True)
+                fig = px.bar(
+                    imp, x="importancia", y="variable", orientation="h",
+                    title="Importancia de variables (impurity-based)",
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            elif hasattr(trained, "coef_"):
+                imp = pd.DataFrame({
+                    "variable": feats, "coeficiente": trained.coef_,
+                }).sort_values("coeficiente", key=abs, ascending=True)
+                fig = px.bar(
+                    imp, x="coeficiente", y="variable", orientation="h",
+                    title="Coeficientes de la regresión lineal",
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.warning("Este algoritmo no expone importancia de variables directamente.")
 
 
 # ----------------------------------------------------------------------
