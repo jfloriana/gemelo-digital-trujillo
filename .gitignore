@@ -20,3 +20,6 @@ coverage/
 .commitmsg.txt
 
 .impeccable/
+
+streamlit_app/.streamlit/secrets.toml
+streamlit_app/__pycache__/
