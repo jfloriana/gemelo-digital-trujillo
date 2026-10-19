@@ -1,0 +1,7 @@
+﻿Nodo,Zona,Sensores,R² de calibración,T (°C),PM2.5 (µg/m³),ΔUHI (°C),PET (°C),Categoría AQI
+TRJ-IOT-01,Centro Histórico,Sensirion SPS30 + BME680,"0,94","28,9","46,8","+4,6","32,4",Dañina para grupos sensibles
+TRJ-IOT-02,Centro Histórico,PMS5003 + SHT31,"0,91","27,2","29,4","+2,9","29,1",Moderada
+TRJ-IOT-03,Corredor Mayorista,Alphasense OPC-N3,"0,96","32,1","67,4","+6,2","36,8",Dañina
+TRJ-IOT-04,El Porvenir,Sensirion SPS30 + BME680,"0,93","33,2","74,8","+6,9","38,1",Dañina
+TRJ-IOT-05,Víctor Larco,PMS5003 + SHT31,"0,92","26,5","31,6","+2,2","27,8",Moderada
+TRJ-IOT-06,Mansiche,Sensirion SPS30 + BME680,"0,93","28,4","39,2","+3,8","31,2",Dañina para grupos sensibles

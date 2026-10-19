@@ -1,0 +1,6 @@
+﻿Marco (fuente),Componentes,Escala,Calidad del aire,Acoplamiento a SBN,Validación temporal reportada
+REFLECT (A8),7 capas conceptuales,Multiescala (revisión),No declarada; foco en ICU,Sí: optimización de vegetación como categoría,No aplica (conceptual)
+DUCT (A26),"3 subsistemas: simulación como servicio, federación de modelos, interfaz",Ciudad (Singapur); acopla modelos meso y micro,No declarada; indicadores de clima urbano y energía,No declarado en el resumen,No declarada en el resumen
+GD de Teutscher et al. (A1),CFD (Boltzmann de celosía) + meteorología en vivo + OpenStreetMap,Microescala,Sí (puntos críticos de exposición),No,"Sí: 7 al 23 de noviembre de 2024 (17 días), actualización horaria"
+Arquitectura de Herath et al. (A19),Arquitectura integrada para gestión en tiempo real,Ciudad / metropolitana,Sí,No declarado,No declarada en el resumen
+Marco propuesto,5 capas + reglas R1-R4,"Microescala (definición operativa, Tabla 3)","Sí (PM, NO₂)",Sí: capa 4 con verificación de compensación,No: se propone un protocolo (sección 4.6)

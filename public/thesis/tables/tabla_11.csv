@@ -1,0 +1,11 @@
+﻿Fuente,Intervención,Efecto térmico / confort,Efecto en ventilación o calidad del aire,Regla
+"A11 Wu et al., 2024","Árboles de calle, setos, techos y muros verdes",Enfriamiento por sombra y evapotranspiración,Puede reducir la ventilación del cañón y dificultar la dispersión,R1
+"A22 Rezníček et al., 2025",Árboles en cañones urbanos (LES),"Efecto positivo sobre el confort, bien establecido",Impacto sobre la calidad del aire cuestionable con tráfico intenso a nivel peatonal,"R1, R2"
+"A32 † Abhijith et al., 2017",Árboles altos frente a setos bajos,No evaluado en el resumen,Árboles: deterioro; setos: mejora,R1
+"A13 Ascenso et al., 2021",Infraestructura verde (WRF-Chem),≈ 1 °C menos (horaria),≈ 10 % más de capacidad de dispersión de NO₂,R2
+"A12 Krayenhoff et al., 2025","Árboles, techos, pavimentos, fotovoltaicos",Árboles: 4 veces el efecto de la siguiente mejor estrategia,Ventilación de contaminación vehicular evaluada como métrica,R2
+"A20 Sabedotti et al., 2023",Vegetación a nivel de calle,No evaluado,Asociaciones no uniformes en la trama urbana,R2
+"A14 Urrutia-Azcona et al., 2026",SBN de calle,Eficacia según estación y configuración,No evaluado,R3
+"A29 Rao et al., 2026",Cobertura arbórea (factor),"Superficie edificada > 37 %; cobertura arbórea 7-11 %, con variabilidad estacional",No evaluado,R3
+"A31 Lopes et al., 2025",Infraestructura verde,"32,6 % del área en riesgo de calor alto",Contaminación persistente donde hay menos infraestructura verde,R4
+"A18 Anderson et al., 2022","Techos y muros verdes, agricultura urbana",Evaluación multiescala orientada a equidad térmica (según el título),No evaluado,R4

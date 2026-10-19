@@ -1,0 +1,10 @@
+﻿Variable,Definición operativa,Categorías / unidad
+V1. Año,Año de publicación en la sede indicada.,2020-2026 (n.º)
+V2. Escala espacial,"Microescala: dominio de hasta 1 km de extensión horizontal, aproximadamente, o unidad a nivel de calle, cañón urbano, manzana, edificio o microambiente. Barrio/distrito/local: entre la microescala y la ciudad (incluye parques). Ciudad/metropolitana. Revisión multiescala: síntesis sin un dominio único.",4 categorías excluyentes
+V3. Tecnología primaria,"Tecnología que predomina en la fuente: gemelo digital (arquitectura con datos, IoT o 3D), simulación numérica física o híbrida, monitoreo con sensores y datos observacionales, o revisión, síntesis y perspectiva.",4 categorías excluyentes
+V4. Capas del marco,"Presencia (1) o ausencia (0) de un componente funcional equivalente a cada capa: L1 adquisición, L2 asimilación, L3 simulación, L4 optimización de SBN, L5 visualización participativa.",Binaria por capa
+V5. SBN evaluada,"La fuente evalúa (por simulación, medición o síntesis) el efecto de al menos un tipo de SBN sobre temperatura, confort térmico o contaminantes.",Sí / no; tipo de SBN
+V6. Magnitud de temperatura,"Reducción de temperatura o índice térmico atribuida a SBN, con la variable exacta (aire, interior, superficie, UTCI).",°C (reducción > 0)
+V7. Magnitud de contaminantes,"Cambio de concentración de PM o NO₂ atribuido a SBN, o métrica alternativa declarada (p. ej., dispersión).",% y tipo de métrica
+V8. Caso de estudio,Ciudad o región del caso y grupo de ingreso del país (clasificación del Banco Mundial).,Alto / medio-alto / medio-bajo
+V9. Tipo de publicación y nivel de lectura,"Artículo, revisión, preprint, ponencia o documento técnico; nivel de lectura (resumen o texto).",Categórica

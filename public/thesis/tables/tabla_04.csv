@@ -1,0 +1,41 @@
+﻿Código,Referencia,Escala,Tecnología / enfoque principal,Clase
+A1,"Teutscher et al., 2025",Micro,GD: CFD (método de Boltzmann de celosía) + meteorología en vivo + OpenStreetMap,GD
+A2,"Abbas et al., 2025",Barrio,"GD + SBN (GREENPASS®): vegetación vertical, parques inundables, riego IoT",GD
+A3,"Babu Saheer et al., 2025",Revisión,Revisión sistemática de 100 estudios y 17 casos reales de GD para calidad del aire,Rev.
+A4,"Cowell et al., 2025",Ciudad,Redes de sensores de bajo costo (fijos y móviles) para GD urbanos,Monit.
+A5,"Li et al., 2026",Micro,"GD con BIM (escaneo LiDAR) y red de sensores de PM2.5 y O₃ (Elizabeth, NJ)",GD
+A6,"Zhivkov et al., 2025",Ciudad,GD: sensores fijos y móviles + aprendizaje automático (redes neuronales gráficas),GD
+A7,"Sukma et al., 2024",Ciudad,GD urbano 3D + IoT (109 sensores) para simular SBN frente a islas de calor (Padua),GD
+A8,"Omrany y Al-Obaidi, 2024",Revisión,Revisión sistemática y marco conceptual REFLECT (7 capas) para GD frente a la ICU,Rev.
+A9,"Pan et al., 2024",Ciudad,"GD de ciudad inteligente (SCDT): sensores meteorológicos + visión artificial (Columbus, GA)",GD
+A10,"Naveed et al., 2025",Ciudad,GD urbano 3D (Blender/Azure) + aprendizaje profundo (CNN-1D) para el ICA (Delhi),GD
+A11,"Wu et al., 2024",Revisión,Revisión de infraestructura verde para el control conjunto de ICU e isla de contaminación,Rev.
+A12,"Krayenhoff et al., 2025",Ciudad,"Modelo meteorológico urbanizado (WRF) acoplado a microclima 3D (TUF-Peatón); Toronto, Phoenix, Miami",Sim.
+A13,"Ascenso et al., 2021",Ciudad,Modelo de calidad del aire en línea WRF-Chem con escenarios de infraestructura verde (Eindhoven),Sim.
+A14,"Urrutia-Azcona et al., 2026",Micro,GD (software ICL) con importación automática de OpenStreetMap; confort térmico de calle,GD
+A15,"Menon y Sharma, 2021",Revisión,Revisión de SBN para mitigación conjunta de contaminación y calor (ciudades de India),Rev.
+A16,"Topping et al., 2021",Revisión,Perspectiva sobre infraestructura de datos y ecosistema de GD de calidad del aire,Rev.
+A17,"Connerton et al., 2025",Barrio,"Sensores de bajo costo en parques y zonas viales (proyecto GreenCities, São Paulo)",Monit.
+A18,"Anderson et al., 2022",Ciudad,Campañas de campo a micro y mesoescala + imágenes LANDSAT (Toronto),Monit.
+A19,"Herath et al., 2025",Ciudad,Arquitectura integrada de GD para gestión de calidad del aire en tiempo real,GD
+A20,"Sabedotti et al., 2023",Micro,"Imágenes de Google Street View/Air View (GVI, NDVI) y modelo autorregresivo espacial (Dublín)",Monit.
+A21,"Yang et al., 2023",Revisión,"Revisión del microclima urbano (viento y entorno térmico): campo, túnel de viento, CFD e IA",Rev.
+A22,"Rezníček et al., 2025",Micro,Simulación de grandes remolinos (LES) del papel de los árboles en cañones urbanos,Sim.
+A23,"Back et al., 2023",Barrio,Integración CFD-GIS para evaluar calor urbano y confort térmico,Sim.
+A24,"Bartzis et al., 2026",Micro,Aprendizaje automático informado por la física + CFD estacionaria + datos operativos (NO₂),Sim.
+A25,"Liu et al., 2021",Revisión,Revisión sistemática de 79 estudios con ENVI-met sobre infraestructura verde y azul,Rev.
+A26,"Aydt et al., 2026",Ciudad,"GD del clima urbano (DUCT): simulación como servicio, federación de modelos, interfaz (Singapur)",GD
+A27,"Hamada et al., 2023",Barrio,GD distrital + método adjunto para ubicar paneles despolucionantes (NOx),GD
+A28,"Liang et al., 2023",Revisión,Revisión de CFD para flujo de aire y contaminantes a microescala,Rev.
+A29,"Rao et al., 2026",Barrio,Aprendizaje profundo explicable de la temperatura superficial a escala de vecindario (Bolonia),Monit.
+A30,"Kumar et al., 2024",Revisión,Síntesis global de 202 estudios sobre 51 tipos de infraestructura verde-azul-gris,Rev.
+A31,"Lopes et al., 2025",Ciudad,"Mapeo de infraestructura verde, riesgo de calor y contaminación (Oporto)",Monit.
+A32 †,"Abhijith et al., 2017",Revisión,Revisión de infraestructura verde para reducir contaminación en vías abiertas y cañones,Rev.
+A33 †,"Adreani et al., s. f.",Ciudad,Marco de GD de ciudad inteligente con integración multidatos y acceso público (Snap4City),GD
+—,"Bździuch et al., 2024 ‡",Micro,"Modelación MISKAM (3D) de dos cañones de Cracovia con y sin vegetación, contrastada con estaciones de monitoreo",Sim.
+—,"Ferré-Bigorra et al., 2022 ‡",Revisión,"Revisión de 131 trabajos y análisis de 22 gemelos digitales urbanos (aplicaciones, entradas, procesamiento y salidas)",Rev.
+—,"Kumar, Corada, et al., 2024 ‡",Revisión,Síntesis de 51 tipos de infraestructura verde-azul-gris sobre contaminación atmosférica (22 con datos cuantitativos),Rev.
+—,"Kumar et al., 2019 ‡",Revisión,"Revisión de infraestructura verde, contaminación atmosférica y salud humana",Rev.
+—,"Lin y Li, 2025 ‡",Revisión,Revisión sistemática de 58 estudios sobre espacios verdes y mitigación de la isla de calor urbana,Rev.
+—,"Shahat et al., 2021 ‡",Revisión,Revisión de 42 artículos sobre gemelos digitales de ciudad y agenda de investigación,Rev.
+—,"Silva et al., 2023 ‡",Micro,"Simulación CFD (OpenFOAM, RANS k-ε) de un cañón idealizado con árboles y CO₂ como trazador",Sim.

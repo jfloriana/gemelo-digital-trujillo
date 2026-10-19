@@ -1,0 +1,6 @@
+﻿Variable (fuente),Unidad,n,Media,DE,Mín-máx,Observación
+"Reducción de temperatura del aire, medias por tipo (A30)",°C,5,"4,32","0,59","3,8-5,0","Media de medias; DE entre tipos; DE intra-tipo reportada 2,7-4,2 (media 3,34)"
+"Reducción de temperatura en simulación o caso (A2, A13)",°C,2,n. c.,n. c.,"1,0-4,0","A2: límite superior, interior; A13: aire exterior; n < 3"
+Intensidad de ICU mitigada entre estudios (A11),°C,1 rango,n. c.,n. c.,"0,4-11",Rango de una revisión; no es observación individual
+Reducción de PM en corredores de alto tráfico (A6),%,1,n. c.,n. c.,hasta 30,Valor máximo; n = 1
+Cambio en capacidad de dispersión de NO₂ (A13),%,1,n. c.,n. c.,≈ +10,Métrica distinta a la reducción de concentración

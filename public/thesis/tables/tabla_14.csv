@@ -1,0 +1,7 @@
+﻿Zona,T base (°C),PM2.5 base (µg/m³),Arbolado (%),Población vulnerable (hab.),Nivel de riesgo
+Zona 1. Centro Histórico (Av. España / Jr. Pizarro),"29,4","48,2","5,8",14 200,Muy alta
+Zona 2. Corredor Av. América Sur / Mercado Mayorista,"31,8","64,7","3,2",22 800,Crítica
+Zona 3. Intercambio vial Av. Mansiche / Mall Plaza,"28,6","38,5","11,4",9500,Media
+Zona 4. El Porvenir (sector industrial del calzado),"32,5","72,3","2,1",41 000,Crítica
+Zona 5. Víctor Larco Herrera (Av. Larco / Huamán),"26,8","32,1","14,6",16 000,Media
+Zona 6. Complejo La Hermelinda (Av. Villarreal / 8 de Octubre),"31,2","68,9","1,8",29 000,Muy alta

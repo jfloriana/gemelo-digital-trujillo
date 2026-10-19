@@ -19,6 +19,7 @@ const NbsSimulatorModule = React.lazy(() => import('./components/modules/NbsSimu
 const ValidationPolicyModule = React.lazy(() => import('./components/modules/ValidationPolicyModule').then(m => ({ default: m.ValidationPolicyModule })));
 const CrispDmModule = React.lazy(() => import('./components/modules/CrispDmModule').then(m => ({ default: m.CrispDmModule })));
 const ReportsModule = React.lazy(() => import('./components/modules/ReportsModule').then(m => ({ default: m.ReportsModule })));
+const ThesisAnnexModule = React.lazy(() => import('./components/modules/ThesisAnnexModule').then(m => ({ default: m.ThesisAnnexModule })));
 const IoTIntegrationModule = React.lazy(() => import('./components/modules/IoTIntegrationModule').then(m => ({ default: m.IoTIntegrationModule })));
 const MlTrainingModule = React.lazy(() => import('./components/modules/MlTrainingModule').then(m => ({ default: m.MlTrainingModule })));
 
@@ -52,7 +53,8 @@ import {
   Bot,
   Workflow,
   Radio,
-  Brain
+  Brain,
+  Images
 } from 'lucide-react';
 
 type ActiveModule =
@@ -65,7 +67,8 @@ type ActiveModule =
   | 'nbs_simulator'
   | 'validation'
   | 'crisp_dm'
-  | 'reports';
+  | 'reports'
+  | 'thesis_annex';
 
 function MainAppContent() {
   const { user, isDemo } = useAuth();
@@ -289,6 +292,18 @@ function MainAppContent() {
           </button>
 
           <button
+            onClick={() => setActiveModule('thesis_annex')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition-all ${
+              activeModule === 'thesis_annex'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Images className="w-4 h-4" />
+            {t('nav.thesisAnnex')}
+          </button>
+
+          <button
             onClick={() => setIsChatbotOpen(true)}
             className="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition-all bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white shadow-sm shadow-emerald-900/15 cursor-pointer ml-auto"
             title="Abrir Asistente Virtual EcoTwin Bot"
@@ -499,6 +514,13 @@ function MainAppContent() {
               objectives={THESIS_OBJECTIVES_DATA}
               activeScenario={activeScenario}
             />
+          </React.Suspense>
+        )}
+
+        {/* VIEW 8: Anexos de la Tesis — Figuras y Tablas Descargables */}
+        {activeModule === 'thesis_annex' && (
+          <React.Suspense fallback={<ModuleFallback />}>
+            <ThesisAnnexModule />
           </React.Suspense>
         )}
       </main>
