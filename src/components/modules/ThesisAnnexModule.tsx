@@ -12,6 +12,11 @@ interface ThesisAnnexItem {
   caption: string;
 }
 
+function fileExt(path: string): string {
+  const match = /\.([a-zA-Z0-9]+)$/.exec(path);
+  return match ? match[1] : 'png';
+}
+
 function downloadFile(url: string, filename: string) {
   const a = document.createElement('a');
   a.href = url;
@@ -64,6 +69,7 @@ const FIGURE_GROUPS: { label: string; filter: (f: ThesisAnnexItem) => boolean }[
   { label: 'Figuras del cuerpo del informe', filter: (f) => /^Figura \d+$/.test(f.id) },
   { label: 'Anexo A — Reporte automático de la plataforma', filter: (f) => f.id.startsWith('Figura A') },
   { label: 'Anexo B — Capturas del prototipo web', filter: (f) => f.id.startsWith('Figura B') },
+  { label: 'Capturas nuevas del sistema en producción (no incluidas en el Word original)', filter: (f) => f.id.startsWith('Captura ') },
 ];
 
 const FALLBACK_ITEMS: ThesisAnnexItem[] = [
@@ -199,7 +205,7 @@ export const ThesisAnnexModule: React.FC = () => {
                       {fig.caption}
                     </div>
                     <button
-                      onClick={() => downloadFile(fig.file, `${fig.id.replace(/\s+/g, '_')}.png`)}
+                      onClick={() => downloadFile(fig.file, `${fig.id.replace(/\s+/g, '_')}.${fileExt(fig.file)}`)}
                       className="self-start px-2.5 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors"
                     >
                       <Download className="w-3.5 h-3.5" />
@@ -281,7 +287,7 @@ export const ThesisAnnexModule: React.FC = () => {
             <img src={preview.file} alt={preview.id} className="max-h-[75vh] w-full object-contain rounded-xl bg-white" />
             <div className="flex items-center gap-2">
               <button
-                onClick={() => downloadFile(preview.file, `${preview.id.replace(/\s+/g, '_')}.png`)}
+                onClick={() => downloadFile(preview.file, `${preview.id.replace(/\s+/g, '_')}.${fileExt(preview.file)}`)}
                 className="px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
               >
                 <Download className="w-3.5 h-3.5" />

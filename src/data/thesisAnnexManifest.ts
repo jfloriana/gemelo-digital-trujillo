@@ -12,8 +12,11 @@ export interface ThesisTable {
 
 /**
  * Figuras y tablas extraídas directamente del informe de tesis
- * (GemeloDigital_SBN.docx). Las imágenes viven en public/thesis/figures/
- * y las tablas en public/thesis/tables/ (CSV), descargables desde la app.
+ * (GemeloDigital_SBN.docx), más 7 capturas nuevas del sistema en
+ * producción (Captura 1-7, no incluidas en el Word original — ver
+ * GemeloDigital_SBN_Interpretacion_Figuras.docx). Las imágenes viven en
+ * public/thesis/figures/ y las tablas en public/thesis/tables/ (CSV),
+ * descargables desde la app.
  */
 export const THESIS_FIGURES: ThesisFigure[] = [
   { id: 'Figura 1', file: '/thesis/figures/figura_01.png', caption: 'Distribución de las 31 fuentes del corpus analítico por (a) año de publicación, (b) escala espacial y (c) tecnología o enfoque primario.' },
@@ -32,6 +35,13 @@ export const THESIS_FIGURES: ThesisFigure[] = [
   { id: 'Figura B6', file: '/thesis/figures/figura_b6.png', caption: 'Laboratorio de entrenamiento: conjunto de 96 filas (24 de referencia pública y 72 de nodos calibrados).' },
   { id: 'Figura B7', file: '/thesis/figures/figura_b7.png', caption: 'Módulo OE5, validación y política pública: cobertura de monitoreo, dictamen y matriz de cumplimiento.' },
   { id: 'Figura B8', file: '/thesis/figures/figura_b8.png', caption: 'Centro de exportación de reportes (Excel, PDF, Word y CSV) y vista previa de los datos compilados por zona.' },
+  { id: 'Captura 1', file: '/thesis/figures/captura_01_hub3d.jpg', caption: 'Hub 3D en vivo del sistema en producción (19-oct-2026): cañón urbano del Centro Histórico con malla discretizada de 5×5 m y telemetría sincronizada en tiempo real.' },
+  { id: 'Captura 2', file: '/thesis/figures/captura_02_oe1_diagnostico.jpg', caption: 'Módulo OE1 en producción: alertas ECA-Aire/OMS/calor y catálogo de zonas filtrable por departamento, con datos en vivo.' },
+  { id: 'Captura 3', file: '/thesis/figures/captura_03_iot_monitoreo.jpg', caption: 'Módulo de Monitoreo IoT en producción: protocolo MQTT, calibración en dos etapas y nodos públicos de referencia en vivo.' },
+  { id: 'Captura 4', file: '/thesis/figures/captura_04_oe3_modelos_ia.jpg', caption: 'Módulo OE3 en producción: arquitectura 1D-CNN desplegada, curva de convergencia real y pronóstico a 24 horas.' },
+  { id: 'Captura 5', file: '/thesis/figures/captura_05_oe4_simulador_nbs.jpg', caption: 'Módulo OE4 en producción: simulador de SBN con parámetros de intervención y resultados del escenario activo.' },
+  { id: 'Captura 6', file: '/thesis/figures/captura_06_oe5_validacion.jpg', caption: 'Módulo OE5 en producción: cobertura real de monitoreo y dictamen estadístico de la hipótesis general.' },
+  { id: 'Captura 7', file: '/thesis/figures/captura_07_anexos_tesis.jpg', caption: 'Módulo "Anexos de Tesis" (funcionalidad nueva, no incluida en el documento original) mostrándose a sí mismo.' },
 ];
 
 export const THESIS_TABLES: ThesisTable[] = [
