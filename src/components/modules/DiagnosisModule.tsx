@@ -5,6 +5,7 @@ import { useI18n } from '../../context/I18nContext';
 import { supabase } from '../../lib/supabase';
 import { ZoneFormModal } from './ZoneFormModal';
 import { EcaAlertStrip } from './EcaAlertStrip';
+import { CaptureWrapper } from '../shared/ChartCaptureButton';
 import { 
   ResponsiveContainer, 
   AreaChart, 
@@ -316,7 +317,11 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
           </div>
 
           {/* Chart Rendering by Tab */}
-          <div className="h-[320px] w-full pt-4">
+          <CaptureWrapper
+            defaultCode={`Gráfico OE1 - ${selectedSensor.name} (${metricTab})`}
+            defaultCaption={`Serie temporal de ${metricTab} del nodo ${selectedSensor.name}, módulo OE1 Diagnóstico.`}
+            className="h-[320px] w-full pt-4"
+          >
             {metricTab === 'pm' && (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={selectedSensor.hourlyHistory}>
@@ -390,7 +395,7 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
                 </ScatterChart>
               </ResponsiveContainer>
             )}
-          </div>
+          </CaptureWrapper>
 
           {/* Street-Level Variability Evidence Table (Zhivkov et al. matching) */}
           <div className="pt-3 border-t border-slate-100 dark:border-slate-800">

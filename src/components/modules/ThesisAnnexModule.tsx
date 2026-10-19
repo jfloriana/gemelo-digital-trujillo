@@ -70,6 +70,11 @@ const FIGURE_GROUPS: { label: string; filter: (f: ThesisAnnexItem) => boolean }[
   { label: 'Anexo A — Reporte automático de la plataforma', filter: (f) => f.id.startsWith('Figura A') },
   { label: 'Anexo B — Capturas del prototipo web', filter: (f) => f.id.startsWith('Figura B') },
   { label: 'Capturas nuevas del sistema en producción (no incluidas en el Word original)', filter: (f) => f.id.startsWith('Captura ') },
+  {
+    label: 'Gráficos capturados desde los módulos',
+    filter: (f) =>
+      !/^Figura \d+$/.test(f.id) && !f.id.startsWith('Figura A') && !f.id.startsWith('Figura B') && !f.id.startsWith('Captura '),
+  },
 ];
 
 const FALLBACK_ITEMS: ThesisAnnexItem[] = [

@@ -8,6 +8,7 @@ import {
 } from '../../utils/mlTraining';
 import { exportTrainingToExcel, exportTrainingToPDF, exportModelReportToExcel, exportModelReportToPDF } from '../../utils/exportUtils';
 import { PublicRecordsViewer } from './PublicRecordsViewer';
+import { CaptureWrapper } from '../shared/ChartCaptureButton';
 import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine,
 } from 'recharts';
@@ -201,7 +202,11 @@ function ModelDetail({ tr }: { tr: TrialRecord }) {
             </div>
             {p.lossHist?.length ? (
               <>
-                <div className="h-[140px] w-full">
+                <CaptureWrapper
+                  defaultCode="Gráfico Entrenamiento IA - Curva de pérdida"
+                  defaultCaption="Curva de pérdida (MSE) por época, laboratorio de entrenamiento IA."
+                  className="h-[140px] w-full"
+                >
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={p.lossHist.map((v, i) => ({ ep: i * 10, loss: v }))} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -211,7 +216,7 @@ function ModelDetail({ tr }: { tr: TrialRecord }) {
                       <Line type="monotone" dataKey="loss" name="MSE" stroke="#9333ea" strokeWidth={2} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
-                </div>
+                </CaptureWrapper>
                 <p className="italic text-slate-400">{t('mlt.lossInterp')}</p>
               </>
             ) : (
@@ -662,7 +667,11 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
             </div>
             <div>
               <div className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">{t('mlt.edaHist')}</div>
-              <div className="h-[190px] w-full">
+              <CaptureWrapper
+                defaultCode="Gráfico Entrenamiento IA - Histograma PM2.5 (EDA)"
+                defaultCaption="Histograma de PM2.5 del análisis exploratorio de datos (EDA), laboratorio de entrenamiento IA."
+                className="h-[190px] w-full"
+              >
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={eda.pmHist} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -672,7 +681,7 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
                     <Bar dataKey="count" name="PM2.5" fill="#0d9488" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
+              </CaptureWrapper>
             </div>
           </div>
           <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400">{t('mlt.edaMissing').replace('{n}', String(eda.dropped))}</p>
@@ -799,7 +808,11 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
             <FlaskConical className="w-5 h-5 text-emerald-600" />
             {t('mlt.chartTitle')} ({t(`mlt.model.${best.model}`)})
           </h3>
-          <div className="h-[220px] w-full">
+          <CaptureWrapper
+            defaultCode={`Gráfico Entrenamiento IA - Predicho vs Real (${best.model})`}
+            defaultCaption={`Comparación de valores predichos vs reales del modelo campeón (${best.model}), laboratorio de entrenamiento IA.`}
+            className="h-[220px] w-full"
+          >
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={best.preds.map((p, i) => ({ i: i + 1, real: p.actual, pred: p.pred }))} margin={{ top: 4, right: 8, left: -14, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -811,7 +824,7 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
                 <Line type="monotone" dataKey="pred" name={t('mlt.predicted')} stroke="#059669" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
-          </div>
+          </CaptureWrapper>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">
             {t('mlt.chartInterp').replace('{r2}', (best.metrics.r2 * 100).toFixed(1)).replace('{rmse}', best.metrics.rmse.toFixed(1))}
           </p>
@@ -1093,7 +1106,11 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
         {best && best.preds.length > 0 && (
           <div>
             <div className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">{t('mlt.paper.F6')} — {t('mlt.residPreview')}</div>
-            <div className="h-[150px] w-full">
+            <CaptureWrapper
+              defaultCode={`Gráfico Entrenamiento IA - Residuales (${best.model})`}
+              defaultCaption={`Vista previa de residuales (predicho menos real) del modelo campeón (${best.model}), laboratorio de entrenamiento IA.`}
+              className="h-[150px] w-full"
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={best.preds.map((p, i) => ({ i: i + 1, err: Number((p.pred - p.actual).toFixed(2)) }))} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -1104,7 +1121,7 @@ export const MlTrainingModule: React.FC<MlTrainingModuleProps> = ({ sensors }) =
                   <Line type="monotone" dataKey="err" name={t('mlt.residErr')} stroke="#d97706" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
-            </div>
+            </CaptureWrapper>
           </div>
         )}
       </div>

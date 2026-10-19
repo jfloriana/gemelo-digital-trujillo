@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SensorNode, UrbanZone, IoTTelemetryPayload, IngestionLog, QaQcValidation, isVirtualSensor } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
+import { CaptureWrapper } from '../shared/ChartCaptureButton';
 import { 
   Radio, 
   Cpu, 
@@ -185,17 +186,22 @@ const ContrastPanel: React.FC<{ publicSensors: SensorNode[]; hardwareSensors: Se
           {paired.byIndex && (
             <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">{t('iot.contrastAligned')}</p>
           )}
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={paired.points} margin={{ top: 4, right: 8, left: -14, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="t" tick={{ fontSize: 9 }} minTickGap={24} />
-              <YAxis tick={{ fontSize: 9 }} domain={['auto', 'auto']} />
-              <Tooltip formatter={(v: unknown) => [`${v} ${unit}`, '']} />
-              <Legend wrapperStyle={{ fontSize: 10 }} />
-              <Line type="monotone" dataKey="hw" name={`${hw.code}`} stroke="#0d9488" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="ref" name={`${ref.code} (ref)`} stroke="#38bdf8" strokeWidth={2} strokeDasharray="5 4" dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
+          <CaptureWrapper
+            defaultCode={`Gráfico IoT - Contraste ${hw.code} vs ${ref.code}`}
+            defaultCaption={`Contraste temporal entre el nodo calibrado ${hw.code} y la referencia ${ref.code}, módulo de Monitoreo IoT.`}
+          >
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={paired.points} margin={{ top: 4, right: 8, left: -14, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="t" tick={{ fontSize: 9 }} minTickGap={24} />
+                <YAxis tick={{ fontSize: 9 }} domain={['auto', 'auto']} />
+                <Tooltip formatter={(v: unknown) => [`${v} ${unit}`, '']} />
+                <Legend wrapperStyle={{ fontSize: 10 }} />
+                <Line type="monotone" dataKey="hw" name={`${hw.code}`} stroke="#0d9488" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="ref" name={`${ref.code} (ref)`} stroke="#38bdf8" strokeWidth={2} strokeDasharray="5 4" dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CaptureWrapper>
           {stats && (
             <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">
               {t('iot.contrastInterp')

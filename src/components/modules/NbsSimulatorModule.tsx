@@ -3,7 +3,8 @@ import { useLiveBaseline } from '../../hooks/useLiveBaseline';
 import { NbsIntervention, UrbanZone, SimulationScenario, SimulationModelType, SimulationMlParams } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
-import { 
+import { CaptureWrapper } from '../shared/ChartCaptureButton';
+import {
   Trees, 
   Leaf, 
   Droplets, 
@@ -571,13 +572,17 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
               <strong className="text-slate-900 dark:text-white">{t('nbs.chart.title')}</strong>
               <span className="text-[10px] text-slate-400 font-mono">{t('nbs.chart.micro')}</span>
             </div>
-            <div className="h-[180px] w-full pt-1">
+            <CaptureWrapper
+              defaultCode="Gráfico OE4 - Comparativa Pre vs Post Intervención"
+              defaultCaption="Comparativa de métricas pre y post intervención NbS, módulo Simulador de SBN."
+              className="h-[180px] w-full pt-1"
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={comparisonData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="metric" stroke="#64748b" fontSize={9} />
                   <YAxis stroke="#64748b" fontSize={9} />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', color: '#0f172a', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
                   <Legend />
@@ -585,7 +590,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
                   <Bar dataKey="Post_NbS" fill="#059669" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
+            </CaptureWrapper>
           </div>
 
           {/* Social & Environmental Summary */}

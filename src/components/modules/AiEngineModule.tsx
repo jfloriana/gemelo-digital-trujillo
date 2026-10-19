@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLiveBaseline } from '../../hooks/useLiveBaseline';
 import { useI18n } from '../../context/I18nContext';
 import { AiModelMetric, UrbanZone } from '../../types';
+import { CaptureWrapper } from '../shared/ChartCaptureButton';
 import { 
   ResponsiveContainer, 
   BarChart, 
@@ -227,13 +228,17 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
               <span className="font-semibold">{t('ai.convergenceTitle')}</span>
               <span className="text-slate-500 dark:text-slate-400 font-mono">{t('ai.epochs')}</span>
             </div>
-            <div className="h-[220px] w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700">
+            <CaptureWrapper
+              defaultCode="Gráfico OE3 - Curva de Convergencia"
+              defaultCaption="Curva de pérdida de entrenamiento y validación del modelo 1D-CNN, módulo OE3."
+              className="h-[220px] w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700"
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={lossData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="epoch" stroke="#64748b" fontSize={10} />
                   <YAxis stroke="#64748b" fontSize={10} />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', color: '#0f172a', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
                   <Legend />
@@ -241,7 +246,7 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
                   <Line type="monotone" dataKey="valLoss" name={t('ai.valLoss')} stroke="#0284c7" strokeWidth={2} strokeDasharray="3 3" dot={false} />
                 </LineChart>
               </ResponsiveContainer>
-            </div>
+            </CaptureWrapper>
           </div>
 
           {/* Horizon Forecast in Trujillo */}
@@ -277,14 +282,18 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
               </div>
             </div>
 
-            <div className="h-[220px] w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700">
+            <CaptureWrapper
+              defaultCode={`Gráfico OE3 - Pronóstico ${forecastHorizon}h ${selectedZone.name}`}
+              defaultCaption={`Pronóstico a ${forecastHorizon} horas de PM2.5 y temperatura para ${selectedZone.name}, módulo OE3.`}
+              className="h-[220px] w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700"
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={forecastData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="hour" stroke="#64748b" fontSize={10} />
                   <YAxis yAxisId="left" stroke="#d97706" fontSize={10} unit=" µg" />
                   <YAxis yAxisId="right" orientation="right" stroke="#ea580c" fontSize={10} unit=" °C" domain={[22, 38]} />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', color: '#0f172a', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
                   <Legend />
@@ -292,7 +301,7 @@ export const AiEngineModule: React.FC<AiEngineModuleProps> = ({
                   <Line yAxisId="right" type="monotone" dataKey="predTemp" name={t('ai.tempPredicted')} stroke="#ea580c" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
-            </div>
+            </CaptureWrapper>
           </div>
         </div>
 
