@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Download, Image as ImageIcon, Table as TableIcon, ZoomIn, X, Trash2 } from 'lucide-react';
+import { Download, Image as ImageIcon, Table as TableIcon, ZoomIn, X, Trash2, Eye, Loader2 } from 'lucide-react';
 import { THESIS_FIGURES, THESIS_TABLES } from '../../data/thesisAnnexManifest';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -21,6 +21,45 @@ function downloadFile(url: string, filename: string) {
   document.body.removeChild(a);
 }
 
+// Parser CSV mínimo pero correcto: respeta comillas dobles, comas y saltos
+// de línea dentro de un campo (RFC 4180), que es lo que escribe csv.writer.
+function parseCSV(text: string): string[][] {
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1); // strip BOM (csv escrito con utf-8-sig)
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else {
+        field += c;
+      }
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ',') {
+      row.push(field);
+      field = '';
+    } else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(field);
+      field = '';
+      rows.push(row);
+      row = [];
+    } else {
+      field += c;
+    }
+  }
+  if (field !== '' || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows.filter((r) => r.some((c) => c.trim() !== ''));
+}
+
 const FIGURE_GROUPS: { label: string; filter: (f: ThesisAnnexItem) => boolean }[] = [
   { label: 'Figuras del cuerpo del informe', filter: (f) => /^Figura \d+$/.test(f.id) },
   { label: 'Anexo A — Reporte automático de la plataforma', filter: (f) => f.id.startsWith('Figura A') },
@@ -37,6 +76,23 @@ export const ThesisAnnexModule: React.FC = () => {
   const [items, setItems] = useState<ThesisAnnexItem[]>(FALLBACK_ITEMS);
   const [preview, setPreview] = useState<ThesisAnnexItem | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [tablePreview, setTablePreview] = useState<ThesisAnnexItem | null>(null);
+  const [tableRows, setTableRows] = useState<string[][] | null>(null);
+  const [tableLoadError, setTableLoadError] = useState<string | null>(null);
+
+  const openTablePreview = async (tbl: ThesisAnnexItem) => {
+    setTablePreview(tbl);
+    setTableRows(null);
+    setTableLoadError(null);
+    try {
+      const res = await fetch(tbl.file);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      setTableRows(parseCSV(text));
+    } catch (e) {
+      setTableLoadError(e instanceof Error ? e.message : 'Error al cargar la tabla');
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -168,11 +224,22 @@ export const ThesisAnnexModule: React.FC = () => {
               key={tbl.id}
               className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-950"
             >
-              <div className="min-w-0">
+              <button
+                onClick={() => openTablePreview(tbl)}
+                className="min-w-0 text-left flex-1 hover:opacity-80 transition-opacity"
+                title="Previsualizar contenido de la tabla"
+              >
                 <div className="text-xs font-bold text-slate-800 dark:text-slate-100">{tbl.id}</div>
                 <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate">{tbl.caption}</div>
-              </div>
+              </button>
               <div className="shrink-0 flex items-center gap-1.5">
+                <button
+                  onClick={() => openTablePreview(tbl)}
+                  title="Previsualizar"
+                  className="w-7 h-7 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 grid place-items-center hover:bg-slate-50 dark:hover:bg-slate-800"
+                >
+                  <Eye className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
+                </button>
                 <button
                   onClick={() => downloadFile(tbl.file, `${tbl.id.replace(/\s+/g, '_')}.csv`)}
                   className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors"
@@ -224,6 +291,95 @@ export const ThesisAnnexModule: React.FC = () => {
                 <button
                   onClick={() => handleDelete(preview)}
                   disabled={deletingId === preview.id}
+                  className="px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Eliminar
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tablePreview && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-6"
+          onClick={() => setTablePreview(null)}
+        >
+          <div
+            className="max-w-5xl w-full max-h-[85vh] flex flex-col gap-3 bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="font-bold text-slate-900 dark:text-white">{tablePreview.id}</div>
+                <div className="text-xs text-slate-600 dark:text-slate-400 max-w-2xl mt-0.5">{tablePreview.caption}</div>
+              </div>
+              <button
+                onClick={() => setTablePreview(null)}
+                className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 shrink-0"
+              >
+                <X className="w-5 h-5 text-slate-700 dark:text-slate-300" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-auto border border-slate-200 dark:border-slate-800 rounded-xl">
+              {tableLoadError && (
+                <div className="p-6 text-sm text-rose-600 dark:text-rose-400">
+                  No se pudo cargar la tabla: {tableLoadError}
+                </div>
+              )}
+              {!tableLoadError && !tableRows && (
+                <div className="p-10 flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Cargando contenido…
+                </div>
+              )}
+              {tableRows && tableRows.length > 0 && (
+                <table className="w-full text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-950 sticky top-0">
+                    <tr>
+                      {tableRows[0].map((cell, i) => (
+                        <th
+                          key={i}
+                          className="text-left px-3 py-2 font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 whitespace-nowrap"
+                        >
+                          {cell}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tableRows.slice(1).map((row, ri) => (
+                      <tr key={ri} className="even:bg-slate-50/60 dark:even:bg-slate-950/40">
+                        {row.map((cell, ci) => (
+                          <td
+                            key={ci}
+                            className="px-3 py-2 text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800/60 align-top"
+                          >
+                            {cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => downloadFile(tablePreview.file, `${tablePreview.id.replace(/\s+/g, '_')}.csv`)}
+                className="px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Descargar CSV
+              </button>
+              {permissions.canModifyZones && (
+                <button
+                  onClick={() => { handleDelete(tablePreview); setTablePreview(null); }}
+                  disabled={deletingId === tablePreview.id}
                   className="px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
