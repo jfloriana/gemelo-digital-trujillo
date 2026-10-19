@@ -1,6 +1,16 @@
-import React, { useState } from 'react';
-import { Download, Image as ImageIcon, Table as TableIcon, ZoomIn, X } from 'lucide-react';
-import { THESIS_FIGURES, THESIS_TABLES, ThesisFigure } from '../../data/thesisAnnexManifest';
+import React, { useEffect, useState } from 'react';
+import { Download, Image as ImageIcon, Table as TableIcon, ZoomIn, X, Trash2 } from 'lucide-react';
+import { THESIS_FIGURES, THESIS_TABLES } from '../../data/thesisAnnexManifest';
+import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
+
+interface ThesisAnnexItem {
+  dbId: string | null;
+  kind: 'figure' | 'table';
+  id: string;
+  file: string;
+  caption: string;
+}
 
 function downloadFile(url: string, filename: string) {
   const a = document.createElement('a');
@@ -11,14 +21,67 @@ function downloadFile(url: string, filename: string) {
   document.body.removeChild(a);
 }
 
-const FIGURE_GROUPS: { label: string; filter: (f: ThesisFigure) => boolean }[] = [
+const FIGURE_GROUPS: { label: string; filter: (f: ThesisAnnexItem) => boolean }[] = [
   { label: 'Figuras del cuerpo del informe', filter: (f) => /^Figura \d+$/.test(f.id) },
   { label: 'Anexo A — Reporte automático de la plataforma', filter: (f) => f.id.startsWith('Figura A') },
   { label: 'Anexo B — Capturas del prototipo web', filter: (f) => f.id.startsWith('Figura B') },
 ];
 
+const FALLBACK_ITEMS: ThesisAnnexItem[] = [
+  ...THESIS_FIGURES.map((f) => ({ dbId: null, kind: 'figure' as const, id: f.id, file: f.file, caption: f.caption })),
+  ...THESIS_TABLES.map((t) => ({ dbId: null, kind: 'table' as const, id: t.id, file: t.file, caption: t.caption })),
+];
+
 export const ThesisAnnexModule: React.FC = () => {
-  const [preview, setPreview] = useState<ThesisFigure | null>(null);
+  const { permissions } = useAuth();
+  const [items, setItems] = useState<ThesisAnnexItem[]>(FALLBACK_ITEMS);
+  const [preview, setPreview] = useState<ThesisAnnexItem | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from('thesis_annex_items')
+        .select('*')
+        .order('sort_order');
+      if (!active) return;
+      if (!error && data && data.length > 0) {
+        setItems(
+          data.map((r: any) => ({
+            dbId: r.id,
+            kind: r.kind,
+            id: r.code,
+            file: r.file_path,
+            caption: r.caption,
+          }))
+        );
+      }
+      // Si falla o la tabla aún no existe/está vacía, se mantiene el fallback estático.
+    })();
+    return () => { active = false; };
+  }, []);
+
+  const figures = items.filter((i) => i.kind === 'figure');
+  const tables = items.filter((i) => i.kind === 'table');
+
+  const handleDelete = async (item: ThesisAnnexItem) => {
+    if (!confirm(`¿Eliminar "${item.id}" del catálogo de anexos? Esta acción no se puede deshacer.`)) return;
+    setDeletingId(item.id);
+    try {
+      if (item.dbId) {
+        const { error } = await supabase.from('thesis_annex_items').delete().eq('id', item.dbId);
+        if (error) {
+          alert(`No se pudo eliminar de la base de datos: ${error.message}`);
+          return;
+        }
+      }
+      setItems((prev) => prev.filter((i) => i.id !== item.id));
+      if (preview?.id === item.id) setPreview(null);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -33,14 +96,15 @@ export const ThesisAnnexModule: React.FC = () => {
         </h2>
         <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-3xl">
           Todas las figuras y tablas del informe (GemeloDigital_SBN.docx) quedan disponibles aquí
-          para descargar directamente desde la aplicación, tal como se citan en el documento:
-          {THESIS_FIGURES.length} figuras (PNG) y {THESIS_TABLES.length} tablas (CSV).
+          para descargar directamente desde la aplicación: {figures.length} figuras (PNG) y{' '}
+          {tables.length} tablas (CSV).
+          {permissions.canModifyZones && ' Como usuario con permisos de edición, puedes eliminar cualquier elemento que no corresponda.'}
         </p>
       </div>
 
       {FIGURE_GROUPS.map((group) => {
-        const figures = THESIS_FIGURES.filter(group.filter);
-        if (figures.length === 0) return null;
+        const groupFigures = figures.filter(group.filter);
+        if (groupFigures.length === 0) return null;
         return (
           <div key={group.label} className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-sm dark:shadow-none">
             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-4">
@@ -48,11 +112,21 @@ export const ThesisAnnexModule: React.FC = () => {
               {group.label}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {figures.map((fig) => (
+              {groupFigures.map((fig) => (
                 <div
                   key={fig.id}
-                  className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-950"
+                  className="relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-950"
                 >
+                  {permissions.canModifyZones && (
+                    <button
+                      onClick={() => handleDelete(fig)}
+                      disabled={deletingId === fig.id}
+                      title="Eliminar esta imagen del catálogo"
+                      className="absolute top-2 right-2 z-10 w-7 h-7 rounded-lg bg-white/90 dark:bg-slate-900/90 border border-rose-200 dark:border-rose-800 grid place-items-center hover:bg-rose-50 dark:hover:bg-rose-950 shadow-sm disabled:opacity-50"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                    </button>
+                  )}
                   <button
                     onClick={() => setPreview(fig)}
                     className="relative group aspect-video bg-white dark:bg-slate-900 overflow-hidden"
@@ -89,7 +163,7 @@ export const ThesisAnnexModule: React.FC = () => {
           Tablas del informe (CSV)
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {THESIS_TABLES.map((tbl) => (
+          {tables.map((tbl) => (
             <div
               key={tbl.id}
               className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-950"
@@ -98,13 +172,25 @@ export const ThesisAnnexModule: React.FC = () => {
                 <div className="text-xs font-bold text-slate-800 dark:text-slate-100">{tbl.id}</div>
                 <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate">{tbl.caption}</div>
               </div>
-              <button
-                onClick={() => downloadFile(tbl.file, `${tbl.id.replace(/\s+/g, '_')}.csv`)}
-                className="shrink-0 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors"
-              >
-                <Download className="w-3.5 h-3.5" />
-                CSV
-              </button>
+              <div className="shrink-0 flex items-center gap-1.5">
+                <button
+                  onClick={() => downloadFile(tbl.file, `${tbl.id.replace(/\s+/g, '_')}.csv`)}
+                  className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  CSV
+                </button>
+                {permissions.canModifyZones && (
+                  <button
+                    onClick={() => handleDelete(tbl)}
+                    disabled={deletingId === tbl.id}
+                    title="Eliminar esta tabla del catálogo"
+                    className="w-7 h-7 rounded-lg bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 grid place-items-center hover:bg-rose-50 dark:hover:bg-rose-950 disabled:opacity-50"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -126,13 +212,25 @@ export const ThesisAnnexModule: React.FC = () => {
               </button>
             </div>
             <img src={preview.file} alt={preview.id} className="max-h-[75vh] w-full object-contain rounded-xl bg-white" />
-            <button
-              onClick={() => downloadFile(preview.file, `${preview.id.replace(/\s+/g, '_')}.png`)}
-              className="self-start px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
-            >
-              <Download className="w-3.5 h-3.5" />
-              Descargar PNG
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => downloadFile(preview.file, `${preview.id.replace(/\s+/g, '_')}.png`)}
+                className="px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Descargar PNG
+              </button>
+              {permissions.canModifyZones && (
+                <button
+                  onClick={() => handleDelete(preview)}
+                  disabled={deletingId === preview.id}
+                  className="px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Eliminar
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

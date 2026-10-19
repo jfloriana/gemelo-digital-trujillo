@@ -24,3 +24,6 @@ coverage/
 streamlit_app/.streamlit/secrets.toml
 streamlit_app/__pycache__/
 fastapi_engine/__pycache__/
+
+.vercel
+.env*

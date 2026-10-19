@@ -522,5 +522,26 @@ create policy "ingestion_insert_service" on public.ingestion_logs for insert wit
 -- insert into storage.buckets (id, name, public) values ('reports','reports', false) on conflict (id) do nothing;
 
 -- ============================================================
+-- 15) thesis_annex_items — catálogo de figuras/tablas de la tesis
+--     (ver supabase/migrations/0006_thesis_annex_items.sql para la
+--     creación con datos semilla; aquí solo el DDL de referencia)
+-- ============================================================
+create table if not exists public.thesis_annex_items (
+  id uuid primary key default gen_random_uuid(),
+  kind text not null check (kind in ('figure','table')),
+  code text not null,
+  file_path text not null,
+  caption text not null,
+  sort_order int not null default 0,
+  created_at timestamptz not null default now()
+);
+create unique index if not exists idx_thesis_annex_code on public.thesis_annex_items(code);
+alter table public.thesis_annex_items enable row level security;
+drop policy if exists "thesis_annex_select_all" on public.thesis_annex_items;
+create policy "thesis_annex_select_all" on public.thesis_annex_items for select using (true);
+drop policy if exists "thesis_annex_write_privileged" on public.thesis_annex_items;
+create policy "thesis_annex_write_privileged" on public.thesis_annex_items for all using (public.is_privileged()) with check (public.is_privileged());
+
+-- ============================================================
 -- FIN SCHEMA — ahora ejecuta seed.sql
 -- ============================================================
