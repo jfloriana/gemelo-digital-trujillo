@@ -1,0 +1,32 @@
+﻿codigo,referencia,tecnologia_enfoque,L1_adquisicion,L2_asimilacion,L3_simulacion,L4_optimizacion_sbn,L5_visualizacion,evalua_sbn,segundo_codificador,fuente_resumen,nota
+A1,"Teutscher et al., 2025",GD: CFD (método de Boltzmann de celosía) + meteorología en vivo + OpenStreetMap,1,1,1,0,1,0,"Claude (modelo de IA, no una persona)",arXiv: A Digital Urban Twin Enabling Interactive Pollution Predictions and Enhanced Planning,AVISO: antes de codificar vi por error la fila A1 de extraccion_40_fuentes.csv; independencia comprometida en esta fila
+A2,"Abbas et al., 2025","GD + SBN (GREENPASS®): vegetación vertical, parques inundables, riego IoT",1,1,1,1,0,1,"Claude (modelo de IA, no una persona)",Integrating Digital Twin and Nature Based Solutions for Climate Resilient Urban Design (resumen vía OpenAlex),AVISO: antes de codificar vi por error la fila A2 de extraccion_40_fuentes.csv; independencia comprometida en esta fila
+A3,"Babu Saheer et al., 2025",Revisión sistemática de 100 estudios y 17 casos reales de GD para calidad del aire,1,0,1,0,0,0,"Claude (modelo de IA, no una persona)",doi:10.1007/s44274-025-00412-6,
+A4,"Cowell et al., 2025",Redes de sensores de bajo costo (fijos y móviles) para GD urbanos,1,1,0,0,0,0,"Claude (modelo de IA, no una persona)",doi:10.3389/frsc.2024.1500516,
+A5,"Li et al., 2026","GD con BIM (escaneo LiDAR) y red de sensores de PM2.5 y O₃ (Elizabeth, NJ)",,,,,,,,,En blanco: no se localizó el resumen
+A6,"Zhivkov et al., 2025",GD: sensores fijos y móviles + aprendizaje automático (redes neuronales gráficas),1,1,1,0,0,1,"Claude (modelo de IA, no una persona)",doi:10.3390/atmos16060731,
+A7,"Sukma et al., 2024",GD urbano 3D + IoT (109 sensores) para simular SBN frente a islas de calor (Padua),1,1,1,1,1,1,"Claude (modelo de IA, no una persona)","Sukma et al. 2024, 3D City Digital Twin Simulation to Mitigate Heat Risk of Urban Heat Islands (OpenAlex)",
+A8,"Omrany y Al-Obaidi, 2024",Revisión sistemática y marco conceptual REFLECT (7 capas) para GD frente a la ICU,0,0,0,1,0,1,"Claude (modelo de IA, no una persona)",Omrany y Al-Obaidi 2024 (OpenAlex),
+A9,"Pan et al., 2024","GD de ciudad inteligente (SCDT): sensores meteorológicos + visión artificial (Columbus, GA)",,,,,,,,,En blanco: no se localizó el resumen
+A10,"Naveed et al., 2025",GD urbano 3D (Blender/Azure) + aprendizaje profundo (CNN-1D) para el ICA (Delhi),1,0,1,0,1,0,"Claude (modelo de IA, no una persona)",Naveed et al. 2025 (OpenAlex),
+A11,"Wu et al., 2024",Revisión de infraestructura verde para el control conjunto de ICU e isla de contaminación,0,0,0,0,0,1,"Claude (modelo de IA, no una persona)",Wu et al. 2024 (OpenAlex),
+A12,"Krayenhoff et al., 2025","Modelo meteorológico urbanizado (WRF) acoplado a microclima 3D (TUF-Peatón); Toronto, Phoenix, Miami",,,,,,,,,"En blanco: solo se halló Jiang y Krayenhoff 2025 (PNAS), cuyo primer autor no coincide con la referencia"
+A13,"Ascenso et al., 2021",Modelo de calidad del aire en línea WRF-Chem con escenarios de infraestructura verde (Eindhoven),,,,,,,,,En blanco: no se localizó la fuente
+A14,"Urrutia-Azcona et al., 2026",GD (software ICL) con importación automática de OpenStreetMap; confort térmico de calle,1,1,1,1,1,1,"Claude (modelo de IA, no una persona)",Urrutia-Azcona et al. 2026 (OpenAlex),
+A15,"Menon y Sharma, 2021",Revisión de SBN para mitigación conjunta de contaminación y calor (ciudades de India),0,0,0,0,0,1,"Claude (modelo de IA, no una persona)",Menon y Sharma 2021 (OpenAlex),
+A16,"Topping et al., 2021",Perspectiva sobre infraestructura de datos y ecosistema de GD de calidad del aire,1,0,1,0,0,0,"Claude (modelo de IA, no una persona)",Topping et al. 2021 (OpenAlex),
+A17,"Connerton et al., 2025","Sensores de bajo costo en parques y zonas viales (proyecto GreenCities, São Paulo)",1,0,0,0,0,1,"Claude (modelo de IA, no una persona)",Connerton et al. 2025 (OpenAlex),
+A18,"Anderson et al., 2022",Campañas de campo a micro y mesoescala + imágenes LANDSAT (Toronto),1,0,0,0,0,1,"Claude (modelo de IA, no una persona)",doi:10.3390/atmos13071027,
+A19,"Herath et al., 2025",Arquitectura integrada de GD para gestión de calidad del aire en tiempo real,1,1,1,0,0,0,"Claude (modelo de IA, no una persona)",Herath et al. 2025 (OpenAlex),
+A20,"Sabedotti et al., 2023","Imágenes de Google Street View/Air View (GVI, NDVI) y modelo autorregresivo espacial (Dublín)",1,0,0,0,0,1,"Claude (modelo de IA, no una persona)",doi:10.1021/acs.est.3c05000,
+A21,"Yang et al., 2023","Revisión del microclima urbano (viento y entorno térmico): campo, túnel de viento, CFD e IA",,,,,,,,,En blanco: fuente localizada (doi:10.1016/j.buildenv.2023.110334) pero sin resumen accesible
+A22,"Rezníček et al., 2025",Simulación de grandes remolinos (LES) del papel de los árboles en cañones urbanos,,,,,,,,,En blanco: no se localizó la fuente
+A23,"Back et al., 2023",Integración CFD-GIS para evaluar calor urbano y confort térmico,0,0,1,0,0,0,"Claude (modelo de IA, no una persona)",doi:10.1016/j.scitotenv.2022.159729,
+A24,"Bartzis et al., 2026",Aprendizaje automático informado por la física + CFD estacionaria + datos operativos (NO₂),1,1,1,0,0,0,"Claude (modelo de IA, no una persona)",Bartzis et al. 2026 (OpenAlex),
+A25,"Liu et al., 2021",Revisión sistemática de 79 estudios con ENVI-met sobre infraestructura verde y azul,,,,,,,,,En blanco: fuente localizada (doi:10.1016/j.buildenv.2021.107939) pero sin resumen accesible
+A26,"Aydt et al., 2026","GD del clima urbano (DUCT): simulación como servicio, federación de modelos, interfaz (Singapur)",1,1,1,0,1,0,"Claude (modelo de IA, no una persona)","Aydt et al. 2026, Tools to manage Singapore’s heat (OpenAlex)",
+A27,"Hamada et al., 2023",GD distrital + método adjunto para ubicar paneles despolucionantes (NOx),,,,,,,,,En blanco: fuente localizada (doi:10.1016/j.buildenv.2023.111111) pero sin resumen accesible
+A28,"Liang et al., 2023",Revisión de CFD para flujo de aire y contaminantes a microescala,0,0,1,0,0,1,"Claude (modelo de IA, no una persona)",Liang et al. 2023 (OpenAlex),
+A29,"Rao et al., 2026",Aprendizaje profundo explicable de la temperatura superficial a escala de vecindario (Bolonia),,,,,,,,,En blanco: no se localizó la fuente
+A30,"Kumar et al., 2024",Síntesis global de 202 estudios sobre 51 tipos de infraestructura verde-azul-gris,0,0,0,0,0,1,"Claude (modelo de IA, no una persona)",Kumar et al. 2024 (OpenAlex),
+A31,"Lopes et al., 2025","Mapeo de infraestructura verde, riesgo de calor y contaminación (Oporto)",1,0,0,0,0,1,"Claude (modelo de IA, no una persona)",Lopes et al. 2025 (OpenAlex),

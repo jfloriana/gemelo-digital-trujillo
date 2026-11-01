@@ -2,4 +2,4 @@ base_de_datos,fecha_ejecucion,cadena,registros_recuperados,ejecutado_por
 Scopus,,,,
 Web of Science,,,,
 ScienceDirect,,,,
-arXiv,,,,
+arXiv,2026-11-01,"all:""digital twin"" AND all:""air quality"" AND submittedDate:[202001010000 TO 202612312359] (8 registros) | all:""digital twin"" AND all:""urban heat"" AND submittedDate:[202001010000 TO 202612312359] (0 registros); API pública http://export.arxiv.org/api/query; total = unión sin duplicados",8,Claude (modelo de IA) vía API pública de arXiv
