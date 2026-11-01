@@ -1,0 +1,8 @@
+﻿Código,Fuente,Tipo de evidencia,"Temperatura (reducción, °C)",Contaminantes,Procedencia
+A2,"Abbas et al., 2025",Marco predictivo con simulación,Hasta 3-4 (temperatura interior),No cuantificado,Resumen
+A6,"Zhivkov et al., 2025",Sensores + aprendizaje automático,No cuantificado,PM: reducción de hasta 30 %,Resumen
+A13,"Ascenso et al., 2021",Simulación WRF-Chem,≈ 1 (temperatura horaria del aire),NO₂: +≈ 10 % en capacidad de dispersión (no es reducción de concentración),Resumen
+A11,"Wu et al., 2024",Revisión,"0,4 a 11 (rango de intensidad de la ICU mitigada entre estudios)",Efecto variable; puede reducir la ventilación,Resumen
+A12,"Krayenhoff et al., 2025",Modelación WRF + TUF-Peatón,Árboles: 4 veces el efecto de la siguiente mejor estrategia sobre el estrés térmico,"Ventilación de contaminación vehicular (métrica, sin %)",Resumen
+A30,"Kumar et al., 2024",Síntesis global,"3,8 a 5,0 (medias por tipo; Tabla 9)",No evaluado,Resumen
+A31,"Lopes et al., 2025",Estudio de caso (mapeo),"32,6 % del área en riesgo de calor alto (no es una reducción)",Contaminación persistente donde hay menos infraestructura verde,Resumen

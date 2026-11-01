@@ -1,0 +1,8 @@
+﻿Código,Criterio
+IC1,Publicación entre 2020 y 2026.
+IC2,"Tema: gemelos digitales o modelación de alta resolución aplicados a calidad del aire y/o calor urbano, o efectos de SBN sobre contaminantes y/o temperatura."
+IC3,"Tipo: artículo, revisión, ponencia, preprint o documento técnico con método descrito."
+IC4,"Identidad bibliográfica verificable (autoría, año, sede y DOI o URL)."
+EC1,Fuera de la ventana temporal (se conserva como fuente contextual si es seminal).
+EC2,"Sin fecha o sede verificables (se conserva como fuente contextual, sin computar en los estadísticos)."
+EC3,Registro duplicado de una misma fuente.

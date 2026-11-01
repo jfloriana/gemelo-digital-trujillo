@@ -188,7 +188,7 @@ APP_URL="http://localhost:3000"
 | `BREVO_API_KEY` | **Sí** | Vercel Secret | `api/send-verification` |
 | `GEMINI_API_KEY` | **Sí** | Vercel Secret | `vite.config.ts` define |
 
-* `anon` es público por diseño (RLS). Nunca subas `.env.local`, `pg` ya está en `devDependencies`, y la DB password `D)TjP9t_*tuyC.)` fue expuesta en chat — **rótala en Supabase Dashboard → Database → Reset password**.
+* `anon` es público por diseño (RLS). Nunca subas `.env.local`, `pg` ya está en `devDependencies`.
 
 ---
 

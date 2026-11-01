@@ -1,0 +1,18 @@
+﻿Código,Referencia,Tipo(s) de SBN,Variable(s) abordada(s)
+A2,"Abbas et al., 2025","Vegetación vertical, parques inundables, riego basado en IoT","Temperatura interior, retención de agua, demanda energética"
+A6,"Zhivkov et al., 2025",Áreas verdes urbanas en corredores de tráfico,Material particulado (PM)
+A7,"Sukma et al., 2024",Infraestructura verde-azul,Riesgo de calor / islas de calor
+A8,"Omrany y Al-Obaidi, 2024",Vegetación urbana (optimización; marco REFLECT),Isla de calor urbana
+A11,"Wu et al., 2024","Espacios verdes, árboles de calle, setos, techos y muros verdes",Isla de calor e isla de contaminación urbanas
+A12,"Krayenhoff et al., 2025","Árboles, techos fríos y verdes, fotovoltaicos, pavimentos reflectantes","Estrés térmico, energía de AC, ventilación de contaminación vehicular"
+A13,"Ascenso et al., 2021",Infraestructura verde (escenarios WRF-Chem),Temperatura horaria y dispersión de NO₂
+A14,"Urrutia-Azcona et al., 2026",SBN de calle (materiales de superficie),Confort térmico exterior (UTCI)
+A15,"Menon y Sharma, 2021","SBN generales (silvicultura urbana, espacios verdes)",Contaminación atmosférica y calor urbano
+A17,"Connerton et al., 2025",Parques urbanos densamente arbolados,Contaminación junto a vías y en áreas verdes
+A18,"Anderson et al., 2022","Techos y muros verdes, agricultura urbana, infraestructura verde",Temperatura del aire y de la superficie
+A20,"Sabedotti et al., 2023","Vegetación a nivel de calle (GVI, NDVI)","PM2.5, NO₂, NO, CO₂, CO"
+A22,"Rezníček et al., 2025",Árboles en cañones urbanos (LES),Confort térmico y calidad del aire
+A25,"Liu et al., 2021","Árboles, techos verdes, jardines verticales, cuerpos de agua (79 estudios ENVI-met)",Confort térmico y calidad del aire
+A29,"Rao et al., 2026",Cobertura arbórea como factor explicativo,Temperatura superficial
+A30,"Kumar et al., 2024",51 tipos de infraestructura verde-azul-gris (202 estudios),Enfriamiento del aire
+A31,"Lopes et al., 2025",Infraestructura verde urbana (mapeo de vegetación),"Isla de calor, riesgo de calor, ozono y PM"
