@@ -1,6 +1,6 @@
 import React from 'react';
 import { useI18n } from '../../context/I18nContext';
-import { ThesisObjectiveEvaluation, UrbanZone, SensorNode, isVirtualSensor } from '../../types';
+import { ThesisObjectiveEvaluation, UrbanZone, SensorNode, isVirtualSensor, isPendingMetric } from '../../types';
 import { 
   CheckCircle2, 
   Award, 
@@ -153,12 +153,14 @@ export const ValidationPolicyModule: React.FC<ValidationPolicyModuleProps> = ({
             <span className="text-slate-500 dark:text-slate-400 block">{t('validation.tempMagnitude')}</span>
             <strong className="text-base font-bold font-mono text-emerald-700">ΔT = -3.8 °C</strong>
             <p className="text-[10px] text-slate-400">{t('validation.tempMagnitudeSub')}</p>
+            <p className="text-[10px] italic text-amber-700 dark:text-amber-400">{t('ui.fixedUnvalidated')}</p>
           </div>
 
           <div className="bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-amber-200/60 text-xs space-y-1 shadow-2xs">
             <span className="text-slate-500 dark:text-slate-400 block">{t('validation.pmReduction')}</span>
             <strong className="text-base font-bold font-mono text-emerald-700">ΔPM2.5 = -28.5%</strong>
             <p className="text-[10px] text-slate-400">{t('validation.pmReductionSub')}</p>
+            <p className="text-[10px] italic text-amber-700 dark:text-amber-400">{t('ui.fixedUnvalidated')}</p>
           </div>
         </div>
       </div>
@@ -180,9 +182,9 @@ export const ValidationPolicyModule: React.FC<ValidationPolicyModuleProps> = ({
                   </span>
                   <h4 className="font-semibold text-xs text-slate-900 dark:text-white">{obj.title}</h4>
                 </div>
-                <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
-                  <Check className="w-3.5 h-3.5" />
-                  {obj.status} (100%)
+                <span className={`text-xs font-semibold flex items-center gap-1 ${obj.status === 'En Ejecución' ? 'text-amber-700' : 'text-emerald-700'}`}>
+                  {obj.status !== 'En Ejecución' && <Check className="w-3.5 h-3.5" />}
+                  {obj.status} ({obj.progressPercent}%)
                 </span>
               </div>
 
@@ -192,7 +194,7 @@ export const ValidationPolicyModule: React.FC<ValidationPolicyModuleProps> = ({
                     <span className="text-slate-500 dark:text-slate-400 block text-[11px]">{m.name}</span>
                     <div className="flex justify-between text-[11px]">
                       <span className="text-slate-400">{t('validation.goal')} {m.target}</span>
-                      <span className="font-bold text-teal-700">{t('validation.achieved')} {m.achieved}</span>
+                      <span className={`font-bold ${isPendingMetric(m) ? 'text-amber-700' : 'text-teal-700'}`}>{t('validation.achieved')} {m.achieved}</span>
                     </div>
                   </div>
                 ))}

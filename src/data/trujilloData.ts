@@ -811,14 +811,14 @@ export const THESIS_OBJECTIVES_DATA: ThesisObjectiveEvaluation[] = [
   {
     code: 'OE4',
     title: 'Diseñar el módulo de simulación de escenarios de Soluciones basadas en la Naturaleza (NbS)',
-    status: 'Completado',
-    progressPercent: 100,
+    status: 'En Ejecución',
+    progressPercent: 75,
     metrics: [
-      { name: 'Reducción térmica microclimática proyectada', target: 'ΔT = 2.0 - 3.5 °C', achieved: 'ΔT = 3.2 °C (Arbolado) y 3.8 °C (Techos Verdes) en Trujillo', compliance: true },
-      { name: 'Reducción de exposición a PM2.5 por deposición foliar', target: 'ΔPM2.5 > 20%', achieved: '28.5% en corredores arbolados (Molle/Huarango)', compliance: true },
-      { name: 'Mejora en Confort Térmico Score (TCS / PET)', target: 'Mejora > 25 pts', achieved: 'Incremento de TCS de 42 a 76 pts (+34 pts de confort)', compliance: true }
+      { name: 'Reducción térmica microclimática proyectada', target: 'ΔT = 2.0 - 3.5 °C', achieved: 'Pendiente de validación: sin resultado validado; el simulador OE4 entrega valores ilustrativos de un modelo heurístico no validado', compliance: false },
+      { name: 'Reducción de exposición a PM2.5 por deposición foliar', target: 'ΔPM2.5 > 20%', achieved: 'Pendiente de validación: sin resultado validado; el simulador OE4 entrega valores ilustrativos de un modelo heurístico no validado', compliance: false },
+      { name: 'Mejora en Confort Térmico Score (TCS / PET)', target: 'Mejora > 25 pts', achieved: 'Pendiente de validación: sin resultado validado; el simulador OE4 entrega valores ilustrativos de un modelo heurístico no validado', compliance: false }
     ],
-    summary: 'Simulador A/B permite a la Municipalidad evaluar proyectos antes de su ejecución física, respaldado en el marco GREENPASS® (Abbas et al., 2025).'
+    summary: 'Simulador A/B permite a la Municipalidad evaluar proyectos antes de su ejecución física, respaldado en el marco GREENPASS® (Abbas et al., 2025). Los resultados del simulador están pendientes de validación.'
   },
   {
     code: 'OE5',
@@ -826,9 +826,9 @@ export const THESIS_OBJECTIVES_DATA: ThesisObjectiveEvaluation[] = [
     status: 'Completado',
     progressPercent: 100,
     metrics: [
-      { name: 'Validación estadística de Hipótesis General', target: 'p-valor < 0.05', achieved: 'p < 0.001 (Diferencia significativa pre y post NbS)', compliance: true },
-      { name: 'Población vulnerable protegida estimada', target: '> 50,000 hab', achieved: '132,500 habitantes beneficiados en zonas críticas de Trujillo', compliance: true },
-      { name: 'Retorno de inversión social (Costo-Efectividad)', target: 'B/C Ratio > 1.5', achieved: 'B/C Ratio = 3.4 (Ahorro en salud respiratoria y energía)', compliance: true }
+      { name: 'Validación estadística de Hipótesis General', target: 'p-valor < 0.05', achieved: 'p < 0.001 (Diferencia significativa pre y post NbS) — valor fijo, ilustrativo, no validado', compliance: true },
+      { name: 'Población vulnerable protegida estimada', target: '> 50,000 hab', achieved: '132,500 habitantes beneficiados en zonas críticas de Trujillo — valor fijo, ilustrativo, no validado', compliance: true },
+      { name: 'Retorno de inversión social (Costo-Efectividad)', target: 'B/C Ratio > 1.5', achieved: 'B/C Ratio = 3.4 (Ahorro en salud respiratoria y energía) — valor fijo, ilustrativo, no validado', compliance: true }
     ],
     summary: 'Se valida la hipótesis de la tesis: el gemelo digital a microescala con NbS reduce significativamente la exposición a contaminantes y calor extremo en Trujillo.'
   }

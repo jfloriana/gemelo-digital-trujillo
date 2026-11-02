@@ -77,6 +77,13 @@ export const ILLUSTRATIVE_LABEL = 'ilustrativa, modelo heurístico no validado';
 export const DEFAULT_WIND_MS = 2.2;
 export const DEFAULT_ALBEDO = 0.2;
 
+export interface Mitigation { tempReduction: number; pm25ReductionPercent: number }
+
+/** Si hay un escenario guardado en OE4 manda su resultado; si no, el cálculo local de la portada. */
+export function resolveTwinMitigation(saved: Mitigation | null | undefined, computed: Mitigation | null): Mitigation | null {
+  return saved ?? computed;
+}
+
 export type NbsModelType = '1d_cnn' | 'gnn' | 'random_forest' | 'bi_lstm' | 'xgboost';
 
 /** Multiplicadores por modelo ML (conservados del prototipo; ver docs). */

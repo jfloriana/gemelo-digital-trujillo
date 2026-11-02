@@ -95,6 +95,8 @@ function MainAppContent() {
   ]);
   const [isSimActive, setIsSimActive] = useState<boolean>(true);
   // Mitigación calculada por el gemelo 3D con src/utils/nbsModel.ts (null = sin escenario activo).
+  // Escenario guardado en OE4 para la zona activa: la portada usa sus mismas NbS, H/W y resultados.
+  const twinScenario = activeScenario && activeScenario.zoneId === selectedZone.id ? activeScenario : null;
   const [twinMitigation, setTwinMitigation] = useState<{ tempReduction: number; pm25ReductionPercent: number } | null>(null);
 
   const handleQuickExport = (format: 'xlsx' | 'pdf' | 'docx' | 'csv') => {
@@ -367,9 +369,10 @@ function MainAppContent() {
               <DigitalTwinCanvas
                 zone={selectedZone}
                 sensors={SENSOR_NODES}
-                selectedNbs={appliedNbs}
+                selectedNbs={twinScenario ? twinScenario.selectedNbs : appliedNbs}
                 nbsCatalog={NBS_CATALOG}
-                isSimulationActive={isSimActive}
+                isSimulationActive={isSimActive || !!twinScenario}
+                scenario={twinScenario}
                 onApplyNbsQuick={handleQuickApplyNbs}
                 onMitigationChange={setTwinMitigation}
               />

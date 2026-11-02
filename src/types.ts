@@ -222,6 +222,10 @@ export interface ThesisObjectiveEvaluation {
   summary: string;
 }
 
+/** Una métrica cuyo texto empieza así no se considera cumplida ni incumplida: está pendiente de validación. */
+export const PENDING_VALIDATION = 'Pendiente de validación';
+export const isPendingMetric = (m: { achieved: string }): boolean => m.achieved.startsWith(PENDING_VALIDATION);
+
 // IoT Protocol & Telemetry Types
 export interface IoTTelemetryPayload {
   sensor_code: string;

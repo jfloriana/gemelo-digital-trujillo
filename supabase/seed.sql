@@ -134,7 +134,7 @@ values
   ('OE1','Diagnosticar la variabilidad microescalar de calidad del aire y temperatura en Trujillo','Completado',100,'Se demostró que las estaciones macroescalares tradicionales no capturan los picos de exposición en los cañones urbanos de Trujillo.'),
   ('OE2','Diseñar la arquitectura del gemelo digital a microescala (Capas Físicas, Datos y Modelado)','Completado',100,'Arquitectura validada según los estándares de Li et al. (2026) y Teutscher et al. (2025) con código abierto adaptado a presupuestos de ciudades intermedias.'),
   ('OE3','Seleccionar y adaptar modelos de Machine Learning y Deep Learning a microescala','Completado',100,'El modelo 1D-CNN y la arquitectura GNN superaron ampliamente a los modelos clásicos gaussianos y Random Forest.'),
-  ('OE4','Diseñar el módulo de simulación de escenarios de Soluciones basadas en la Naturaleza (NbS)','Completado',100,'Simulador A/B permite a la Municipalidad evaluar proyectos antes de su ejecución física, respaldado en el marco GREENPASS® (Abbas et al., 2025).'),
+  ('OE4','Diseñar el módulo de simulación de escenarios de Soluciones basadas en la Naturaleza (NbS)','En Ejecución',75,'Simulador A/B permite a la Municipalidad evaluar proyectos antes de su ejecución física, respaldado en el marco GREENPASS® (Abbas et al., 2025). Los resultados del simulador están pendientes de validación.'),
   ('OE5','Establecer indicadores y procedimientos de validación de hipótesis y política pública','Completado',100,'Se valida la hipótesis de la tesis: el gemelo digital a microescala con NbS reduce significativamente la exposición a contaminantes y calor extremo en Trujillo.')
 on conflict (code) do update set title=excluded.title, status=excluded.status, progress_percent=excluded.progress_percent, summary=excluded.summary;
 
@@ -149,12 +149,12 @@ values
   ('OE3','Precisión predictiva de 1D-CNN (Naveed et al. 2025)','R² > 0.95','R² = 0.9925 | MAPE = 1.23%',true),
   ('OE3','Atribución vehicular mediante GNN (Zhivkov et al. 2025)','Atribución > 50%','65.2% de PM2.5 atribuido a flota diésel y combis en Trujillo',true),
   ('OE3','Tiempo de inferencia para gemelo digital en tiempo real','< 50ms','4.8ms con 1D-CNN optimizado',true),
-  ('OE4','Reducción térmica microclimática proyectada','ΔT = 2.0 - 3.5 °C','ΔT = 3.2 °C (Arbolado) y 3.8 °C (Techos Verdes) en Trujillo',true),
-  ('OE4','Reducción de exposición a PM2.5 por deposición foliar','ΔPM2.5 > 20%','28.5% en corredores arbolados (Molle/Huarango)',true),
-  ('OE4','Mejora en Confort Térmico Score (TCS / PET)','Mejora > 25 pts','Incremento de TCS de 42 a 76 pts (+34 pts de confort)',true),
-  ('OE5','Validación estadística de Hipótesis General','p-valor < 0.05','p < 0.001 (Diferencia significativa pre y post NbS)',true),
-  ('OE5','Población vulnerable protegida estimada','> 50,000 hab','132,500 habitantes beneficiados en zonas críticas de Trujillo',true),
-  ('OE5','Retorno de inversión social (Costo-Efectividad)','B/C Ratio > 1.5','B/C Ratio = 3.4 (Ahorro en salud respiratoria y energía)',true)
+  ('OE4','Reducción térmica microclimática proyectada','ΔT = 2.0 - 3.5 °C','Pendiente de validación: sin resultado validado; el simulador OE4 entrega valores ilustrativos de un modelo heurístico no validado',false),
+  ('OE4','Reducción de exposición a PM2.5 por deposición foliar','ΔPM2.5 > 20%','Pendiente de validación: sin resultado validado; el simulador OE4 entrega valores ilustrativos de un modelo heurístico no validado',false),
+  ('OE4','Mejora en Confort Térmico Score (TCS / PET)','Mejora > 25 pts','Pendiente de validación: sin resultado validado; el simulador OE4 entrega valores ilustrativos de un modelo heurístico no validado',false),
+  ('OE5','Validación estadística de Hipótesis General','p-valor < 0.05','p < 0.001 (Diferencia significativa pre y post NbS) — valor fijo, ilustrativo, no validado',true),
+  ('OE5','Población vulnerable protegida estimada','> 50,000 hab','132,500 habitantes beneficiados en zonas críticas de Trujillo — valor fijo, ilustrativo, no validado',true),
+  ('OE5','Retorno de inversión social (Costo-Efectividad)','B/C Ratio > 1.5','B/C Ratio = 3.4 (Ahorro en salud respiratoria y energía) — valor fijo, ilustrativo, no validado',true)
 on conflict do nothing;
 
 -- Verificación rápida

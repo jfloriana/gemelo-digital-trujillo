@@ -1,8 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useI18n } from '../../context/I18nContext';
-import { SensorNode, UrbanZone, NbsIntervention } from '../../types';
+import { SensorNode, UrbanZone, NbsIntervention, SimulationScenario } from '../../types';
 import { useLiveBaseline } from '../../hooks/useLiveBaseline';
-import { computeNbs, NBS_COEF, DEFAULT_WIND_MS, DEFAULT_ALBEDO } from '../../utils/nbsModel';
+import { computeNbs, resolveTwinMitigation, NBS_COEF, DEFAULT_WIND_MS, DEFAULT_ALBEDO } from '../../utils/nbsModel';
 import { 
   Layers, 
   Wind, 
@@ -23,6 +23,8 @@ interface DigitalTwinCanvasProps {
   selectedNbs: { nbsId: string; quantityOrArea: number }[];
   nbsCatalog: NbsIntervention[];
   isSimulationActive: boolean;
+  /** Escenario guardado en OE4 para esta zona: define NbS, H/W y resultados de la portada. */
+  scenario?: SimulationScenario | null;
   onApplyNbsQuick?: (nbsId: string) => void;
   /** Notifica la mitigación calculada con nbsModel.ts (null = sin escenario activo). */
   onMitigationChange?: (m: { tempReduction: number; pm25ReductionPercent: number } | null) => void;
@@ -34,6 +36,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
   selectedNbs,
   nbsCatalog,
   isSimulationActive,
+  scenario,
   onApplyNbsQuick,
   onMitigationChange
 }) => {
@@ -55,7 +58,8 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
   ]);
 
   // Calculate current thermal & PM state based on NbS applied
-  const totalTreesCount = (selectedNbs.find(n => n.nbsId === 'nbs-arbolado')?.quantityOrArea || 0) + customTrees.length;
+  // Con escenario OE4 guardado, los árboles dibujados a mano no entran al cálculo (solo son visuales).
+  const totalTreesCount = (selectedNbs.find(n => n.nbsId === 'nbs-arbolado')?.quantityOrArea || 0) + (scenario ? 0 : customTrees.length);
   const greenRoofsArea = selectedNbs.find(n => n.nbsId === 'nbs-techo-verde')?.quantityOrArea || 0;
   const greenWallsArea = selectedNbs.find(n => n.nbsId === 'nbs-muro-verde')?.quantityOrArea || 0;
   const permeableArea = selectedNbs.find(n => n.nbsId === 'nbs-pavimento-permeable')?.quantityOrArea || 0;
@@ -65,8 +69,8 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
   // HUD vivo (Fase B): parte de la última telemetría real cuando existe;
   // si no, baseline estático de tesis. La mitigación NbS se aplica encima igual.
   const { data: liveBase } = useLiveBaseline(zone.id, true);
-  const baseTemp = liveBase?.temp ?? zone.baselineTemp;
-  const basePm = liveBase?.pm25 ?? zone.baselinePM25;
+  const baseTemp = scenario ? scenario.results.initialTemp : (liveBase?.temp ?? zone.baselineTemp);
+  const basePm = scenario ? scenario.results.initialPM25 : (liveBase?.pm25 ?? zone.baselinePM25);
 
   // Mitigación calculada con el mismo modelo del simulador OE4 (src/utils/nbsModel.ts).
   // H/W: promedio de los nodos de la zona; viento y albedo: valores por defecto del simulador.
@@ -92,12 +96,16 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
         rainGardenArea
       })
     : null;
-  const currentTempMitigation = nbsOut?.tempReduction ?? 0;
-  const currentPmMitigationPercent = nbsOut?.pm25ReductionPercent ?? 0;
+  const mitigation = resolveTwinMitigation(
+    scenario ? { tempReduction: scenario.results.tempReduction, pm25ReductionPercent: scenario.results.pm25ReductionPercent } : null,
+    nbsOut ? { tempReduction: nbsOut.tempReduction, pm25ReductionPercent: nbsOut.pm25ReductionPercent } : null
+  );
+  const currentTempMitigation = mitigation?.tempReduction ?? 0;
+  const currentPmMitigationPercent = mitigation?.pm25ReductionPercent ?? 0;
 
   useEffect(() => {
-    onMitigationChange?.(nbsOut ? { tempReduction: nbsOut.tempReduction, pm25ReductionPercent: nbsOut.pm25ReductionPercent } : null);
-  }, [nbsOut?.tempReduction, nbsOut?.pm25ReductionPercent, !!nbsOut]); // eslint-disable-line react-hooks/exhaustive-deps
+    onMitigationChange?.(mitigation);
+  }, [mitigation?.tempReduction, mitigation?.pm25ReductionPercent, !!mitigation]); // eslint-disable-line react-hooks/exhaustive-deps
   const effectiveTemp = Number((baseTemp - currentTempMitigation).toFixed(1));
   const effectivePM25 = Number((basePm * (1 - currentPmMitigationPercent / 100)).toFixed(1));
 
@@ -566,7 +574,7 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
               )}
             </div>
           </div>
-          {nbsOut && (
+          {mitigation && (
             <p className="text-[9px] italic text-slate-500 dark:text-slate-400 pt-0.5">{t('canvas.illustrative')}</p>
           )}
 

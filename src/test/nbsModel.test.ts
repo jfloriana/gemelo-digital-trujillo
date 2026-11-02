@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import {
-  computeNbs, ventilationIndex, canopyCoverFraction, appendRuleEvent, readRuleLog,
+  computeNbs, ventilationIndex, canopyCoverFraction, appendRuleEvent, readRuleLog, resolveTwinMitigation,
   NBS_COEF, RULE_LOG_KEY, ILLUSTRATIVE_LABEL, type NbsInputs, type RuleEvent,
 } from '../utils/nbsModel';
 import { SENSOR_NODES } from '../data/trujilloData';
-import { isSimulatedReading, originLabel, SIMULATED_LABEL, type SensorNode } from '../types';
+import { isSimulatedReading, originLabel, SIMULATED_LABEL, isPendingMetric, type SensorNode } from '../types';
 import { buildTelemetryCsv } from '../utils/exportUtils';
 
 const base: NbsInputs = {
@@ -197,5 +197,59 @@ describe('5. Portada (gemelo 3D) calculada con nbsModel.ts', () => {
     expect(r.tempReduction).toBeGreaterThan(0);
     expect(r.tempReduction).toBeLessThan(NBS_COEF.DT_SATURATION);
     expect(r.pm25ReductionPercent).toBeLessThan(36);
+  });
+});
+
+describe('6. Portada = escenario OE4; OE4 pendiente de validación; cifras fijas rotuladas', () => {
+  const read = (p: string) => readFileSync(p, 'utf8');
+
+  it('si hay escenario guardado en OE4, la portada usa su resultado (mismos valores)', () => {
+    const saved = { tempReduction: 1.6, pm25ReductionPercent: 4.1 };
+    expect(resolveTwinMitigation(saved, { tempReduction: 0.9, pm25ReductionPercent: 0.6 })).toEqual(saved);
+    expect(resolveTwinMitigation(null, { tempReduction: 0.9, pm25ReductionPercent: 0.6 })).toEqual({ tempReduction: 0.9, pm25ReductionPercent: 0.6 });
+    expect(resolveTwinMitigation(null, null)).toBeNull();
+  });
+
+  it('App pasa al gemelo las NbS del escenario guardado y el gemelo parte de su línea base', () => {
+    const app = read('src/App.tsx');
+    const canvas = read('src/components/digitaltwin/DigitalTwinCanvas.tsx');
+    expect(app).toContain('selectedNbs={twinScenario ? twinScenario.selectedNbs : appliedNbs}');
+    expect(app).toContain('scenario={twinScenario}');
+    expect(canvas).toContain('scenario.results.initialTemp');
+    expect(canvas).toContain('scenario.results.tempReduction');
+  });
+
+  it('OE4 ya no está cumplido: en ejecución, métricas pendientes y sin las cifras 3,2 / 3,8 / 28,5', () => {
+    const data = read('src/data/trujilloData.ts');
+    const oe4 = data.slice(data.indexOf("code: 'OE4'"), data.indexOf("code: 'OE5'"));
+    expect(oe4).toContain("status: 'En Ejecución'");
+    expect(oe4).not.toMatch(/3\.2 °C|3\.8 °C|28\.5%/);
+    expect((oe4.match(/Pendiente de validación/g) ?? []).length).toBe(3);
+    expect((oe4.match(/compliance: false/g) ?? []).length).toBe(3);
+    expect(isPendingMetric({ achieved: 'Pendiente de validación: x' })).toBe(true);
+    expect(isPendingMetric({ achieved: 'R² = 0.99' })).toBe(false);
+  });
+
+  it('seed.sql y la migración 0009 dejan OE4 pendiente en la base de datos', () => {
+    const seed = read('supabase/seed.sql');
+    expect(seed).not.toMatch(/ΔT = 3\.2 °C \(Arbolado\)/);
+    expect(seed).not.toMatch(/28\.5% en corredores arbolados/);
+    const mig = read('supabase/migrations/0009_oe4_pendiente_validacion.sql');
+    expect(mig).toContain("status = 'En Ejecución'");
+    expect(mig).toContain('compliance = false');
+  });
+
+  it('las cifras fijas llevan el rótulo en la interfaz, los informes y los 6 idiomas', () => {
+    const i18n = read('src/context/I18nContext.tsx');
+    expect((i18n.match(/'ui\.fixedUnvalidated'/g) ?? []).length).toBe(6);
+    expect(read('src/components/modules/ValidationPolicyModule.tsx')).toContain("t('ui.fixedUnvalidated')");
+    const exp = read('src/utils/exportUtils.ts');
+    expect(exp).toContain('t(5) = 8.42, p < .001, d = 1.9 (efecto grande) (valor fijo, ilustrativo, no validado)');
+    expect(exp).toContain('metas de diseño ΔT 2.0–3.5 °C y ΔPM2.5 >20 %; valor fijo, ilustrativo, no validado');
+    for (const k of ['assistant.g.nbs.a1', 'assistant.g.nbs.a2', 'assistant.g.pm.body', 'crispdm.p1.task2', 'validation.rec2.desc', 'cards.populationSub', 'nbs.metric.budgetSub']) {
+      const lines = i18n.split('\n').filter((l) => l.includes(`'${k}':`));
+      expect(lines).toHaveLength(6);
+      expect(lines.every((l) => /\((valor fijo|fixed value|固定值|fester Wert|valeur fixe|valor fixo)/.test(l) || /_\((valor fijo|fixed value|固定值|fester Wert|valeur fixe|valor fixo)/.test(l))).toBe(true);
+    }
   });
 });

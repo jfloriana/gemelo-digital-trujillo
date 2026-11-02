@@ -17,7 +17,7 @@ import {
   PageNumber
 } from 'docx';
 import saveAs from 'file-saver';
-import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, SimulationScenario, isSimulatedReading, originLabel, SIMULATED_LABEL } from '../types';
+import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, SimulationScenario, isPendingMetric, isSimulatedReading, originLabel, SIMULATED_LABEL } from '../types';
 
 // Reducción con signo: valores negativos indican aumento de la concentración (efecto adverso del arbolado).
 const signedRed = (x: number): string => (x >= 0 ? `-${x}` : `+${Math.abs(x)}`);
@@ -350,7 +350,7 @@ export const exportToExcel = (
         m.name,
         m.target,
         m.achieved,
-        m.compliance ? 'CUMPLE' : 'NO CUMPLE'
+        isPendingMetric(m) ? 'PENDIENTE DE VALIDACIÓN' : (m.compliance ? 'CUMPLE' : 'NO CUMPLE')
       ]);
     });
   });
@@ -1396,7 +1396,7 @@ export const exportToWord = async (
     bullet('OE1: Diagnosticar la variabilidad microescalar de calidad del aire y temperatura en ' + zones.length + ' zonas críticas de Trujillo (Delta PM2.5 >150%, R² calibración >0.85).'),
     bullet('OE2: Diseñar la arquitectura del gemelo digital (malla 5×5 m, latencia <5 s, 7 capas REFLECT).'),
     bullet('OE3: Seleccionar y adaptar modelos ML/DL a microescala (R² >0.95, inferencia <50 ms, n=' + models.length + ' modelos).'),
-    bullet('OE4: Diseñar el simulador NbS con flora nativa y estándar GREENPASS® (ΔT 2.0–3.5 °C, ΔPM2.5 >20%).'),
+    bullet('OE4: Diseñar el simulador NbS con flora nativa y estándar GREENPASS® (metas de diseño ΔT 2.0–3.5 °C y ΔPM2.5 >20 %; valor fijo, ilustrativo, no validado).'),
     bullet('OE5: Validar hipótesis y proponer ordenanzas (p < .05, >50 000 hab. beneficiados, B/C >1.5).'),
     heading2('1.3 Hipótesis'),
     normal('H1: El gemelo digital a microescala con NbS reduce significativamente (p < .05) la exposición a PM2.5 y la temperatura del aire en cañones urbanos de Trujillo respecto a la línea base.', { italics: true }),
@@ -1546,14 +1546,14 @@ export const exportToWord = async (
         rows: [
           new TableRow({ children: WL.thObj.map((h: string) => tituloCell(h)) }),
           ...o.metrics.map(m => new TableRow({ children: [
-            tdCell(m.name, { size: 14 }), tdCell(m.target, { size: 14, align: AlignmentType.CENTER }), tdCell(m.achieved, { size: 13 }), tdCell(m.compliance ? 'SÍ' : 'NO', { size: 14, align: AlignmentType.CENTER, bold: true }),
+            tdCell(m.name, { size: 14 }), tdCell(m.target, { size: 14, align: AlignmentType.CENTER }), tdCell(m.achieved, { size: 13 }), tdCell(isPendingMetric(m) ? 'PEND.' : (m.compliance ? 'SÍ' : 'NO'), { size: 14, align: AlignmentType.CENTER, bold: true }),
           ]})),
         ],
       }),
       normal(`Tabla 5.${o.code.slice(-1)}. Métricas ${o.code}.`, { italics: true, size: 16 }),
     ]).flat(),
     heading2('5.6 Validación de hipótesis y políticas'),
-    normal('Prueba t pareada pre/post NbS: t(5) = 8.42, p < .001, d = 1.9 (efecto grande). Se rechaza H0. B/C = 3.4 con 132 500 beneficiarios justifica ordenanza MPT para corredores arbolados y techos verdes en zonas Crítica/Muy Alta. Limitaciones: nodos limitados en Víctor Larco, falta de COVs industriales y validación estacional completa.', {}),
+    normal('Prueba t pareada pre/post NbS: t(5) = 8.42, p < .001, d = 1.9 (efecto grande) (valor fijo, ilustrativo, no validado). La decisión sobre H0 queda pendiente de validación. B/C = 3.4 con 132 500 beneficiarios (valor fijo, ilustrativo, no validado) son insumo de una posible ordenanza MPT para corredores arbolados y techos verdes en zonas Crítica/Muy Alta, que queda pendiente de validación. Limitaciones: nodos limitados en Víctor Larco, falta de COVs industriales y validación estacional completa.', {}),
     bullet('Ordenanza propuesta: 30% de cobertura arbórea mínima en nuevos desarrollos con H/W >1.5.'),
     bullet('Incentivo tributario para techos verdes ≥50 m² con Sedum spp.'),
     bullet('Red IoT municipal con mantenimiento trimestral y QA/QC Zhivkov.'),
