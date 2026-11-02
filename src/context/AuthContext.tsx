@@ -281,11 +281,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return;
     }
-    const { error } = await supabase.auth.signInWithPassword({ email, password: 'trujillo2026' });
+    // La contraseña de las cuentas demo ya no vive en el código: se lee de VITE_DEMO_PASSWORD.
+    // Sin ella, el modo demo funciona solo con los perfiles locales (sin sesión en Supabase).
+    const demoPassword = import.meta.env.VITE_DEMO_PASSWORD as string | undefined;
+    if (!demoPassword) {
+      const local = registeredUsers.find(u => u.id === userId) || DEMO_FALLBACK_USERS.find(u => u.id === userId);
+      if (local) {
+        setUser(local);
+        localStorage.setItem('trujillo_digital_twin_active_user', JSON.stringify(local));
+      }
+      return;
+    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password: demoPassword });
     if (error) {
       console.warn('loginWithDemo fallo', error.message);
       if (error.message.includes('Invalid login credentials')) {
-        await supabase.auth.signUp({ email, password: 'trujillo2026', options: { data: { name: email.split('@')[0], role: 'ciudadano', institution: 'Demo' } } });
+        await supabase.auth.signUp({ email, password: demoPassword, options: { data: { name: email.split('@')[0], role: 'ciudadano', institution: 'Demo' } } });
       }
     }
   };
