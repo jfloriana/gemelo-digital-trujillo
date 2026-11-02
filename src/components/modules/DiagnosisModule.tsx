@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UrbanZone, SensorNode } from '../../types';
+import { UrbanZone, SensorNode, isSimulatedReading, SIMULATED_LABEL } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { supabase } from '../../lib/supabase';
@@ -315,6 +315,12 @@ export const DiagnosisModule: React.FC<DiagnosisModuleProps> = ({
               </span>
             </div>
           </div>
+
+          {selectedSensor.hourlyHistory.some(isSimulatedReading) && (
+            <div role="status" className="mt-3 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700 px-3 py-1.5 text-[11px] font-semibold text-amber-900 dark:text-amber-200">
+              {SIMULATED_LABEL}: esta serie se genera con una fórmula (respaldo cuando no hay lecturas de sensores). No es una medición.
+            </div>
+          )}
 
           {/* Chart Rendering by Tab */}
           <CaptureWrapper

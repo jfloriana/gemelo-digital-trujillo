@@ -27,3 +27,6 @@ fastapi_engine/__pycache__/
 
 .vercel
 .env*
+
+# Notas locales del agente (no subir)
+.atl/

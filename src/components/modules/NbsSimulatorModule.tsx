@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLiveBaseline } from '../../hooks/useLiveBaseline';
 import { NbsIntervention, UrbanZone, SimulationScenario, SimulationModelType, SimulationMlParams } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { CaptureWrapper } from '../shared/ChartCaptureButton';
+import { computeNbs, MODEL_FACTORS, NBS_COEF, appendRuleEvent, readRuleLog, RuleEvent } from '../../utils/nbsModel';
 import {
   Trees, 
   Leaf, 
@@ -73,6 +74,8 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
   const [ambientWindSpeed, setAmbientWindSpeed] = useState<number>(2.2); // m/s
   const [ambientSolarRad, setAmbientSolarRad] = useState<number>(540); // W/m²
   const [ambientRH, setAmbientRH] = useState<number>(72); // %
+  const [studyAreaM2, setStudyAreaM2] = useState<number>(NBS_COEF.DEFAULT_STUDY_AREA_M2); // área de estudio (m²)
+  const [lai, setLai] = useState<number>(NBS_COEF.DEFAULT_LAI); // índice de área foliar
 
   // NbS Interventions State
   const [treeCount, setTreeCount] = useState<number>(180); // Number of trees
@@ -90,49 +93,53 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
   const effTemp = liveOn && liveBaseline ? liveBaseline.temp : selectedZone.baselineTemp;
   const effPm25 = liveOn && liveBaseline ? liveBaseline.pm25 : selectedZone.baselinePM25;
 
-  // Model Coefficients & Multipliers (Grounded on Naveed 2025, Zhivkov 2025, Abbas 2025 GREENPASS)
-  const getModelMultiplier = (model: SimulationModelType) => {
-    switch (model) {
-      case '1d_cnn':
-        return { name: '1D-CNN (Naveed et al. 2025)', r2: 0.9925, tempFactor: 1.05, pmFactor: 1.08 };
-      case 'gnn':
-        return { name: 'GNN - Graph Neural Network (Zhivkov et al. 2025)', r2: 0.9880, tempFactor: 0.98, pmFactor: 1.15 };
-      case 'random_forest':
-        return { name: 'Random Forest Regressor (300 Trees)', r2: 0.9610, tempFactor: 0.94, pmFactor: 0.92 };
-      case 'bi_lstm':
-        return { name: 'Bi-LSTM Spatiotemporal (Li et al. 2026)', r2: 0.9740, tempFactor: 1.02, pmFactor: 1.04 };
-      case 'xgboost':
-      default:
-        return { name: 'XGBoost Microclimate Ensemble', r2: 0.9530, tempFactor: 0.96, pmFactor: 0.95 };
-    }
-  };
+  // Coeficientes y reglas: ver src/utils/nbsModel.ts y docs/coeficientes_simulador.md
+  const currentModelMeta = MODEL_FACTORS[selectedMlModel] ?? MODEL_FACTORS.xgboost;
 
-  const currentModelMeta = getModelMultiplier(selectedMlModel);
+  // Factor de atrapamiento del cañón (solo informativo en la interfaz)
+  const canyonTrappingFactor = 1.0 + (canyonHWRatio - 1.0) * NBS_COEF.CANYON_TRAP_SLOPE;
 
-  // Microscale Canyon Vortex & Trapping Factor (Higher H/W ratio traps more heat & pollution)
-  const canyonTrappingFactor = 1.0 + (canyonHWRatio - 1.0) * 0.18;
-  const windDispersionFactor = Math.max(0.6, 1.0 - (ambientWindSpeed - 1.5) * 0.12);
-
-  // Multi-Pollutant & Thermal Calculations
-  const treeCooling = (treeCount / 100) * 1.85 * currentModelMeta.tempFactor;
-  const roofCooling = (greenRoofArea / 1000) * 0.92 * (1 + (0.5 - surfaceAlbedo) * 0.4);
-  const wallCooling = (greenWallArea / 1000) * 0.74;
-  const permCooling = (permeableArea / 1000) * 0.42 * (1 + surfaceAlbedo * 0.6);
-  const rainCooling = (rainGardenArea / 1000) * 0.48;
-
-  const totalTempDrop = Math.min(5.6, Number(((treeCooling + roofCooling + wallCooling + permCooling + rainCooling) / canyonTrappingFactor).toFixed(1)));
+  const nbsOut = computeNbs({
+    modelType: selectedMlModel,
+    baselineTemp: effTemp,
+    baselinePm25: effPm25,
+    canyonHWRatio,
+    windSpeed: ambientWindSpeed,
+    surfaceAlbedo,
+    studyAreaM2,
+    lai,
+    treeCrownRadiusM: NBS_COEF.DEFAULT_CROWN_RADIUS_M,
+    treeCount,
+    greenRoofArea,
+    greenWallArea,
+    permeableArea,
+    rainGardenArea
+  });
+  const totalTempDrop = nbsOut.tempReduction;
   const simulatedTemp = Number((effTemp - totalTempDrop).toFixed(1));
 
-  // PM2.5 and PM10 Interception Calculations
-  const treePmRed = (treeCount / 100) * 15.2 * currentModelMeta.pmFactor;
-  const roofPmRed = (greenRoofArea / 1000) * 5.8;
-  const wallPmRed = (greenWallArea / 1000) * 7.4;
-  const permPmRed = (permeableArea / 1000) * 2.4;
-  const rainPmRed = (rainGardenArea / 1000) * 3.8;
-
-  const totalPmRedPercent = Math.min(42, Number(((treePmRed + roofPmRed + wallPmRed + permPmRed + rainPmRed) * windDispersionFactor).toFixed(1)));
+  // PM2.5 con signo: negativo = el escenario aumenta la concentración
+  const totalPmRedPercent = nbsOut.pm25ReductionPercent;
   const simulatedPM25 = Number((effPm25 * (1 - totalPmRedPercent / 100)).toFixed(1));
-  const simulatedPM10 = Number(((effPm25 * 1.76) * (1 - (totalPmRedPercent * 1.1) / 100)).toFixed(1));
+  const simulatedPM10 = Number(((effPm25 * NBS_COEF.PM10_PM25_RATIO) * (1 - (totalPmRedPercent * NBS_COEF.PM10_FACTOR) / 100)).toFixed(1));
+
+  // Registro de activaciones de la regla R1 (solo al pasar de inactiva a activa)
+  const [ruleLog, setRuleLog] = useState<RuleEvent[]>(() => readRuleLog(typeof window !== 'undefined' ? window.localStorage : undefined));
+  const r1WasActive = useRef<boolean>(false);
+  useEffect(() => {
+    if (nbsOut.r1.active && !r1WasActive.current) {
+      const ev: RuleEvent = {
+        ts: new Date().toISOString(),
+        rule: 'R1',
+        zoneId: selectedZone.id,
+        canopyCover: nbsOut.r1.canopyCover,
+        ventilation: nbsOut.r1.ventilation,
+        message: nbsOut.r1.reason
+      };
+      setRuleLog(appendRuleEvent(typeof window !== 'undefined' ? window.localStorage : undefined, ev));
+    }
+    r1WasActive.current = nbsOut.r1.active;
+  }, [nbsOut.r1.active, nbsOut.r1.canopyCover, nbsOut.r1.ventilation, nbsOut.r1.reason, selectedZone.id]);
 
   // Secondary Pollutants O3 & NO2 Photochemical Mitigation
   const initialO3 = 24.5;
@@ -144,7 +151,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
   const petBefore = Number((effTemp + 4.2).toFixed(1));
   const petAfter = Number((simulatedTemp + 1.2).toFixed(1));
   const tcsBefore = Math.max(15, Math.min(100, Math.round(100 - (effTemp - 20) * 5.2 - (effPm25 / 1.6))));
-  const tcsAfter = Math.min(96, Math.round(tcsBefore + (totalTempDrop * 7.5) + (totalPmRedPercent * 0.45)));
+  const tcsAfter = Math.max(0, Math.min(100, Math.round(tcsBefore + (totalTempDrop * 7.5) + (totalPmRedPercent * 0.45))));
 
   // Budget in Peruvian Soles (PEN) & Benefit/Cost
   const totalBudgetPEN = (
@@ -203,9 +210,9 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
       initialPM25: effPm25,
       simulatedPM25,
       pm25ReductionPercent: totalPmRedPercent,
-      initialPM10: Number((effPm25 * 1.76).toFixed(1)),
+      initialPM10: Number((effPm25 * NBS_COEF.PM10_PM25_RATIO).toFixed(1)),
       simulatedPM10,
-      pm10ReductionPercent: Math.min(48, Number((totalPmRedPercent * 1.1).toFixed(1))),
+      pm10ReductionPercent: Number((totalPmRedPercent * NBS_COEF.PM10_FACTOR).toFixed(1)),
       initialO3,
       simulatedO3,
       o3ReductionPercent: Number((((initialO3 - simulatedO3) / initialO3) * 100).toFixed(1)),
@@ -223,7 +230,11 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
       stormwaterRetentionM3,
       exposedPopulationBenefited: populationBenefited,
       modelUsedName: currentModelMeta.name,
-      modelR2Score: currentModelMeta.r2
+      modelR2Score: currentModelMeta.r2,
+      ruleR1Active: nbsOut.r1.active,
+      ruleR1Message: nbsOut.r1.reason,
+      ventilationIndex: nbsOut.ventilation,
+      resultOrigin: 'SIMULADO (modelo heurístico; no es medición)'
     }
   };
 
@@ -375,6 +386,40 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
             <p className="text-[10px] text-slate-500 dark:text-slate-400">
               {t('nbs.panel1.trapping')} <strong>{canyonTrappingFactor.toFixed(2)}x</strong>
             </p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+              Ventilación del cañón: <strong>{nbsOut.ventilation.toFixed(2)}</strong> · Cobertura de copas: <strong>{(nbsOut.canopyCover * 100).toFixed(0)} %</strong>
+            </p>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <label className="text-[10px] text-slate-500 dark:text-slate-400 space-y-0.5">
+                Área de estudio (m²)
+                <input
+                  type="number"
+                  min={1000}
+                  step={1000}
+                  value={studyAreaM2}
+                  onChange={(e) => setStudyAreaM2(Math.max(1000, Number(e.target.value) || NBS_COEF.DEFAULT_STUDY_AREA_M2))}
+                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-1 text-xs"
+                />
+              </label>
+              <label className="text-[10px] text-slate-500 dark:text-slate-400 space-y-0.5">
+                LAI del dosel
+                <input
+                  type="number"
+                  min={0.5}
+                  max={7}
+                  step={0.5}
+                  value={lai}
+                  onChange={(e) => setLai(Math.min(7, Math.max(0.5, Number(e.target.value) || NBS_COEF.DEFAULT_LAI)))}
+                  className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-1 text-xs"
+                />
+              </label>
+            </div>
+            {nbsOut.r1.active && (
+              <div role="alert" className="mt-1 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700 p-2 text-[11px] text-amber-900 dark:text-amber-200">
+                {nbsOut.r1.reason}
+                <span className="block text-[10px] opacity-80">Activaciones registradas: {ruleLog.filter(e => e.rule === 'R1').length}</span>
+              </div>
+            )}
           </div>
 
           {/* Canyon Orientation & Surface Albedo */}
@@ -544,7 +589,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
             <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 p-3.5 rounded-xl shadow-xs space-y-0.5">
               <span className="text-[11px] text-slate-500 dark:text-slate-400 block">{t('nbs.metric.pmMitigation')}</span>
               <strong className="text-xl font-bold font-mono text-amber-700">
-                -{totalPmRedPercent}%
+                {totalPmRedPercent >= 0 ? '-' : '+'}{Math.abs(totalPmRedPercent)}%
               </strong>
               <p className="text-[10px] text-slate-400">De {effPm25} a {simulatedPM25} µg</p>
             </div>

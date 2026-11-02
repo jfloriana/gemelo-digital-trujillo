@@ -142,6 +142,7 @@ export function useSupabaseData() {
                 temperature: Number(r.temperature), humidity: Number(r.humidity), windSpeed: Number(r.wind_speed), windDirection: r.wind_direction,
                 solarRadiation: Number(r.solar_radiation), heatIndex: Number(r.heat_index), uhiDelta: Number(r.uhi_delta),
                 petScore: Number(r.pet_score), tcsScore: Number(r.tcs_score), aqiIndex: Number(r.aqi_index), aqiCategory: r.aqi_category,
+                origin: 'MEDICION',
               });
             });
             mappedSensors = mappedSensors.map(sn => ({ ...sn, hourlyHistory: bySensor[sn.id]?.slice(-12) ?? sn.hourlyHistory }));
@@ -176,14 +177,14 @@ export function useSupabaseData() {
             pm25: Number(r.pm25), pm10: Number(r.pm10), no2: Number(r.no2), o3: Number(r.o3), co: Number(r.co), co2: Number(r.co2),
             temperature: Number(r.temperature), humidity: Number(r.humidity), windSpeed: Number(r.wind_speed), windDirection: r.wind_direction,
             solarRadiation: Number(r.solar_radiation), heatIndex: Number(r.heat_index), uhiDelta: Number(r.uhi_delta),
-            petScore: Number(r.pet_score), tcsScore: Number(r.tcs_score), aqiIndex: Number(r.aqi_index), aqiCategory: r.aqi_category,
+            petScore: Number(r.pet_score), tcsScore: Number(r.tcs_score), aqiIndex: Number(r.aqi_index), aqiCategory: r.aqi_category, origin: 'MEDICION' as const,
           },
           hourlyHistory: [...s.hourlyHistory.slice(-11), {
             timestamp: new Date(r.measured_at).toLocaleTimeString('es-PE', { hour:'2-digit', minute:'2-digit' }),
             pm25: Number(r.pm25), pm10: Number(r.pm10), no2: Number(r.no2), o3: Number(r.o3), co: Number(r.co), co2: Number(r.co2),
             temperature: Number(r.temperature), humidity: Number(r.humidity), windSpeed: Number(r.wind_speed), windDirection: r.wind_direction,
             solarRadiation: Number(r.solar_radiation), heatIndex: Number(r.heat_index), uhiDelta: Number(r.uhi_delta),
-            petScore: Number(r.pet_score), tcsScore: Number(r.tcs_score), aqiIndex: Number(r.aqi_index), aqiCategory: r.aqi_category,
+            petScore: Number(r.pet_score), tcsScore: Number(r.tcs_score), aqiIndex: Number(r.aqi_index), aqiCategory: r.aqi_category, origin: 'MEDICION' as const,
           }]
         } : s))
       })

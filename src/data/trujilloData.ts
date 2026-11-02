@@ -360,7 +360,9 @@ const generateHourlyReadings = (basePM: number, baseTemp: number, isCalibrated =
       petScore,
       tcsScore,
       aqiIndex: Math.round(currentPM25 * 2.8),
-      aqiCategory
+      aqiCategory,
+      // Serie generada por fórmula (no proviene de sensores)
+      origin: 'SIMULADA/FALLBACK' as const
     };
   });
 };

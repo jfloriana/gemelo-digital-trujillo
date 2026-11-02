@@ -28,7 +28,7 @@ A26,"Aydt et al., 2026",2026,corpus,Ciudad,GD,"GD del clima urbano (DUCT): simul
 A27,"Hamada et al., 2023",2023,corpus,Barrio,GD,GD distrital + método adjunto para ubicar paneles despolucionantes (NOx),0,0,1,1,0,0,,,
 A28,"Liang et al., 2023",2023,corpus,Revisión,Rev.,Revisión de CFD para flujo de aire y contaminantes a microescala,0,0,1,0,0,0,,,
 A29,"Rao et al., 2026",2026,corpus,Barrio,Monit.,Aprendizaje profundo explicable de la temperatura superficial a escala de vecindario (Bolonia),0,0,0,1,0,1,Bolonia,Italia,Alto
-A30,"Kumar et al., 2024",2024,corpus,Revisión,Rev.,Síntesis global de 202 estudios sobre 51 tipos de infraestructura verde-azul-gris,0,0,0,1,0,1,,,
+A30,"Kumar, Debele, et al., 2024",2024,corpus,Revisión,Rev.,Síntesis global de 202 estudios sobre 51 tipos de infraestructura verde-azul-gris,0,0,0,1,0,1,,,
 A31,"Lopes et al., 2025",2025,corpus,Ciudad,Monit.,"Mapeo de infraestructura verde, riesgo de calor y contaminación (Oporto)",0,0,0,1,0,1,Oporto,Portugal,Alto
 A32,"Abhijith et al., 2017",2017,contextual,Revisión,Rev.,Revisión de infraestructura verde para reducir contaminación en vías abiertas y cañones,,,,,,,,,
 A33,"Adreani et al., s. f.",s. f.,contextual,Ciudad,GD,Marco de GD de ciudad inteligente con integración multidatos y acceso público (Snap4City),,,,,,,,,

@@ -46,7 +46,13 @@ export interface EnvironmentalReading {
   tcsScore: number;    // Thermal Comfort Score (0 - 100)
   aqiIndex: number;    // 0 - 500
   aqiCategory: 'Buena' | 'Moderada' | 'Dañina para grupos sensibles' | 'Dañina' | 'Muy dañina' | 'Peligrosa';
+  // Procedencia del dato. Si falta, se trata como simulada (más seguro que presentarla como medición).
+  origin?: 'MEDICION' | 'SIMULADA/FALLBACK';
 }
+
+export const SIMULATED_LABEL = 'SIMULADA / FALLBACK';
+export const isSimulatedReading = (r: Pick<EnvironmentalReading, 'origin'>): boolean => r.origin !== 'MEDICION';
+export const originLabel = (r: Pick<EnvironmentalReading, 'origin'>): string => (isSimulatedReading(r) ? SIMULATED_LABEL : 'MEDICIÓN');
 
 // Nodos virtuales sin hardware que replican datasets abiertos (migración 0004).
 // Se muestran en sección propia y se excluyen de promedios de calibración.
@@ -200,6 +206,10 @@ export interface SimulationScenario {
     exposedPopulationBenefited: number;
     modelUsedName?: string;
     modelR2Score?: number;
+    ruleR1Active?: boolean;     // regla R1 (ventilación) activa en este escenario
+    ruleR1Message?: string;
+    ventilationIndex?: number;  // 0-1
+    resultOrigin?: string;      // los resultados del simulador son modelados, no medidos
   };
 }
 

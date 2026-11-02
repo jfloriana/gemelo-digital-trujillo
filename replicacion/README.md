@@ -26,3 +26,7 @@ Segundo codificador (modelo de IA)
 
 Registro de búsquedas
 - `protocolo/registro_busquedas.csv`: solo arXiv fue ejecutada (2026-11-01, API pública). Scopus, Web of Science y ScienceDirect siguen en blanco y deben ejecutarse con acceso institucional.
+
+Escenarios del simulador
+- `salidas/escenarios_simulador.csv` se regenera con `node replicacion/scripts/exportar_escenarios.mjs` desde la raíz del repositorio (requiere `npm install`). Es salida de un modelo heurístico, no una medición; ver `docs/coeficientes_simulador.md`.
+- `CHANGELOG_replicacion.md` resume los cambios de esta versión.

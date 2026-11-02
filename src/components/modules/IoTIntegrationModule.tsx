@@ -379,6 +379,7 @@ export const IoTIntegrationModule: React.FC<IoTIntegrationModuleProps> = ({
     const newReading = {
       ...activeSensor.lastReading,
       timestamp: nowStr,
+      origin: 'SIMULADA/FALLBACK' as const, // lectura inyectada por el simulador de hardware
       pm25: calibResult.appliedCorrections.calibrated_pm25,
       pm10: Number((calibResult.appliedCorrections.calibrated_pm25 * 1.76).toFixed(1)),
       o3: calibResult.appliedCorrections.calibrated_o3,

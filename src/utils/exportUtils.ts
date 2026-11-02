@@ -17,7 +17,10 @@ import {
   PageNumber
 } from 'docx';
 import saveAs from 'file-saver';
-import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, SimulationScenario } from '../types';
+import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, SimulationScenario, isSimulatedReading, originLabel, SIMULATED_LABEL } from '../types';
+
+// Reducción con signo: valores negativos indican aumento de la concentración (efecto adverso del arbolado).
+const signedRed = (x: number): string => (x >= 0 ? `-${x}` : `+${Math.abs(x)}`);
 import { TrialRecord, ModelKind, DomainGap, contrastPairs, pairedTTest } from './mlTraining';
 
 type ExportLang = 'es' | 'en' | 'zh' | 'de' | 'fr' | 'pt';
@@ -371,8 +374,8 @@ export const exportToExcel = (
       ['RESULTADOS PROYECTADOS PRE Y POST INTERVENCIÓN'],
       ['Métrica Ambiental / Confort', 'Valor Línea Base (Pre)', 'Valor Simulado (Post)', 'Reducción / Mejora', 'Unidad'],
       ['Temperatura del Aire', String(activeScenario.results.initialTemp), String(activeScenario.results.simulatedTemp), `-${activeScenario.results.tempReduction}`, '°C'],
-      ['Material Particulado PM2.5', String(activeScenario.results.initialPM25), String(activeScenario.results.simulatedPM25), `-${activeScenario.results.pm25ReductionPercent}%`, 'µg/m³'],
-      ['Material Particulado PM10', String(activeScenario.results.initialPM10 || (activeScenario.results.initialPM25 * 1.76).toFixed(1)), String(activeScenario.results.simulatedPM10 || (activeScenario.results.simulatedPM25 * 1.76).toFixed(1)), `-${activeScenario.results.pm10ReductionPercent || activeScenario.results.pm25ReductionPercent}%`, 'µg/m³'],
+      ['Material Particulado PM2.5', String(activeScenario.results.initialPM25), String(activeScenario.results.simulatedPM25), `${signedRed(activeScenario.results.pm25ReductionPercent)}%`, 'µg/m³'],
+      ['Material Particulado PM10', String(activeScenario.results.initialPM10 || (activeScenario.results.initialPM25 * 1.76).toFixed(1)), String(activeScenario.results.simulatedPM10 || (activeScenario.results.simulatedPM25 * 1.76).toFixed(1)), `${signedRed(activeScenario.results.pm10ReductionPercent || activeScenario.results.pm25ReductionPercent)}%`, 'µg/m³'],
       ['Ozono Troposférico O3', String(activeScenario.results.initialO3 || 24.5), String(activeScenario.results.simulatedO3 || 18.2), `-${activeScenario.results.o3ReductionPercent || 25.7}%`, 'ppb'],
       ['Dióxido de Nitrógeno NO2', String(activeScenario.results.initialNO2 || 38.0), String(activeScenario.results.simulatedNO2 || 26.5), `-${activeScenario.results.no2ReductionPercent || 30.2}%`, 'ppb'],
       ['Temperatura Fisiológica Equivalente (PET)', String(activeScenario.results.petBefore), String(activeScenario.results.petAfter), `-${(activeScenario.results.petBefore - activeScenario.results.petAfter).toFixed(1)}`, '°C'],
@@ -382,7 +385,9 @@ export const exportToExcel = (
       ['Presupuesto Total Requerido (S/.):', String(activeScenario.results.totalBudgetPEN)],
       ['Población Vulnerable Protegida:', String(activeScenario.results.exposedPopulationBenefited)],
       ['Captura de CO2 Estimada (Ton/año):', String(activeScenario.results.co2CapturedTonYear)],
-      ['Retención de Escorrentía Hídrica (m³/año):', String(activeScenario.results.stormwaterRetentionM3 || 480)]
+      ['Retención de Escorrentía Hídrica (m³/año):', String(activeScenario.results.stormwaterRetentionM3 || 480)],
+      ['Regla R1 (ventilación):', activeScenario.results.ruleR1Active ? (activeScenario.results.ruleR1Message || 'Activa') : 'No activa'],
+      ['Origen de los resultados:', activeScenario.results.resultOrigin || 'SIMULADO (modelo heurístico; no es medición)']
     ];
     const wsScenario = XLSX.utils.aoa_to_sheet(scenarioData);
     XLSX.utils.book_append_sheet(wb, wsScenario, tr.w6);
@@ -391,7 +396,8 @@ export const exportToExcel = (
   XLSX.writeFile(wb, `${tr.file}_${Date.now()}.xlsx`);
 };
 
-export const exportToCSV = (sensors: SensorNode[], _lang: ExportLang = 'es') => {
+/** Construye el CSV de telemetría; cada fila declara si es MEDICIÓN o SIMULADA / FALLBACK. */
+export const buildTelemetryCsv = (sensors: SensorNode[]): string => {
   const headers = [
     'timestamp',
     'codigo_sensor',
@@ -409,7 +415,8 @@ export const exportToCSV = (sensors: SensorNode[], _lang: ExportLang = 'es') => 
     'delta_uhi_isla_calor_c',
     'aqi_indice',
     'aqi_categoria',
-    'r2_calibracion'
+    'r2_calibracion',
+    'origen_dato'
   ];
 
   const rows: string[] = [headers.join(',')];
@@ -433,12 +440,17 @@ export const exportToCSV = (sensors: SensorNode[], _lang: ExportLang = 'es') => 
         reading.uhiDelta,
         reading.aqiIndex,
         `"${reading.aqiCategory}"`,
-        sensor.r2ScoreCalibrated
+        sensor.r2ScoreCalibrated,
+        `"${originLabel(reading)}"`
       ].join(','));
     });
   });
 
-  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  return rows.join('\n');
+};
+
+export const exportToCSV = (sensors: SensorNode[], _lang: ExportLang = 'es') => {
+  const blob = new Blob([buildTelemetryCsv(sensors)], { type: 'text/csv;charset=utf-8;' });
   saveAs(blob, `Dataset_Telemetria_IoT_Trujillo_${Date.now()}.csv`);
 };
 
@@ -1053,7 +1065,7 @@ export const exportToPDF = (
       ['Modelo Predictivo ML', `${activeScenario.results.modelUsedName || '1D-CNN'} (R² = ${activeScenario.results.modelR2Score || 0.9925})`],
       ['Relación H/W Cañón Urbano', String(activeScenario.mlParams?.canyonHWRatio || '2.1 (Cañón Estrecho)')],
       ['Temperatura del Aire', `${activeScenario.results.initialTemp} °C -> ${activeScenario.results.simulatedTemp} °C (Δ = -${activeScenario.results.tempReduction} °C)`],
-      ['Material Particulado PM2.5', `${activeScenario.results.initialPM25} -> ${activeScenario.results.simulatedPM25} µg/m³ (-${activeScenario.results.pm25ReductionPercent}%)`],
+      ['Material Particulado PM2.5', `${activeScenario.results.initialPM25} -> ${activeScenario.results.simulatedPM25} µg/m³ (${signedRed(activeScenario.results.pm25ReductionPercent)}%)`],
       ['Confort Térmico PET / TCS', `${activeScenario.results.petBefore} °C -> ${activeScenario.results.petAfter} °C | TCS: ${activeScenario.results.tcsScoreBefore} -> ${activeScenario.results.tcsScoreAfter} pts`],
       ['Población Beneficiada', `${activeScenario.results.exposedPopulationBenefited.toLocaleString()} habitantes`],
       ['Captura CO2 / Retención Hídrica', `${activeScenario.results.co2CapturedTonYear} Ton CO2/año | ${activeScenario.results.stormwaterRetentionM3 || 480} m³/año`],
@@ -1501,8 +1513,8 @@ export const exportToWord = async (
           new TableRow({ children: WL.thScen.map((h: string) => tituloCell(h)) }),
           ...[
             ['Temperatura aire', `${activeScenario.results.initialTemp} °C`, `${activeScenario.results.simulatedTemp} °C`, `-${activeScenario.results.tempReduction} °C`],
-            ['PM2.5', `${activeScenario.results.initialPM25} µg/m³`, `${activeScenario.results.simulatedPM25} µg/m³`, `-${activeScenario.results.pm25ReductionPercent}%`],
-            ['PM10', `${(activeScenario.results.initialPM10 || activeScenario.results.initialPM25*1.76).toFixed(1)} µg/m³`, `${(activeScenario.results.simulatedPM10 || activeScenario.results.simulatedPM25*1.76).toFixed(1)} µg/m³`, `-${activeScenario.results.pm10ReductionPercent || activeScenario.results.pm25ReductionPercent}%`],
+            ['PM2.5', `${activeScenario.results.initialPM25} µg/m³`, `${activeScenario.results.simulatedPM25} µg/m³`, `${signedRed(activeScenario.results.pm25ReductionPercent)}%`],
+            ['PM10', `${(activeScenario.results.initialPM10 || activeScenario.results.initialPM25*1.76).toFixed(1)} µg/m³`, `${(activeScenario.results.simulatedPM10 || activeScenario.results.simulatedPM25*1.76).toFixed(1)} µg/m³`, `${signedRed(activeScenario.results.pm10ReductionPercent || activeScenario.results.pm25ReductionPercent)}%`],
             ['O₃', `${activeScenario.results.initialO3 || 24.5} ppb`, `${activeScenario.results.simulatedO3 || 18.2} ppb`, `-${activeScenario.results.o3ReductionPercent || 25.7}%`],
             ['NO₂', `${activeScenario.results.initialNO2 || 38} ppb`, `${activeScenario.results.simulatedNO2 || 26.5} ppb`, `-${activeScenario.results.no2ReductionPercent || 30.2}%`],
             ['PET', `${activeScenario.results.petBefore} °C`, `${activeScenario.results.petAfter} °C`, `${(activeScenario.results.petAfter - activeScenario.results.petBefore).toFixed(1)} °C`],
@@ -1589,6 +1601,7 @@ export const exportToWord = async (
       ],
     }),
     heading2('Apéndice B. Telemetría horaria por nodo (últimas 12 h, N=' + sensors.reduce((a,s)=>a+s.hourlyHistory.length,0) + ' lecturas)'),
+    normal(`Origen de los datos: ${sensors.reduce((a,s)=>a+s.hourlyHistory.filter(isSimulatedReading).length,0)} de ${sensors.reduce((a,s)=>a+s.hourlyHistory.length,0)} lecturas están marcadas ${SIMULATED_LABEL} (serie generada por fórmula); no son mediciones y no deben citarse como tales.`, { italics: true, size: 19 }),
     ...sensors.slice(0, 6).map(s => [
       heading2(`Nodo ${s.code} — ${s.name} (${s.zoneName})`),
       new Table({
@@ -1597,7 +1610,7 @@ export const exportToWord = async (
           new TableRow({ children: WL.thHour.map((h: string) => tituloCell(h)) }),
           ...s.hourlyHistory.map(h => new TableRow({ children: [
             tdCell(h.timestamp, { size: 14 }), tdCell(String(h.pm25), { size: 14, align: AlignmentType.CENTER }), tdCell(`${h.temperature}°C`, { size: 14, align: AlignmentType.CENTER }),
-            tdCell(`${h.humidity}%`, { size: 14, align: AlignmentType.CENTER }), tdCell(h.aqiCategory, { size: 13 }),
+            tdCell(`${h.humidity}%`, { size: 14, align: AlignmentType.CENTER }), tdCell(h.aqiCategory + (isSimulatedReading(h) ? ' · ' + SIMULATED_LABEL : ''), { size: 13 }),
           ]})),
         ],
       }),
@@ -1616,6 +1629,8 @@ export const exportToWord = async (
             ...Object.entries(activeScenario.mlParams || {}).map(([k,v]) => new TableRow({ children: [tdCell(k, { size: 14, bold: true }), tdCell(String(v), { size: 14 })] })),
             new TableRow({ children: [tdCell(' Ambient wind', { bold: true }), tdCell(String(activeScenario.ambientWindSpeed), {})] }),
             new TableRow({ children: [tdCell(' Ambient solar', { bold: true }), tdCell(String(activeScenario.ambientSolarRadiation), {})] }),
+            new TableRow({ children: [tdCell('Regla R1 (ventilación)', { bold: true }), tdCell(activeScenario.results.ruleR1Active ? (activeScenario.results.ruleR1Message || 'Activa') : 'No activa', {})] }),
+            new TableRow({ children: [tdCell('Origen de los resultados', { bold: true }), tdCell(activeScenario.results.resultOrigin || 'SIMULADO (modelo heurístico; no es medición)', {})] }),
           ],
         })
       : normal('Sin escenario activo al exportar. Ejecuta una simulación en OE4 y vuelve a exportar para anexar parámetros completos.', { italics: true }),
