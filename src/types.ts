@@ -217,12 +217,13 @@ export interface ThesisObjectiveEvaluation {
   code: string;
   title: string;
   status: 'Completado' | 'En Ejecución' | 'Validado';
-  progressPercent: number;
+  progressPercent: number | null; // null = sin porcentaje validado
   metrics: { name: string; target: string; achieved: string; compliance: boolean }[];
   summary: string;
 }
 
 /** Una métrica cuyo texto empieza así no se considera cumplida ni incumplida: está pendiente de validación. */
+export const formatProgress = (p: number | null | undefined): string => (p == null ? 'sin porcentaje validado' : `${p}%`);
 export const PENDING_VALIDATION = 'Pendiente de validación';
 export const isPendingMetric = (m: { achieved: string }): boolean => m.achieved.startsWith(PENDING_VALIDATION);
 

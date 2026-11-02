@@ -17,7 +17,7 @@ import {
   PageNumber
 } from 'docx';
 import saveAs from 'file-saver';
-import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, SimulationScenario, isPendingMetric, isSimulatedReading, originLabel, SIMULATED_LABEL } from '../types';
+import { UrbanZone, SensorNode, AiModelMetric, NbsIntervention, ThesisObjectiveEvaluation, SimulationScenario, isPendingMetric, formatProgress, isSimulatedReading, originLabel, SIMULATED_LABEL } from '../types';
 
 // Reducción con signo: valores negativos indican aumento de la concentración (efecto adverso del arbolado).
 const signedRed = (x: number): string => (x >= 0 ? `-${x}` : `+${Math.abs(x)}`);
@@ -345,7 +345,7 @@ export const exportToExcel = (
       objData.push([
         obj.code,
         obj.title,
-        String(obj.progressPercent),
+        formatProgress(obj.progressPercent),
         obj.status,
         m.name,
         m.target,
@@ -1092,7 +1092,7 @@ export const exportToPDF = (
   const objTableRows = objectives.map(o => [
     o.code,
     o.title,
-    `${o.progressPercent}%`,
+    formatProgress(o.progressPercent),
     o.status,
     o.summary
   ]);
@@ -1539,7 +1539,7 @@ export const exportToWord = async (
   const oe5: any[] = [
     heading1(WL.h1.oe5, true),
     ...objectives.map(o => [
-      heading2(`${o.code}: ${o.title} — ${o.status} (${o.progressPercent}%)`),
+      heading2(`${o.code}: ${o.title} — ${o.status} (${formatProgress(o.progressPercent)})`),
       normal(o.summary, {}),
       new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },

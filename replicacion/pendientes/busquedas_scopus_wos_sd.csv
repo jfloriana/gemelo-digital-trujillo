@@ -1,5 +1,5 @@
 ﻿base,fecha_ejecucion,cadena_usada,filtros,registros_recuperados,tras_duplicados,ejecutado_por
-Scopus,,copiar de la Tabla 1 del articulo,2020-2026; ingles/espanol,,,
+Scopus,2026-11-02,"Tabla 1 (Scopus), TITLE-ABS-KEY completa",PUBYEAR 2020-2026; English OR Spanish,1033,,"Claude (navegador integrado, sesion iniciada por el autor); 25 de las 38 DOI de la bibliografia estan indexadas en Scopus y 13 de ellas las recupera la cadena"
 Web of Science Core Collection,,copiar de la Tabla 1 del articulo,2020-2026; ingles/espanol,,,
 ScienceDirect S1,,copiar de la Tabla 1 del articulo,2020-2026; ingles/espanol,,,
 ScienceDirect S2,,copiar de la Tabla 1 del articulo,2020-2026; ingles/espanol,,,

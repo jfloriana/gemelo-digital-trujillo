@@ -1,6 +1,6 @@
 import React from 'react';
 import { useI18n } from '../../context/I18nContext';
-import { ThesisObjectiveEvaluation, UrbanZone, SensorNode, isVirtualSensor, isPendingMetric } from '../../types';
+import { ThesisObjectiveEvaluation, UrbanZone, SensorNode, isVirtualSensor, isPendingMetric, formatProgress } from '../../types';
 import { 
   CheckCircle2, 
   Award, 
@@ -184,7 +184,7 @@ export const ValidationPolicyModule: React.FC<ValidationPolicyModuleProps> = ({
                 </div>
                 <span className={`text-xs font-semibold flex items-center gap-1 ${obj.status === 'En Ejecución' ? 'text-amber-700' : 'text-emerald-700'}`}>
                   {obj.status !== 'En Ejecución' && <Check className="w-3.5 h-3.5" />}
-                  {obj.status} ({obj.progressPercent}%)
+                  {obj.status} ({formatProgress(obj.progressPercent)}){obj.metrics.some(isPendingMetric) ? ' · pendiente de validación' : ''}
                 </span>
               </div>
 

@@ -90,7 +90,7 @@ function mapObjective(r: any, metrics: any[]): ThesisObjectiveEvaluation {
     code: r.code,
     title: r.title,
     status: r.status,
-    progressPercent: r.progress_percent,
+    progressPercent: r.progress_percent ?? null,
     summary: r.summary,
     metrics: metrics.filter(m=>m.objective_code===r.code).map(m=>({ name:m.name, target:m.target, achieved:m.achieved, compliance:m.compliance })),
   };

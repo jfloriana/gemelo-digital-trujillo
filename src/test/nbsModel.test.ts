@@ -5,7 +5,7 @@ import {
   NBS_COEF, RULE_LOG_KEY, ILLUSTRATIVE_LABEL, type NbsInputs, type RuleEvent,
 } from '../utils/nbsModel';
 import { SENSOR_NODES } from '../data/trujilloData';
-import { isSimulatedReading, originLabel, SIMULATED_LABEL, isPendingMetric, type SensorNode } from '../types';
+import { isSimulatedReading, originLabel, SIMULATED_LABEL, isPendingMetric, formatProgress, type SensorNode } from '../types';
 import { buildTelemetryCsv } from '../utils/exportUtils';
 
 const base: NbsInputs = {
@@ -250,6 +250,52 @@ describe('6. Portada = escenario OE4; OE4 pendiente de validación; cifras fijas
       const lines = i18n.split('\n').filter((l) => l.includes(`'${k}':`));
       expect(lines).toHaveLength(6);
       expect(lines.every((l) => /\((valor fijo|fixed value|固定值|fester Wert|valeur fixe|valor fixo)/.test(l) || /_\((valor fijo|fixed value|固定值|fester Wert|valeur fixe|valor fixo)/.test(l))).toBe(true);
+    }
+  });
+});
+
+describe('7. OE5 pendiente, OE4 sin porcentaje, textos del asistente rotulados', () => {
+  const read = (p: string) => readFileSync(p, 'utf8');
+  const data = read('src/data/trujilloData.ts');
+  const oe = (code: string, next?: string) => data.slice(data.indexOf(`code: '${code}'`), next ? data.indexOf(`code: '${next}'`) : undefined);
+
+  it('OE4 y OE5 están en ejecución, sin porcentaje validado', () => {
+    for (const block of [oe('OE4', 'OE5'), oe('OE5')]) {
+      expect(block).toContain("status: 'En Ejecución'");
+      expect(block).toContain('progressPercent: null');
+    }
+    expect(oe('OE4', 'OE5')).not.toContain('75');
+    expect(formatProgress(null)).toBe('sin porcentaje validado');
+    expect(formatProgress(100)).toBe('100%');
+  });
+
+  it('OE5: resumen reescrito y sus 3 métricas pendientes y no cumplidas', () => {
+    const b = oe('OE5');
+    expect(b).toContain("summary: 'Sin validación empírica; resultados ilustrativos'");
+    expect(b).not.toContain('Se valida la hipótesis');
+    expect((b.match(/Pendiente de validación: sin validación empírica;/g) ?? []).length).toBe(3);
+    expect((b.match(/compliance: false/g) ?? []).length).toBe(3);
+    expect(b).not.toContain('compliance: true');
+  });
+
+  it('seed.sql y la migración 0010 reflejan lo mismo y son idempotentes', () => {
+    const seed = read('supabase/seed.sql');
+    expect(seed).not.toContain('Se valida la hipótesis');
+    expect(seed).not.toMatch(/'En Ejecución',75,/);
+    const mig = read('supabase/migrations/0010_oe5_pendiente_validacion.sql');
+    expect(mig).toContain('drop not null');
+    expect(mig).toContain("summary = 'Sin validación empírica; resultados ilustrativos'");
+    expect(mig).not.toMatch(/insert into/i);
+    expect((mig.match(/compliance = false/g) ?? []).length).toBe(3);
+    expect(read('supabase/schema.sql')).not.toMatch(/progress_percent integer not null/);
+  });
+
+  it('las respuestas del asistente con cifras de escenario llevan rótulo en los 6 idiomas', () => {
+    const i18n = read('src/context/I18nContext.tsx');
+    for (const k of ['assistant.g.heat.body', 'assistant.r.thesis.body', 'assistant.g.pm.body']) {
+      const lines = i18n.split('\n').filter((l) => l.includes(`'${k}':`));
+      expect(lines).toHaveLength(6);
+      expect(lines.every((l) => /_\((valor fijo|fixed value|固定值|fester Wert|valeur fixe|valor fixo)/.test(l))).toBe(true);
     }
   });
 });

@@ -134,8 +134,8 @@ values
   ('OE1','Diagnosticar la variabilidad microescalar de calidad del aire y temperatura en Trujillo','Completado',100,'Se demostró que las estaciones macroescalares tradicionales no capturan los picos de exposición en los cañones urbanos de Trujillo.'),
   ('OE2','Diseñar la arquitectura del gemelo digital a microescala (Capas Físicas, Datos y Modelado)','Completado',100,'Arquitectura validada según los estándares de Li et al. (2026) y Teutscher et al. (2025) con código abierto adaptado a presupuestos de ciudades intermedias.'),
   ('OE3','Seleccionar y adaptar modelos de Machine Learning y Deep Learning a microescala','Completado',100,'El modelo 1D-CNN y la arquitectura GNN superaron ampliamente a los modelos clásicos gaussianos y Random Forest.'),
-  ('OE4','Diseñar el módulo de simulación de escenarios de Soluciones basadas en la Naturaleza (NbS)','En Ejecución',75,'Simulador A/B permite a la Municipalidad evaluar proyectos antes de su ejecución física, respaldado en el marco GREENPASS® (Abbas et al., 2025). Los resultados del simulador están pendientes de validación.'),
-  ('OE5','Establecer indicadores y procedimientos de validación de hipótesis y política pública','Completado',100,'Se valida la hipótesis de la tesis: el gemelo digital a microescala con NbS reduce significativamente la exposición a contaminantes y calor extremo en Trujillo.')
+  ('OE4','Diseñar el módulo de simulación de escenarios de Soluciones basadas en la Naturaleza (NbS)','En Ejecución',null,'Simulador A/B permite a la Municipalidad evaluar proyectos antes de su ejecución física, respaldado en el marco GREENPASS® (Abbas et al., 2025). Los resultados del simulador están pendientes de validación.'),
+  ('OE5','Establecer indicadores y procedimientos de validación de hipótesis y política pública','En Ejecución',null,'Sin validación empírica; resultados ilustrativos')
 on conflict (code) do update set title=excluded.title, status=excluded.status, progress_percent=excluded.progress_percent, summary=excluded.summary;
 
 insert into public.thesis_objective_metrics (objective_code, name, target, achieved, compliance)
@@ -152,9 +152,9 @@ values
   ('OE4','Reducción térmica microclimática proyectada','ΔT = 2.0 - 3.5 °C','Pendiente de validación: sin resultado validado; el simulador OE4 entrega valores ilustrativos de un modelo heurístico no validado',false),
   ('OE4','Reducción de exposición a PM2.5 por deposición foliar','ΔPM2.5 > 20%','Pendiente de validación: sin resultado validado; el simulador OE4 entrega valores ilustrativos de un modelo heurístico no validado',false),
   ('OE4','Mejora en Confort Térmico Score (TCS / PET)','Mejora > 25 pts','Pendiente de validación: sin resultado validado; el simulador OE4 entrega valores ilustrativos de un modelo heurístico no validado',false),
-  ('OE5','Validación estadística de Hipótesis General','p-valor < 0.05','p < 0.001 (Diferencia significativa pre y post NbS) — valor fijo, ilustrativo, no validado',true),
-  ('OE5','Población vulnerable protegida estimada','> 50,000 hab','132,500 habitantes beneficiados en zonas críticas de Trujillo — valor fijo, ilustrativo, no validado',true),
-  ('OE5','Retorno de inversión social (Costo-Efectividad)','B/C Ratio > 1.5','B/C Ratio = 3.4 (Ahorro en salud respiratoria y energía) — valor fijo, ilustrativo, no validado',true)
+  ('OE5','Validación estadística de Hipótesis General','p-valor < 0.05','Pendiente de validación: sin validación empírica; p < 0.001 es un valor fijo, ilustrativo, no validado',false),
+  ('OE5','Población vulnerable protegida estimada','> 50,000 hab','Pendiente de validación: sin validación empírica; 132,500 habitantes es un valor fijo, ilustrativo, no validado',false),
+  ('OE5','Retorno de inversión social (Costo-Efectividad)','B/C Ratio > 1.5','Pendiente de validación: sin validación empírica; B/C Ratio = 3.4 es un valor fijo, ilustrativo, no validado',false)
 on conflict do nothing;
 
 -- Verificación rápida

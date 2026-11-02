@@ -812,7 +812,7 @@ export const THESIS_OBJECTIVES_DATA: ThesisObjectiveEvaluation[] = [
     code: 'OE4',
     title: 'Diseñar el módulo de simulación de escenarios de Soluciones basadas en la Naturaleza (NbS)',
     status: 'En Ejecución',
-    progressPercent: 75,
+    progressPercent: null,
     metrics: [
       { name: 'Reducción térmica microclimática proyectada', target: 'ΔT = 2.0 - 3.5 °C', achieved: 'Pendiente de validación: sin resultado validado; el simulador OE4 entrega valores ilustrativos de un modelo heurístico no validado', compliance: false },
       { name: 'Reducción de exposición a PM2.5 por deposición foliar', target: 'ΔPM2.5 > 20%', achieved: 'Pendiente de validación: sin resultado validado; el simulador OE4 entrega valores ilustrativos de un modelo heurístico no validado', compliance: false },
@@ -823,13 +823,13 @@ export const THESIS_OBJECTIVES_DATA: ThesisObjectiveEvaluation[] = [
   {
     code: 'OE5',
     title: 'Establecer indicadores y procedimientos de validación de hipótesis y política pública',
-    status: 'Completado',
-    progressPercent: 100,
+    status: 'En Ejecución',
+    progressPercent: null,
     metrics: [
-      { name: 'Validación estadística de Hipótesis General', target: 'p-valor < 0.05', achieved: 'p < 0.001 (Diferencia significativa pre y post NbS) — valor fijo, ilustrativo, no validado', compliance: true },
-      { name: 'Población vulnerable protegida estimada', target: '> 50,000 hab', achieved: '132,500 habitantes beneficiados en zonas críticas de Trujillo — valor fijo, ilustrativo, no validado', compliance: true },
-      { name: 'Retorno de inversión social (Costo-Efectividad)', target: 'B/C Ratio > 1.5', achieved: 'B/C Ratio = 3.4 (Ahorro en salud respiratoria y energía) — valor fijo, ilustrativo, no validado', compliance: true }
+      { name: 'Validación estadística de Hipótesis General', target: 'p-valor < 0.05', achieved: 'Pendiente de validación: sin validación empírica; p < 0.001 es un valor fijo, ilustrativo, no validado', compliance: false },
+      { name: 'Población vulnerable protegida estimada', target: '> 50,000 hab', achieved: 'Pendiente de validación: sin validación empírica; 132,500 habitantes es un valor fijo, ilustrativo, no validado', compliance: false },
+      { name: 'Retorno de inversión social (Costo-Efectividad)', target: 'B/C Ratio > 1.5', achieved: 'Pendiente de validación: sin validación empírica; B/C Ratio = 3.4 es un valor fijo, ilustrativo, no validado', compliance: false }
     ],
-    summary: 'Se valida la hipótesis de la tesis: el gemelo digital a microescala con NbS reduce significativamente la exposición a contaminantes y calor extremo en Trujillo.'
+    summary: 'Sin validación empírica; resultados ilustrativos'
   }
 ];

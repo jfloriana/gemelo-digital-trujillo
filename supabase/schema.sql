@@ -318,7 +318,7 @@ create table if not exists public.thesis_objectives (
   code text primary key, -- OE1
   title text not null,
   status objective_status not null,
-  progress_percent integer not null check (progress_percent between 0 and 100),
+  progress_percent integer check (progress_percent between 0 and 100), -- NULL = sin porcentaje validado
   summary text not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
