@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useI18n } from '../../context/I18nContext';
 import { SensorNode, UrbanZone, NbsIntervention } from '../../types';
 import { useLiveBaseline } from '../../hooks/useLiveBaseline';
+import { computeNbs, NBS_COEF, DEFAULT_WIND_MS, DEFAULT_ALBEDO } from '../../utils/nbsModel';
 import { 
   Layers, 
   Wind, 
@@ -23,6 +24,8 @@ interface DigitalTwinCanvasProps {
   nbsCatalog: NbsIntervention[];
   isSimulationActive: boolean;
   onApplyNbsQuick?: (nbsId: string) => void;
+  /** Notifica la mitigación calculada con nbsModel.ts (null = sin escenario activo). */
+  onMitigationChange?: (m: { tempReduction: number; pm25ReductionPercent: number } | null) => void;
 }
 
 export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
@@ -31,7 +34,8 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
   selectedNbs,
   nbsCatalog,
   isSimulationActive,
-  onApplyNbsQuick
+  onApplyNbsQuick,
+  onMitigationChange
 }) => {
   const { t } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -56,14 +60,44 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
   const greenWallsArea = selectedNbs.find(n => n.nbsId === 'nbs-muro-verde')?.quantityOrArea || 0;
   const permeableArea = selectedNbs.find(n => n.nbsId === 'nbs-pavimento-permeable')?.quantityOrArea || 0;
 
-  const currentTempMitigation = isSimulationActive ? Math.min(4.8, (totalTreesCount * 0.08) + (greenRoofsArea * 0.002) + (greenWallsArea * 0.003) + (permeableArea * 0.001)) : 0;
-  const currentPmMitigationPercent = isSimulationActive ? Math.min(36, (totalTreesCount * 0.6) + (greenRoofsArea * 0.015) + (greenWallsArea * 0.02)) : 0;
+  const rainGardenArea = selectedNbs.find(n => n.nbsId === 'nbs-jardin-lluvia')?.quantityOrArea || 0;
 
   // HUD vivo (Fase B): parte de la última telemetría real cuando existe;
   // si no, baseline estático de tesis. La mitigación NbS se aplica encima igual.
   const { data: liveBase } = useLiveBaseline(zone.id, true);
   const baseTemp = liveBase?.temp ?? zone.baselineTemp;
   const basePm = liveBase?.pm25 ?? zone.baselinePM25;
+
+  // Mitigación calculada con el mismo modelo del simulador OE4 (src/utils/nbsModel.ts).
+  // H/W: promedio de los nodos de la zona; viento y albedo: valores por defecto del simulador.
+  const zoneHW = (() => {
+    const hw = sensors.filter(s => s.zoneId === zone.id).map(s => s.streetCanyonHWRatio);
+    return hw.length ? hw.reduce((a, b) => a + b, 0) / hw.length : 2.1;
+  })();
+  const nbsOut = isSimulationActive
+    ? computeNbs({
+        modelType: '1d_cnn',
+        baselineTemp: baseTemp,
+        baselinePm25: basePm,
+        canyonHWRatio: zoneHW,
+        windSpeed: DEFAULT_WIND_MS,
+        surfaceAlbedo: DEFAULT_ALBEDO,
+        studyAreaM2: NBS_COEF.DEFAULT_STUDY_AREA_M2,
+        lai: NBS_COEF.DEFAULT_LAI,
+        treeCrownRadiusM: NBS_COEF.DEFAULT_CROWN_RADIUS_M,
+        treeCount: totalTreesCount,
+        greenRoofArea: greenRoofsArea,
+        greenWallArea: greenWallsArea,
+        permeableArea,
+        rainGardenArea
+      })
+    : null;
+  const currentTempMitigation = nbsOut?.tempReduction ?? 0;
+  const currentPmMitigationPercent = nbsOut?.pm25ReductionPercent ?? 0;
+
+  useEffect(() => {
+    onMitigationChange?.(nbsOut ? { tempReduction: nbsOut.tempReduction, pm25ReductionPercent: nbsOut.pm25ReductionPercent } : null);
+  }, [nbsOut?.tempReduction, nbsOut?.pm25ReductionPercent, !!nbsOut]); // eslint-disable-line react-hooks/exhaustive-deps
   const effectiveTemp = Number((baseTemp - currentTempMitigation).toFixed(1));
   const effectivePM25 = Number((basePm * (1 - currentPmMitigationPercent / 100)).toFixed(1));
 
@@ -525,8 +559,16 @@ export const DigitalTwinCanvas: React.FC<DigitalTwinCanvasProps> = ({
                   {t('canvas.hudMitigatedPm').replace('{val}', currentPmMitigationPercent.toFixed(1))}
                 </span>
               )}
+              {currentPmMitigationPercent < 0 && (
+                <span className="text-[10px] text-amber-700 block font-medium">
+                  {t('canvas.hudIncreasedPm').replace('{val}', Math.abs(currentPmMitigationPercent).toFixed(1))}
+                </span>
+              )}
             </div>
           </div>
+          {nbsOut && (
+            <p className="text-[9px] italic text-slate-500 dark:text-slate-400 pt-0.5">{t('canvas.illustrative')}</p>
+          )}
 
           <div className="flex items-center justify-between text-[11px] text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-100 dark:border-slate-800">
             <span className="font-medium">{t('canvas.hudUhi')}</span>

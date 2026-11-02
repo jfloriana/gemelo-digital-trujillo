@@ -70,6 +70,13 @@ export const NBS_COEF = {
   PM10_PM25_RATIO: 1.76, // [H]
 } as const;
 
+/** Rótulo obligatorio para toda cifra de escenario mostrada o exportada. */
+export const ILLUSTRATIVE_LABEL = 'ilustrativa, modelo heurístico no validado';
+
+/** Valores por defecto de la interfaz (viento y albedo) cuando no hay escenario guardado. */
+export const DEFAULT_WIND_MS = 2.2;
+export const DEFAULT_ALBEDO = 0.2;
+
 export type NbsModelType = '1d_cnn' | 'gnn' | 'random_forest' | 'bi_lstm' | 'xgboost';
 
 /** Multiplicadores por modelo ML (conservados del prototipo; ver docs). */

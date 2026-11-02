@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import {
   computeNbs, ventilationIndex, canopyCoverFraction, appendRuleEvent, readRuleLog,
-  NBS_COEF, RULE_LOG_KEY, type NbsInputs, type RuleEvent,
+  NBS_COEF, RULE_LOG_KEY, ILLUSTRATIVE_LABEL, type NbsInputs, type RuleEvent,
 } from '../utils/nbsModel';
 import { SENSOR_NODES } from '../data/trujilloData';
 import { isSimulatedReading, originLabel, SIMULATED_LABEL, type SensorNode } from '../types';
@@ -162,5 +162,40 @@ describe('4. Serie de respaldo marcada como SIMULADA / FALLBACK', () => {
     const measured = { ...SENSOR_NODES[0], hourlyHistory: SENSOR_NODES[0].hourlyHistory.map((r) => ({ ...r, origin: 'MEDICION' as const })) } as SensorNode;
     const lines = buildTelemetryCsv([measured]).split('\n').slice(1);
     expect(lines.every((l) => l.endsWith('"MEDICIÓN"'))).toBe(true);
+  });
+});
+
+describe('5. Portada (gemelo 3D) calculada con nbsModel.ts', () => {
+  const canvas = readFileSync('src/components/digitaltwin/DigitalTwinCanvas.tsx', 'utf8');
+  const i18n = readFileSync('src/context/I18nContext.tsx', 'utf8');
+  const app = readFileSync('src/App.tsx', 'utf8');
+
+  it('el gemelo 3D ya no usa topes fijos 4,8 °C / 36 % ni coeficientes propios', () => {
+    expect(canvas).not.toMatch(/Math\.min\(\s*4\.8/);
+    expect(canvas).not.toMatch(/Math\.min\(\s*36\b/);
+    expect(canvas).toContain('computeNbs(');
+  });
+
+  it('la tarjeta de mitigación no usa el texto fijo "-3.2 °C a -3.8 °C" en ningún idioma', () => {
+    expect(i18n).not.toMatch(/cards\.mitigationVal/);
+    expect(app).not.toMatch(/cards\.mitigationVal/);
+    expect(app).toContain('cards.mitigationNone');
+  });
+
+  it('toda cifra de escenario lleva el rótulo "ilustrativa, modelo heurístico no validado"', () => {
+    expect(ILLUSTRATIVE_LABEL).toBe('ilustrativa, modelo heurístico no validado');
+    expect(i18n).toContain("'canvas.illustrative': 'Cifra ilustrativa, modelo heurístico no validado'");
+    expect(canvas).toContain("t('canvas.illustrative')");
+    expect(readFileSync('src/components/modules/NbsSimulatorModule.tsx', 'utf8')).toContain('ILLUSTRATIVE_LABEL');
+  });
+
+  it('con la configuración inicial de la portada, el Centro Histórico da un valor acotado por el modelo', () => {
+    const r = computeNbs({
+      ...base, modelType: '1d_cnn', baselineTemp: 29.4, baselinePm25: 48.2, canyonHWRatio: 2.1,
+      treeCount: 123, greenRoofArea: 1800, greenWallArea: 650, permeableArea: 0, rainGardenArea: 0,
+    });
+    expect(r.tempReduction).toBeGreaterThan(0);
+    expect(r.tempReduction).toBeLessThan(NBS_COEF.DT_SATURATION);
+    expect(r.pm25ReductionPercent).toBeLessThan(36);
   });
 });

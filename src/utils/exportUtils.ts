@@ -387,7 +387,7 @@ export const exportToExcel = (
       ['Captura de CO2 Estimada (Ton/año):', String(activeScenario.results.co2CapturedTonYear)],
       ['Retención de Escorrentía Hídrica (m³/año):', String(activeScenario.results.stormwaterRetentionM3 || 480)],
       ['Regla R1 (ventilación):', activeScenario.results.ruleR1Active ? (activeScenario.results.ruleR1Message || 'Activa') : 'No activa'],
-      ['Origen de los resultados:', activeScenario.results.resultOrigin || 'SIMULADO (modelo heurístico; no es medición)']
+      ['Origen de los resultados:', activeScenario.results.resultOrigin || 'SIMULADO (ilustrativa, modelo heurístico no validado; no es medición)']
     ];
     const wsScenario = XLSX.utils.aoa_to_sheet(scenarioData);
     XLSX.utils.book_append_sheet(wb, wsScenario, tr.w6);
@@ -1630,7 +1630,7 @@ export const exportToWord = async (
             new TableRow({ children: [tdCell(' Ambient wind', { bold: true }), tdCell(String(activeScenario.ambientWindSpeed), {})] }),
             new TableRow({ children: [tdCell(' Ambient solar', { bold: true }), tdCell(String(activeScenario.ambientSolarRadiation), {})] }),
             new TableRow({ children: [tdCell('Regla R1 (ventilación)', { bold: true }), tdCell(activeScenario.results.ruleR1Active ? (activeScenario.results.ruleR1Message || 'Activa') : 'No activa', {})] }),
-            new TableRow({ children: [tdCell('Origen de los resultados', { bold: true }), tdCell(activeScenario.results.resultOrigin || 'SIMULADO (modelo heurístico; no es medición)', {})] }),
+            new TableRow({ children: [tdCell('Origen de los resultados', { bold: true }), tdCell(activeScenario.results.resultOrigin || 'SIMULADO (ilustrativa, modelo heurístico no validado; no es medición)', {})] }),
           ],
         })
       : normal('Sin escenario activo al exportar. Ejecuta una simulación en OE4 y vuelve a exportar para anexar parámetros completos.', { italics: true }),

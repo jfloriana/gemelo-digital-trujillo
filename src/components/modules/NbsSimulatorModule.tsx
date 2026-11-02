@@ -4,7 +4,7 @@ import { NbsIntervention, UrbanZone, SimulationScenario, SimulationModelType, Si
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { CaptureWrapper } from '../shared/ChartCaptureButton';
-import { computeNbs, MODEL_FACTORS, NBS_COEF, appendRuleEvent, readRuleLog, RuleEvent } from '../../utils/nbsModel';
+import { computeNbs, MODEL_FACTORS, NBS_COEF, ILLUSTRATIVE_LABEL, appendRuleEvent, readRuleLog, RuleEvent } from '../../utils/nbsModel';
 import {
   Trees, 
   Leaf, 
@@ -234,7 +234,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
       ruleR1Active: nbsOut.r1.active,
       ruleR1Message: nbsOut.r1.reason,
       ventilationIndex: nbsOut.ventilation,
-      resultOrigin: 'SIMULADO (modelo heurístico; no es medición)'
+      resultOrigin: `SIMULADO (${ILLUSTRATIVE_LABEL}; no es medición)`
     }
   };
 
@@ -576,6 +576,7 @@ export const NbsSimulatorModule: React.FC<NbsSimulatorModuleProps> = ({
 
         {/* Col 9-12: Predicted Outcomes & Impact Metrics */}
         <div className="lg:col-span-4 space-y-4">
+          <p className="text-[10px] italic text-slate-500 dark:text-slate-400">Cifras de escenario: {ILLUSTRATIVE_LABEL}.</p>
           {/* Key Output Metric Cards */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 p-3.5 rounded-xl shadow-xs space-y-0.5">

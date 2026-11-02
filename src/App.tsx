@@ -94,6 +94,8 @@ function MainAppContent() {
     { nbsId: 'nbs-muro-verde', quantityOrArea: 650 },
   ]);
   const [isSimActive, setIsSimActive] = useState<boolean>(true);
+  // Mitigación calculada por el gemelo 3D con src/utils/nbsModel.ts (null = sin escenario activo).
+  const [twinMitigation, setTwinMitigation] = useState<{ tempReduction: number; pm25ReductionPercent: number } | null>(null);
 
   const handleQuickExport = (format: 'xlsx' | 'pdf' | 'docx' | 'csv') => {
     if (format === 'xlsx') {
@@ -369,6 +371,7 @@ function MainAppContent() {
                 nbsCatalog={NBS_CATALOG}
                 isSimulationActive={isSimActive}
                 onApplyNbsQuick={handleQuickApplyNbs}
+                onMitigationChange={setTwinMitigation}
               />
             </React.Suspense>
 
@@ -397,8 +400,14 @@ function MainAppContent() {
                   <span>{t('cards.mitigation')}</span>
                   <Flame className="w-4 h-4 text-emerald-600" />
                 </div>
-                <div className="text-lg font-bold text-emerald-700 dark:text-emerald-400 font-mono">{t('cards.mitigationVal')}</div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('cards.mitigationSub')}</p>
+                <div className="text-lg font-bold text-emerald-700 dark:text-emerald-400 font-mono">
+                  {twinMitigation
+                    ? `${twinMitigation.tempReduction > 0 ? '−' : '+'}${Math.abs(twinMitigation.tempReduction).toFixed(1)} °C · ${twinMitigation.pm25ReductionPercent >= 0 ? '−' : '+'}${Math.abs(twinMitigation.pm25ReductionPercent).toFixed(1)} % PM2.5`
+                    : t('cards.mitigationNone')}
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {twinMitigation ? `${t('cards.mitigationSub')} · ${t('canvas.illustrative')}` : t('cards.mitigationNoneSub')}
+                </p>
               </div>
 
               <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4.5 rounded-2xl shadow-sm dark:shadow-none space-y-1.5">

@@ -49,7 +49,7 @@ for (const z of TRUJILLO_ZONES) {
   const p = previo(z);
   filas.push([z.id, `"${z.name}"`, z.baselineTemp, z.baselinePM25, f(r.tempReduction), f(z.baselineTemp - r.tempReduction),
     f(r.pm25ReductionPercent), f(z.baselinePM25 * (1 - r.pm25ReductionPercent / 100)), f(r.pm25TreeNetPercent),
-    r.ventilation, r.canopyCover, r.r1.active ? 1 : 0, f(p.dt), f(p.pm), 'SIMULADO (modelo heurístico; no es medición)']);
+    r.ventilation, r.canopyCover, r.r1.active ? 1 : 0, f(p.dt), f(p.pm), 'SIMULADO (ilustrativa, modelo heurístico no validado; no es medición)']);
 }
 const csv = filas.map((r) => r.join(',')).join('\n') + '\n';
 writeFileSync(join(process.cwd(), 'replicacion', 'salidas', 'escenarios_simulador.csv'), '\ufeff' + csv, 'utf8');
